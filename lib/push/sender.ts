@@ -12,7 +12,9 @@ export async function sendNotificationToSubscriber(
   subscriber: Subscriber,
   notification: NotificationPayload
 ): Promise<{ success: boolean; error?: string; platform: string }> {
-  const platform = subscriber.platform;
+  // const platform = subscriber.platform;
+  const platform = subscriber.platform || 'unknown';
+
 
   try {
     // Android/iOS via FCM
