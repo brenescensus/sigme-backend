@@ -1,42 +1,52 @@
-// // Individual website operations
-// // ============================================================
-
+// //websites[id]/route.ts
 // import { NextRequest, NextResponse } from 'next/server';
 // import { createClient } from '@/lib/supabase/server';
 
-// interface RouteParams {
-//   params: {
-//     id: string;
-//   };
-// }
-
-// // GET - Get specific website
-// export async function GET(req: NextRequest, { params }: RouteParams) {
+// /* ============================================================
+//    GET - Get specific website
+// ============================================================ */
+// export async function GET(
+//   req: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
 //   try {
+//     // 🔑 REQUIRED: await params
+//     const { id } = await params;
+
 //     const supabase = await createClient();
 
+//     // Auth check
+//     const {
+//       data: { user },
+//       error: authError,
+//     } = await supabase.auth.getUser();
 
-//     const { data: { user }, error: authError } = await supabase.auth.getUser();
 //     if (authError || !user) {
-//       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+//       return NextResponse.json(
+//         { error: 'Unauthorized' },
+//         { status: 401 }
+//       );
 //     }
 
 //     const { data, error } = await supabase
 //       .from('websites')
 //       .select('*')
-//       .eq('id', params.id)
+//       .eq('id', id)
 //       .eq('user_id', user.id)
 //       .single();
 
-//     if (error) {
-//       return NextResponse.json({ error: 'Website not found' }, { status: 404 });
+//     if (error || !data) {
+//       return NextResponse.json(
+//         { error: 'Website not found' },
+//         { status: 404 }
+//       );
 //     }
 
 //     return NextResponse.json({
 //       success: true,
 //       website: data,
 //     });
-//   } catch (error: any) {
+//   } catch (error) {
 //     console.error('[Website GET] Error:', error);
 //     return NextResponse.json(
 //       { error: 'Internal server error' },
@@ -45,15 +55,29 @@
 //   }
 // }
 
-// // PUT - Update website
-// export async function PUT(req: NextRequest, { params }: RouteParams) {
+// /* ============================================================
+//    PUT - Update website
+// ============================================================ */
+// export async function PUT(
+//   req: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
 //   try {
+//     const { id } = await params;
+
 //     const supabase = await createClient();
 
+//     // Auth check
+//     const {
+//       data: { user },
+//       error: authError,
+//     } = await supabase.auth.getUser();
 
-//     const { data: { user }, error: authError } = await supabase.auth.getUser();
 //     if (authError || !user) {
-//       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+//       return NextResponse.json(
+//         { error: 'Unauthorized' },
+//         { status: 401 }
+//       );
 //     }
 
 //     const body = await req.json();
@@ -68,20 +92,23 @@
 //         ...(status && { status }),
 //         updated_at: new Date().toISOString(),
 //       })
-//       .eq('id', params.id)
+//       .eq('id', id)
 //       .eq('user_id', user.id)
 //       .select()
 //       .single();
 
 //     if (error) {
-//       return NextResponse.json({ error: error.message }, { status: 500 });
+//       return NextResponse.json(
+//         { error: error.message },
+//         { status: 500 }
+//       );
 //     }
 
 //     return NextResponse.json({
 //       success: true,
 //       website: data,
 //     });
-//   } catch (error: any) {
+//   } catch (error) {
 //     console.error('[Website PUT] Error:', error);
 //     return NextResponse.json(
 //       { error: 'Internal server error' },
@@ -90,15 +117,29 @@
 //   }
 // }
 
-// // DELETE - Delete website (soft delete)
-// export async function DELETE(req: NextRequest, { params }: RouteParams) {
+// /* ============================================================
+//    DELETE - Soft delete website
+// ============================================================ */
+// export async function DELETE(
+//   req: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
 //   try {
+//     const { id } = await params;
+
 //     const supabase = await createClient();
 
+//     // Auth check
+//     const {
+//       data: { user },
+//       error: authError,
+//     } = await supabase.auth.getUser();
 
-//     const { data: { user }, error: authError } = await supabase.auth.getUser();
 //     if (authError || !user) {
-//       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+//       return NextResponse.json(
+//         { error: 'Unauthorized' },
+//         { status: 401 }
+//       );
 //     }
 
 //     const { error } = await supabase
@@ -107,18 +148,21 @@
 //         status: 'deleted',
 //         updated_at: new Date().toISOString(),
 //       })
-//       .eq('id', params.id)
+//       .eq('id', id)
 //       .eq('user_id', user.id);
 
 //     if (error) {
-//       return NextResponse.json({ error: error.message }, { status: 500 });
+//       return NextResponse.json(
+//         { error: error.message },
+//         { status: 500 }
+//       );
 //     }
 
 //     return NextResponse.json({
 //       success: true,
 //       message: 'Website deleted successfully',
 //     });
-//   } catch (error: any) {
+//   } catch (error) {
 //     console.error('[Website DELETE] Error:', error);
 //     return NextResponse.json(
 //       { error: 'Internal server error' },
@@ -126,6 +170,9 @@
 //     );
 //   }
 // }
+
+
+// FILE: app/api/websites/[id]/route.ts
 // Individual website operations
 // ============================================================
 
@@ -140,9 +187,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 🔑 REQUIRED: await params
     const { id } = await params;
-
     const supabase = await createClient();
 
     // Auth check
@@ -186,15 +231,34 @@ export async function GET(
 }
 
 /* ============================================================
-   PUT - Update website
+   PATCH - Update website (partial update)
+============================================================ */
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return updateWebsite(req, params);
+}
+
+/* ============================================================
+   PUT - Update website (full update)
 ============================================================ */
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  return updateWebsite(req, params);
+}
+
+/* ============================================================
+   Shared update logic
+============================================================ */
+async function updateWebsite(
+  req: NextRequest,
+  params: Promise<{ id: string }>
+) {
   try {
     const { id } = await params;
-
     const supabase = await createClient();
 
     // Auth check
@@ -213,15 +277,19 @@ export async function PUT(
     const body = await req.json();
     const { name, url, domain, status } = body;
 
+    // Build update object only with provided fields
+    const updates: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (name !== undefined) updates.name = name;
+    if (url !== undefined) updates.url = url;
+    if (domain !== undefined) updates.domain = domain;
+    if (status !== undefined) updates.status = status;
+
     const { data, error } = await supabase
       .from('websites')
-      .update({
-        ...(name && { name }),
-        ...(url && { url }),
-        ...(domain && { domain }),
-        ...(status && { status }),
-        updated_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
@@ -234,12 +302,19 @@ export async function PUT(
       );
     }
 
+    if (!data) {
+      return NextResponse.json(
+        { error: 'Website not found or unauthorized' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       website: data,
     });
   } catch (error) {
-    console.error('[Website PUT] Error:', error);
+    console.error('[Website UPDATE] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -256,7 +331,6 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-
     const supabase = await createClient();
 
     // Auth check
@@ -272,19 +346,28 @@ export async function DELETE(
       );
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('websites')
       .update({
         status: 'deleted',
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .select()
+      .single();
 
     if (error) {
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
+      );
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { error: 'Website not found or unauthorized' },
+        { status: 404 }
       );
     }
 
