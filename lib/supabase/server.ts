@@ -53,12 +53,15 @@
 // lib/supabase/server.ts
 // ============================================================
 
+// FILE: lib/supabase/server.ts
+// ============================================================
+
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
 
 /**
- * Regular authenticated server client
+ * Authenticated server client (App Router)
  * MUST be async because cookies() is async
  */
 export async function createClient() {
@@ -72,28 +75,17 @@ export async function createClient() {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch {
-            // Called from Server Component – ignore
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options });
-          } catch {
-            // Ignore
-          }
-        },
+        // DO NOT set/remove cookies here
+        set() {},
+        remove() {},
       },
     }
   );
 }
 
 /**
- * Service role client (NO cookies)
- * Safe for background jobs / admin operations
+ * Service role client (admin / background jobs)
+ * NO cookies
  */
 export function createServiceClient() {
   return createServerClient<Database>(

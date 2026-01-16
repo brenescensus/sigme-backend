@@ -71,7 +71,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next();
 
   const supabase = createServerClient(
@@ -106,6 +106,13 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+
+
 export const config = {
-  matcher: ['/api/:path*'],
+  matcher: [
+    '/api/websites/:path*',
+    '/api/campaigns/:path*',
+    '/api/subscribers/:path*',
+    '/api/notifications/:path*',
+  ],
 };
