@@ -74,6 +74,26 @@ import { NextResponse, type NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next();
 
+
+ 
+// Add CORS headers
+  const allowedOrigins = [
+    'https://sigme-push-notification-suite.vercel.app', 
+    'http://localhost:8080'
+  ];
+  
+  const origin = request.headers.get('origin');
+  
+  // Only set the Access-Control-Allow-Origin header if origin is valid
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+  }
+  
+  // Set other CORS headers
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
