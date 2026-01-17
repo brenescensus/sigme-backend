@@ -275,7 +275,7 @@ async function updateWebsite(
     }
 
     const body = await req.json();
-    const { name, url, domain, status } = body;
+    const { name, url, domain, status,description } = body;
 
     // Build update object only with provided fields
     const updates: any = {
@@ -286,6 +286,8 @@ async function updateWebsite(
     if (url !== undefined) updates.url = url;
     if (domain !== undefined) updates.domain = domain;
     if (status !== undefined) updates.status = status;
+    if (description !== undefined) updates.description = description; // Add this
+
 
     const { data, error } = await supabase
       .from('websites')
