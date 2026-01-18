@@ -158,9 +158,11 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/api/auth/:path*',      
     '/api/websites/:path*',
     '/api/campaigns/:path*',
     '/api/subscribers/:path*',
     '/api/notifications/:path*',
   ],
 };
+  // matcher: ['/api/:path*'],
