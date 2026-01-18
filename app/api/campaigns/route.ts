@@ -1,7 +1,3 @@
-// FILE: app/api/campaigns/route.ts
-// Campaign management
-// ============================================================
-
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 

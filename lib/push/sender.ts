@@ -1,6 +1,5 @@
-// FILE: lib/push/sender.ts
+//  lib/push/sender.ts
 // Main notification sender that handles all platforms
-// ============================================================
 
 import { sendWebPushNotification, WebPushSubscription, NotificationPayload } from './web-push';
 import { sendFCMNotification } from './fcm';

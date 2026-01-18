@@ -1,6 +1,5 @@
-// FILE: lib/push/fcm.ts
 // Firebase Cloud Messaging for Android/iOS
-// ============================================================
+// 
 
 import jwt from 'jsonwebtoken';
 

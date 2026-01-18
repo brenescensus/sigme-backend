@@ -1,13 +1,10 @@
 // FILE: app/api/websites/[id]/subscribers/route.ts
 // Get subscribers for a specific website
-// ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-/* ============================================================
-   GET - Get all subscribers for a specific website
-============================================================ */
+  //  GET - Get all subscribers for a specific website
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

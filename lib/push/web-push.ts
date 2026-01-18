@@ -1,6 +1,5 @@
 // Web Push notification sender
 //lib\push\web-push.ts
-// ============================================================
 
 import webpush from 'web-push';
 

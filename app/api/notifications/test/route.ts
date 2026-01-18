@@ -1,6 +1,5 @@
-// FILE: app/api/notifications/test/route.ts
+// app/api/notifications/test/route.ts
 // Send test notification to a single subscriber
-// ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';

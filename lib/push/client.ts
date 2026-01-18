@@ -1,6 +1,5 @@
-// FILE: lib/push/client.ts
+//  lib/push/client.ts
 // Client-side push notification subscription handler
-// ============================================================
 
 /**
  * Convert VAPID key from base64 to Uint8Array

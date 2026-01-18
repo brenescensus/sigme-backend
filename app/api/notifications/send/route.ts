@@ -1,6 +1,4 @@
-// FILE: app/api/notifications/send/route.ts
 // Send push notifications
-// ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
