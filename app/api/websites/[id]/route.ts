@@ -1,213 +1,182 @@
-
-
-//  app/api/websites/[id]/route.ts
-// Individual website operations
-
+// app/api/websites/[id]/route.ts 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { withAuth, getAuthenticatedClient, AuthUser } from '@/lib/auth-middleware';
 
-  //  GET - Get specific website
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const supabase = await createClient();
-
-    // Auth check
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+// ==========================================
+// GET - Get single website
+// ==========================================
+export const GET = withAuth(
+  async (req: NextRequest, user: AuthUser, context: any) => {
+    try {
+      const params = await context.params;
+      const websiteId = params.id;
+      
+      console.log('[WEBSITE GET] User:', user.email, 'Website:', websiteId);
+      
+      //  Get authenticated client from request
+      const supabase = await getAuthenticatedClient(req);
+      
+      // Verify ownership and fetch
+      const { data: website, error } = await supabase
+        .from('websites')
+        .select('*')
+        .eq('id', websiteId)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error || !website) {
+        return NextResponse.json({
+          success: false,
+          error: 'Website not found or access denied',
+        }, { status: 404 });
+      }
+      
+      console.log(' [WEBSITE GET] Found:', website.name);
+      
+      return NextResponse.json({
+        success: true,
+        website,
+      });
+    } catch (error: any) {
+      console.error(' [WEBSITE GET] Error:', error);
+      return NextResponse.json({
+        success: false,
+        error: 'Internal server error',
+      }, { status: 500 });
     }
-
-    const { data, error } = await supabase
-      .from('websites')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (error || !data) {
-      return NextResponse.json(
-        { error: 'Website not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      website: data,
-    });
-  } catch (error) {
-    console.error('[Website GET] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
   }
-}
+);
 
-/* ============================================================
-   PATCH - Update website (partial update)
-============================================================ */
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  return updateWebsite(req, params);
-}
-
-/* ============================================================
-   PUT - Update website (full update)
-============================================================ */
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  return updateWebsite(req, params);
-}
-
-/* ============================================================
-   Shared update logic
-============================================================ */
-async function updateWebsite(
-  req: NextRequest,
-  params: Promise<{ id: string }>
-) {
-  try {
-    const { id } = await params;
-    const supabase = await createClient();
-
-    // Auth check
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const body = await req.json();
-    const { name, url, domain, status,description } = body;
-
-    // Build update object only with provided fields
-    const updates: any = {
-      updated_at: new Date().toISOString(),
-    };
-
-    if (name !== undefined) updates.name = name;
-    if (url !== undefined) updates.url = url;
-    if (domain !== undefined) updates.domain = domain;
-    if (status !== undefined) updates.status = status;
-    if (description !== undefined) updates.description = description; // Add this
-
-
-    const { data, error } = await supabase
-      .from('websites')
-      .update(updates)
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-
-    if (!data) {
-      return NextResponse.json(
-        { error: 'Website not found or unauthorized' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      website: data,
-    });
-  } catch (error) {
-    console.error('[Website UPDATE] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-/* ============================================================
-   DELETE - Soft delete website
-============================================================ */
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const supabase = await createClient();
-
-    // Auth check
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { data, error } = await supabase
-      .from('websites')
-      .update({
-        status: 'deleted',
+// ==========================================
+// PATCH - Update website
+// ==========================================
+export const PATCH = withAuth(
+  async (req: NextRequest, user: AuthUser, context: any) => {
+    try {
+      const params = await context.params;
+      const websiteId = params.id;
+      
+      console.log('📝 [WEBSITE PATCH] User:', user.email, 'Website:', websiteId);
+      
+      const body = await req.json();
+      
+      //  Get authenticated client from request
+      const supabase = await getAuthenticatedClient(req);
+      
+      // Verify ownership
+      const { data: website, error: fetchError } = await supabase
+        .from('websites')
+        .select('id, user_id')
+        .eq('id', websiteId)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (fetchError || !website) {
+        return NextResponse.json({
+          success: false,
+          error: 'Website not found or access denied',
+        }, { status: 404 });
+      }
+      
+      // Build update object (only include allowed fields)
+      const allowedFields = ['name', 'url', 'domain', 'description', 'status'];
+      const updates: any = {
         updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      };
+      
+      allowedFields.forEach(field => {
+        if (body[field] !== undefined) {
+          updates[field] = body[field];
+        }
+      });
+      
+      // Update
+      const { data, error } = await supabase
+        .from('websites')
+        .update(updates)
+        .eq('id', websiteId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error(' [WEBSITE PATCH] DB error:', error);
+        return NextResponse.json({
+          success: false,
+          error: error.message,
+        }, { status: 500 });
+      }
+      
+      console.log(' [WEBSITE PATCH] Updated:', websiteId);
+      
+      return NextResponse.json({
+        success: true,
+        website: data,
+      });
+    } catch (error: any) {
+      console.error(' [WEBSITE PATCH] Error:', error);
+      return NextResponse.json({
+        success: false,
+        error: 'Internal server error',
+      }, { status: 500 });
     }
-
-    if (!data) {
-      return NextResponse.json(
-        { error: 'Website not found or unauthorized' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Website deleted successfully',
-    });
-  } catch (error) {
-    console.error('[Website DELETE] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
   }
-}
+);
+
+// ==========================================
+// DELETE - Delete website
+// ==========================================
+export const DELETE = withAuth(
+  async (req: NextRequest, user: AuthUser, context: any) => {
+    try {
+      const params = await context.params;
+      const websiteId = params.id;
+      
+      console.log('🗑️ [WEBSITE DELETE] User:', user.email, 'Website:', websiteId);
+      
+      //  Get authenticated client from request
+      const supabase = await getAuthenticatedClient(req);
+      
+      // Verify ownership
+      const { data: website, error: fetchError } = await supabase
+        .from('websites')
+        .select('id, user_id')
+        .eq('id', websiteId)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (fetchError || !website) {
+        return NextResponse.json({
+          success: false,
+          error: 'Website not found or access denied',
+        }, { status: 404 });
+      }
+      
+      // Delete (cascade should handle related records)
+      const { error } = await supabase
+        .from('websites')
+        .delete()
+        .eq('id', websiteId);
+      
+      if (error) {
+        console.error(' [WEBSITE DELETE] DB error:', error);
+        return NextResponse.json({
+          success: false,
+          error: error.message,
+        }, { status: 500 });
+      }
+      
+      console.log(' [WEBSITE DELETE] Deleted:', websiteId);
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Website deleted successfully',
+      });
+    } catch (error: any) {
+      console.error(' [WEBSITE DELETE] Error:', error);
+      return NextResponse.json({
+        success: false,
+        error: 'Internal server error',
+      }, { status: 500 });
+    }
+  }
+);

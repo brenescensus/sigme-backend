@@ -240,7 +240,7 @@ export async function middleware(request: NextRequest) {
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
 
-  // ✅ No Supabase client here - let API routes handle it
+  //  No Supabase client here - let API routes handle it
   return response;
 }
 
