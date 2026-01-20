@@ -1,139 +1,235 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+// // ============================================
+// // app/api/campaigns/route.ts
+// // CREATE & LIST campaigns - FIXED TO MATCH FRONTEND
+// // ============================================
 
-// GET - List campaigns
-export async function GET(req: NextRequest) {
-  try {
-    const supabase = await createClient();
+// import { NextRequest, NextResponse } from 'next/server';
+// import { withAuth, getAuthenticatedClient, AuthUser } from '@/lib/auth-middleware';
 
+// // GET - List all campaigns for a website
+// export const GET = withAuth(
+//   async (req: NextRequest, user: AuthUser) => {
+//     try {
+//       const { searchParams } = new URL(req.url);
+//       const websiteId = searchParams.get('websiteId');
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+//       console.log('[Campaigns GET] Request for website:', websiteId);
 
-    const { searchParams } = new URL(req.url);
-    const websiteId = searchParams.get('websiteId');
-    const status = searchParams.get('status');
+//       if (!websiteId) {
+//         return NextResponse.json(
+//           { error: 'websiteId is required' },
+//           { status: 400 }
+//         );
+//       }
 
-    if (!websiteId) {
-      return NextResponse.json(
-        { error: 'websiteId parameter is required' },
-        { status: 400 }
-      );
-    }
+//       const supabase = await getAuthenticatedClient(req);
 
-    // Verify website ownership
-    const { data: website } = await supabase
-      .from('websites')
-      .select('id')
-      .eq('id', websiteId)
-      .eq('user_id', user.id)
-      .single();
+//       // Verify website ownership
+//       const { data: website, error: websiteError } = await supabase
+//         .from('websites')
+//         .select('id')
+//         .eq('id', websiteId)
+//         .eq('user_id', user.id)
+//         .single();
 
-    if (!website) {
-      return NextResponse.json(
-        { error: 'Website not found or access denied' },
-        { status: 404 }
-      );
-    }
+//       if (websiteError || !website) {
+//         console.error('[Campaigns GET] Website access denied:', websiteError);
+//         return NextResponse.json(
+//           { error: 'Website not found or access denied' },
+//           { status: 404 }
+//         );
+//       }
 
-    let query = supabase
-      .from('campaigns')
-      .select('*')
-      .eq('website_id', websiteId);
+//       // Fetch campaigns
+//       const { data: campaigns, error } = await supabase
+//         .from('campaigns')
+//         .select('*')
+//         .eq('website_id', websiteId)
+//         .order('created_at', { ascending: false });
 
-    if (status) {
-      query = query.eq('status', status);
-    }
+//       if (error) {
+//         console.error('[Campaigns GET] Error:', error);
+//         return NextResponse.json(
+//           { error: error.message },
+//           { status: 500 }
+//         );
+//       }
 
-    query = query.order('created_at', { ascending: false });
+//       console.log('[Campaigns GET] Found', campaigns?.length || 0, 'campaigns');
 
-    const { data, error } = await query;
+//       return NextResponse.json({
+//         success: true,
+//         campaigns: campaigns || [],
+//       });
+//     } catch (error: any) {
+//       console.error('[Campaigns GET] Error:', error);
+//       return NextResponse.json(
+//         { error: 'Internal server error' },
+//         { status: 500 }
+//       );
+//     }
+//   }
+// );
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+// // POST - Create new campaign
+// export const POST = withAuth(
+//   async (req: NextRequest, user: AuthUser) => {
+//     try {
+//       const supabase = await getAuthenticatedClient(req);
+//       const body = await req.json();
 
-    return NextResponse.json({
-      success: true,
-      campaigns: data,
-    });
-  } catch (error: any) {
-    console.error('[Campaigns GET] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+//       console.log('[Campaigns POST] Creating campaign:', {
+//         name: body.name,
+//         websiteId: body.websiteId,
+//         segment: body.segment,
+//         status: body.status,
+//       });
 
-// POST - Create campaign
-export async function POST(req: NextRequest) {
-  try {
-    const supabase = await createClient();
+//       const {
+//         websiteId,
+//         name,
+//         title,
+//         body: messageBody,
+//         icon_url,
+//         image_url,
+//         click_url,
+//         actions,
+//         segment,
+//         target_browsers,
+//         target_devices,
+//         target_countries,
+//         status,
+//         scheduled_at,
+//         is_recurring,
+//         recurrence_pattern,
+//         recurrence_config,
+//         next_send_at,
+//       } = body;
 
+//       // Validation
+//       if (!websiteId || !name || !title || !messageBody) {
+//         return NextResponse.json(
+//           { error: 'Required fields: websiteId, name, title, body' },
+//           { status: 400 }
+//         );
+//       }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+//       // Verify website ownership
+//       const { data: website, error: websiteError } = await supabase
+//         .from('websites')
+//         .select('id, user_id')
+//         .eq('id', websiteId)
+//         .eq('user_id', user.id)
+//         .single();
 
-    const body = await req.json();
-    const { websiteId, name, title, body: notifBody, iconUrl, imageUrl, clickUrl, scheduledFor } = body;
+//       if (websiteError || !website) {
+//         console.error('[Campaigns POST] Website access denied:', websiteError);
+//         return NextResponse.json(
+//           { error: 'Website not found or access denied' },
+//           { status: 404 }
+//         );
+//       }
 
-    if (!websiteId || !name || !title || !notifBody) {
-      return NextResponse.json(
-        { error: 'Required: websiteId, name, title, body' },
-        { status: 400 }
-      );
-    }
+//       // BILLING CHECK: Recurring notifications
+//       if (is_recurring && status !== 'draft') {
+//         // Get user's plan and limits
+//         const { data: userData } = await supabase
+//           .from('users')
+//           .select('plan, role')
+//           .eq('id', user.id)
+//           .single();
 
-    // Verify website ownership
-    const { data: website } = await supabase
-      .from('websites')
-      .select('id')
-      .eq('id', websiteId)
-      .eq('user_id', user.id)
-      .single();
+//         const isOwner = userData?.role === 'owner' || user.email?.includes('owner');
 
-    if (!website) {
-      return NextResponse.json(
-        { error: 'Website not found or access denied' },
-        { status: 404 }
-      );
-    }
+//         if (!isOwner) {
+//           // Count current recurring campaigns
+//           const { count } = await supabase
+//             .from('campaigns')
+//             .select('*', { count: 'exact', head: true })
+//             .eq('website_id', websiteId)
+//             .eq('is_recurring', true)
+//             .in('status', ['recurring', 'active']);
 
-    const { data, error } = await supabase
-      .from('campaigns')
-      .insert({
-        website_id: websiteId,
-        name,
-        title,
-        body: notifBody,
-        icon_url: iconUrl,
-        image_url: imageUrl,
-        click_url: clickUrl,
-        status: scheduledFor ? 'scheduled' : 'draft',
-        scheduled_for: scheduledFor,
-        created_by: user.id,
-      })
-      .select()
-      .single();
+//           const currentRecurring = count || 0;
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+//           // Check limits based on plan
+//           const limits = {
+//             free: 0,
+//             starter: 10,
+//             growth: 30,
+//           };
 
-    return NextResponse.json({
-      success: true,
-      campaign: data,
-    }, { status: 201 });
-  } catch (error: any) {
-    console.error('[Campaigns POST] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
+//           const maxRecurring = limits[userData?.plan as keyof typeof limits] || 0;
+
+//           if (currentRecurring >= maxRecurring) {
+//             console.warn('[Campaigns POST] Billing limit exceeded:', {
+//               current: currentRecurring,
+//               max: maxRecurring,
+//               plan: userData?.plan,
+//             });
+//             return NextResponse.json(
+//               { 
+//                 error: 'BILLING_LIMIT_EXCEEDED',
+//                 message: `Your plan allows ${maxRecurring} recurring campaigns. Upgrade to create more.`,
+//                 code: 'BILLING_LIMIT_EXCEEDED'
+//               },
+//               { status: 403 }
+//             );
+//           }
+//         }
+//       }
+
+//       // Normalize segment value - ensure consistency
+//       const normalizedSegment = segment === 'all' ? 'all_subscribers' : segment || 'all_subscribers';
+
+//       console.log('[Campaigns POST] Normalized segment:', normalizedSegment);
+
+//       // Create campaign - using snake_case for database columns
+//       const { data: campaign, error } = await supabase
+//         .from('campaigns')
+//         .insert({
+//           website_id: websiteId,
+//           name,
+//           title,
+//           body: messageBody,
+//           icon_url: icon_url || null,
+//           image_url: image_url || null,
+//           click_url: click_url || null,
+//           actions: actions || null,
+//           segment: normalizedSegment,
+//           target_browsers: target_browsers || null,
+//           target_devices: target_devices || null,
+//           target_countries: target_countries || null,
+//           status: status || 'draft',
+//           scheduled_at: scheduled_at || null,
+//           is_recurring: is_recurring || false,
+//           recurrence_pattern: recurrence_pattern || null,
+//           recurrence_config: recurrence_config || null,
+//           next_send_at: next_send_at || null,
+//         })
+//         .select()
+//         .single();
+
+//       if (error) {
+//         console.error('[Campaigns POST] Database error:', error);
+//         return NextResponse.json(
+//           { error: error.message },
+//           { status: 500 }
+//         );
+//       }
+
+//       console.log('[Campaigns POST] Campaign created successfully:', campaign.id);
+
+//       return NextResponse.json({
+//         success: true,
+//         campaign,
+//       }, { status: 201 });
+//     } catch (error: any) {
+//       console.error('[Campaigns POST] Error:', error);
+//       return NextResponse.json(
+//         { error: 'Internal server error' },
+//         { status: 500 }
+//       );
+//     }
+//   }
+// );
