@@ -1,8 +1,211 @@
 
 
-// // Export with withAuth wrapper
+// // // Export with withAuth wrapper
+// // export const POST = withAuth(handler);
+// // app/api/notifications/send/route.ts
+// import { NextRequest, NextResponse } from 'next/server';
+// import { withAuth, AuthUser, getAuthenticatedClient } from '@/lib/auth-middleware';
+// import { sendNotificationToSubscriber } from '@/lib/push/sender';
+
+// async function handler(req: NextRequest, user: AuthUser) {
+//   try {
+//     const supabase = await getAuthenticatedClient(req);
+//     const body = await req.json();
+//     const { websiteId, notification, targetSubscriberIds, campaignId } = body;
+
+//     // Validate required fields
+//     if (!websiteId || !notification?.title || !notification?.body) {
+//       return NextResponse.json(
+//         { error: 'Required: websiteId, notification.title, notification.body' },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Verify website ownership
+//     const { data: website, error: websiteError } = await supabase
+//       .from('websites')
+//       .select('*')
+//       .eq('id', websiteId)
+//       .eq('user_id', user.id)
+//       .single();
+
+//     if (websiteError || !website) {
+//       return NextResponse.json(
+//         { error: 'Website not found or access denied' },
+//         { status: 404 }
+//       );
+//     }
+
+//     // Get subscribers
+//     let query = supabase
+//       .from('subscribers')
+//       .select('*')
+//       .eq('website_id', websiteId)
+//       .eq('status', 'active');
+
+//     if (targetSubscriberIds && Array.isArray(targetSubscriberIds) && targetSubscriberIds.length > 0) {
+//       query = query.in('id', targetSubscriberIds);
+//     }
+
+//     const { data: subscribers, error: subsError } = await query;
+
+//     if (subsError) {
+//       console.error('[Send Notification] Subscribers query error:', subsError);
+//       return NextResponse.json(
+//         { error: 'Failed to fetch subscribers' },
+//         { status: 500 }
+//       );
+//     }
+
+//     if (!subscribers || subscribers.length === 0) {
+//       return NextResponse.json({
+//         success: true,
+//         sent: 0,
+//         failed: 0,
+//         message: 'No active subscribers found',
+//       });
+//     }
+
+//     // Prepare notification payload
+//     const notificationPayload = {
+//       title: notification.title,
+//       body: notification.body,
+//       icon: notification.icon || '/icon-192.png',
+//       badge: notification.badge || '/badge-72.png',
+//       image: notification.image,
+//       url: notification.url || '/',
+//       tag: notification.tag || `campaign-${campaignId || Date.now()}`,
+//       requireInteraction: notification.requireInteraction || false,
+//       actions: notification.actions || [],
+//     };
+
+//     // Send notifications
+//     let sentCount = 0;
+//     let failedCount = 0;
+//     const expiredSubscriberIds: string[] = [];
+//     const results: any[] = [];
+
+//     // Process in batches of 50
+//     const BATCH_SIZE = 50;
+//     for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
+//       const batch = subscribers.slice(i, i + BATCH_SIZE);
+
+//       const batchResults = await Promise.allSettled(
+//         batch.map(subscriber => sendNotificationToSubscriber(subscriber, notificationPayload))
+//       );
+
+//       for (let j = 0; j < batchResults.length; j++) {
+//         const result = batchResults[j];
+//         const subscriber = batch[j];
+
+//         if (result.status === 'fulfilled' && result.value.success) {
+//           sentCount++;
+
+//           // Log success
+//           await supabase.from('notification_logs').insert({
+//             campaign_id: campaignId || null,
+//             subscriber_id: subscriber.id,
+//             website_id: websiteId,
+//             status: 'sent',
+//             platform: result.value.platform,
+//             sent_at: new Date().toISOString(),
+//           });
+//         } else {
+//           failedCount++;
+
+//           const error = result.status === 'rejected'
+//             ? result.reason?.message || 'Unknown error'
+//             : result.value.error || 'Unknown error';
+
+//           // Log failure
+//           await supabase.from('notification_logs').insert({
+//             campaign_id: campaignId || null,
+//             subscriber_id: subscriber.id,
+//             website_id: websiteId,
+//             status: 'failed',
+//             platform: result.status === 'fulfilled' ? result.value.platform : subscriber.platform,
+//             error_message: error,
+//           });
+
+//           // Mark expired subscriptions
+//           if (error.includes('SUBSCRIPTION_EXPIRED')) {
+//             expiredSubscriberIds.push(subscriber.id);
+//           }
+
+//           results.push({
+//             subscriberId: subscriber.id,
+//             error,
+//           });
+//         }
+//       }
+//     }
+
+//     // Mark expired subscriptions as inactive
+//     if (expiredSubscriberIds.length > 0) {
+//       await supabase
+//         .from('subscribers')
+//         .update({
+//           status: 'inactive',
+//           updated_at: new Date().toISOString(),
+//         })
+//         .in('id', expiredSubscriberIds);
+//     }
+
+//     // Update campaign stats if applicable
+//     if (campaignId) {
+//       const { data: campaign } = await supabase
+//         .from('campaigns')
+//         .select('sent_count, failed_count')
+//         .eq('id', campaignId)
+//         .single();
+
+//       if (campaign) {
+//         await supabase
+//           .from('campaigns')
+//           .update({
+//             sent_count: (campaign.sent_count || 0) + sentCount,
+//             failed_count: (campaign.failed_count || 0) + failedCount,
+//             status: 'completed',
+//             sent_at: new Date().toISOString(),
+//             updated_at: new Date().toISOString(),
+//           })
+//           .eq('id', campaignId);
+//       }
+//     }
+
+//     // Update website stats
+//     await supabase
+//       .from('websites')
+//       .update({
+//         notifications_sent: (website.notifications_sent || 0) + sentCount,
+//         updated_at: new Date().toISOString(),
+//       })
+//       .eq('id', websiteId);
+
+//     return NextResponse.json({
+//       success: true,
+//       sent: sentCount,
+//       failed: failedCount,
+//       total: subscribers.length,
+//       expiredSubscriptions: expiredSubscriberIds.length,
+//       errors: failedCount > 0 ? results.filter(r => r.error) : undefined,
+//     });
+//   } catch (error: any) {
+//     console.error('[Send Notification] Error:', error);
+//     return NextResponse.json(
+//       { error: 'Internal server error', details: error.message },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+// //  Export with withAuth wrapper
 // export const POST = withAuth(handler);
+
+
 // app/api/notifications/send/route.ts
+// Fixed version with correct return values
+
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthUser, getAuthenticatedClient } from '@/lib/auth-middleware';
 import { sendNotificationToSubscriber } from '@/lib/push/sender';
@@ -12,6 +215,13 @@ async function handler(req: NextRequest, user: AuthUser) {
     const supabase = await getAuthenticatedClient(req);
     const body = await req.json();
     const { websiteId, notification, targetSubscriberIds, campaignId } = body;
+
+    console.log('[Send Notification] Request:', {
+      websiteId,
+      campaignId,
+      targetSubscriberIds: targetSubscriberIds?.length || 'all',
+      hasNotification: !!notification,
+    });
 
     // Validate required fields
     if (!websiteId || !notification?.title || !notification?.body) {
@@ -44,23 +254,28 @@ async function handler(req: NextRequest, user: AuthUser) {
       .eq('status', 'active');
 
     if (targetSubscriberIds && Array.isArray(targetSubscriberIds) && targetSubscriberIds.length > 0) {
+      console.log('[Send Notification] Filtering to specific subscribers:', targetSubscriberIds.length);
       query = query.in('id', targetSubscriberIds);
     }
 
     const { data: subscribers, error: subsError } = await query;
 
+    console.log('[Send Notification] Subscribers found:', subscribers?.length || 0);
+
     if (subsError) {
       console.error('[Send Notification] Subscribers query error:', subsError);
       return NextResponse.json(
-        { error: 'Failed to fetch subscribers' },
+        { error: 'Failed to fetch subscribers', details: subsError.message },
         { status: 500 }
       );
     }
 
     if (!subscribers || subscribers.length === 0) {
+      console.log('[Send Notification] No subscribers to send to');
       return NextResponse.json({
         success: true,
-        sent: 0,
+        sent: 0,        // Total attempted
+        delivered: 0,   // Successfully delivered
         failed: 0,
         message: 'No active subscribers found',
       });
@@ -79,9 +294,11 @@ async function handler(req: NextRequest, user: AuthUser) {
       actions: notification.actions || [],
     };
 
+    console.log('[Send Notification] Starting delivery to', subscribers.length, 'subscribers');
+
     // Send notifications
-    let sentCount = 0;
-    let failedCount = 0;
+    let deliveredCount = 0;  // ✅ Successfully delivered
+    let failedCount = 0;     // ✅ Failed to deliver
     const expiredSubscriberIds: string[] = [];
     const results: any[] = [];
 
@@ -99,14 +316,14 @@ async function handler(req: NextRequest, user: AuthUser) {
         const subscriber = batch[j];
 
         if (result.status === 'fulfilled' && result.value.success) {
-          sentCount++;
+          deliveredCount++;
 
           // Log success
           await supabase.from('notification_logs').insert({
             campaign_id: campaignId || null,
             subscriber_id: subscriber.id,
             website_id: websiteId,
-            status: 'sent',
+            status: 'delivered',  // ✅ Changed from 'sent' to 'delivered'
             platform: result.value.platform,
             sent_at: new Date().toISOString(),
           });
@@ -125,10 +342,11 @@ async function handler(req: NextRequest, user: AuthUser) {
             status: 'failed',
             platform: result.status === 'fulfilled' ? result.value.platform : subscriber.platform,
             error_message: error,
+            sent_at: new Date().toISOString(),
           });
 
           // Mark expired subscriptions
-          if (error.includes('SUBSCRIPTION_EXPIRED')) {
+          if (error.includes('SUBSCRIPTION_EXPIRED') || error.includes('410')) {
             expiredSubscriberIds.push(subscriber.id);
           }
 
@@ -140,8 +358,15 @@ async function handler(req: NextRequest, user: AuthUser) {
       }
     }
 
+    console.log('[Send Notification] Delivery complete:', {
+      total: subscribers.length,
+      delivered: deliveredCount,
+      failed: failedCount,
+    });
+
     // Mark expired subscriptions as inactive
     if (expiredSubscriberIds.length > 0) {
+      console.log('[Send Notification] Marking', expiredSubscriberIds.length, 'subscriptions as inactive');
       await supabase
         .from('subscribers')
         .update({
@@ -151,47 +376,31 @@ async function handler(req: NextRequest, user: AuthUser) {
         .in('id', expiredSubscriberIds);
     }
 
-    // Update campaign stats if applicable
-    if (campaignId) {
-      const { data: campaign } = await supabase
-        .from('campaigns')
-        .select('sent_count, failed_count')
-        .eq('id', campaignId)
-        .single();
-
-      if (campaign) {
-        await supabase
-          .from('campaigns')
-          .update({
-            sent_count: (campaign.sent_count || 0) + sentCount,
-            failed_count: (campaign.failed_count || 0) + failedCount,
-            status: 'completed',
-            sent_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', campaignId);
-      }
-    }
+    // ✅ DON'T update campaign stats here - let the campaign send endpoint do it
+    // This prevents double-counting and conflicts
 
     // Update website stats
     await supabase
       .from('websites')
       .update({
-        notifications_sent: (website.notifications_sent || 0) + sentCount,
+        notifications_sent: (website.notifications_sent || 0) + deliveredCount,
         updated_at: new Date().toISOString(),
       })
       .eq('id', websiteId);
 
+    // ✅ Return proper field names
     return NextResponse.json({
       success: true,
-      sent: sentCount,
-      failed: failedCount,
-      total: subscribers.length,
+      sent: subscribers.length,           // Total sent (attempted)
+      delivered: deliveredCount,          // Successfully delivered
+      failed: failedCount,                // Failed to deliver
+      total: subscribers.length,          // Same as sent
       expiredSubscriptions: expiredSubscriberIds.length,
       errors: failedCount > 0 ? results.filter(r => r.error) : undefined,
     });
   } catch (error: any) {
     console.error('[Send Notification] Error:', error);
+    console.error('[Send Notification] Error stack:', error.stack);
     return NextResponse.json(
       { error: 'Internal server error', details: error.message },
       { status: 500 }
@@ -199,5 +408,4 @@ async function handler(req: NextRequest, user: AuthUser) {
   }
 }
 
-//  Export with withAuth wrapper
 export const POST = withAuth(handler);
