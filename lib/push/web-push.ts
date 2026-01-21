@@ -1,11 +1,24 @@
+
+
 // Web Push notification sender
-//lib\push\web-push.ts
+// lib/push/web-push.ts
 
 import webpush from 'web-push';
 
+// ✅ FIX: Use a short, static VAPID subject (max 32 chars)
+// The subject should be a URL or mailto, but keep it SHORT
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:push@notify.app';
+
+// Validate VAPID subject length
+if (VAPID_SUBJECT.length > 32) {
+  console.warn(
+    `[Web Push] VAPID subject too long (${VAPID_SUBJECT.length} chars). Using fallback.`
+  );
+}
+
 // Configure VAPID details
 webpush.setVapidDetails(
-  `mailto:noreply@${new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').hostname}`,
+  VAPID_SUBJECT,
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 );
@@ -35,6 +48,11 @@ export async function sendWebPushNotification(
   payload: NotificationPayload
 ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
   try {
+    // ✅ FIX: Truncate topic to max 32 chars (web-push requirement)
+    const topic = payload.tag 
+      ? payload.tag.substring(0, 32) 
+      : undefined;
+
     const response = await webpush.sendNotification(
       subscription,
       JSON.stringify({
@@ -44,7 +62,7 @@ export async function sendWebPushNotification(
       {
         TTL: 86400, // 24 hours
         urgency: 'high',
-        topic: payload.tag,
+        topic, // ✅ Use truncated topic
       }
     );
 
