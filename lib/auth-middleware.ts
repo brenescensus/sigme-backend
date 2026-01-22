@@ -228,6 +228,8 @@ const ALLOWED_ORIGINS = [
   'http://localhost:8080', // Next.js dev server
   'http://localhost:4173', // Vite preview
     'http://localhost:3000', // Next.js dev server
+    'https://notifications-app-seven.vercel.app',
+    'https://sigme-backend-fkde.vercel.app',
 
   process.env.NEXT_PUBLIC_APP_URL || '',
 ].filter(Boolean);
