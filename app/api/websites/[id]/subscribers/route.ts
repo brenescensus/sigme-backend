@@ -1,25 +1,58 @@
-// // FILE: app/api/websites/[id]/subscribers/route.ts
-// // Get subscribers for a specific website
+
+// // app/api/websites/[id]/subscribers/route.ts
+// // Get subscribers for a specific website - Token-based authentication
 
 // import { NextRequest, NextResponse } from 'next/server';
-// import { createClient } from '@/lib/supabase/server';
+// import { createClient } from '@supabase/supabase-js';
+// import jwt from 'jsonwebtoken';
 
-//   //  GET - Get all subscribers for a specific website
+// const JWT_SECRET = process.env.JWT_SECRET!;
+
+// // Initialize Supabase client
+// const supabase = createClient(
+//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//   process.env.SUPABASE_SERVICE_ROLE_KEY!
+// );
+
+// /**
+//  * Verify JWT token from Authorization header
+//  */
+// function verifyToken(request: NextRequest) {
+//   const authHeader = request.headers.get('authorization');
+  
+//   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+//     return null;
+//   }
+
+//   const token = authHeader.split(' ')[1];
+
+//   try {
+//     const decoded = jwt.verify(token, JWT_SECRET) as {
+//       id: string;
+//       email: string;
+//       fullName: string;
+//     };
+//     return decoded;
+//   } catch (error) {
+//     console.error('Token verification failed:', error);
+//     return null;
+//   }
+// }
+
+// // ==========================================
+// // GET - Get all subscribers for a specific website
+// // ==========================================
 // export async function GET(
 //   req: NextRequest,
 //   { params }: { params: Promise<{ id: string }> }
 // ) {
 //   try {
 //     const { id: websiteId } = await params;
-//     const supabase = await createClient();
 
-//     // Auth check
-//     const {
-//       data: { user },
-//       error: authError,
-//     } = await supabase.auth.getUser();
+//     // Verify JWT token
+//     const user = verifyToken(req);
 
-//     if (authError || !user) {
+//     if (!user) {
 //       return NextResponse.json(
 //         { error: 'Unauthorized' },
 //         { status: 401 }
@@ -43,7 +76,7 @@
 
 //     // Get query parameters for filtering
 //     const { searchParams } = new URL(req.url);
-//     const status = searchParams.get('status') || 'active';
+//     const status = searchParams.get('status');
 //     const platform = searchParams.get('platform');
 //     const limit = parseInt(searchParams.get('limit') || '100');
 //     const offset = parseInt(searchParams.get('offset') || '0');
@@ -53,7 +86,7 @@
 //       .from('subscribers')
 //       .select('*', { count: 'exact' })
 //       .eq('website_id', websiteId)
-//       .order('subscribed_at', { ascending: false })
+//       .order('created_at', { ascending: false })
 //       .range(offset, offset + limit - 1);
 
 //     // Optional filters
@@ -99,24 +132,20 @@
 //   }
 // }
 
-// /* ============================================================
-//    POST - Add subscriber to specific website
-// ============================================================ */
+// // ==========================================
+// // POST - Add subscriber to specific website
+// // ==========================================
 // export async function POST(
 //   req: NextRequest,
 //   { params }: { params: Promise<{ id: string }> }
 // ) {
 //   try {
 //     const { id: websiteId } = await params;
-//     const supabase = await createClient();
 
-//     // Auth check
-//     const {
-//       data: { user },
-//       error: authError,
-//     } = await supabase.auth.getUser();
+//     // Verify JWT token
+//     const user = verifyToken(req);
 
-//     if (authError || !user) {
+//     if (!user) {
 //       return NextResponse.json(
 //         { error: 'Unauthorized' },
 //         { status: 401 }
@@ -224,16 +253,12 @@
 //   }
 // }
 
-
-
 // app/api/websites/[id]/subscribers/route.ts
-// Get subscribers for a specific website - Token-based authentication
+// FIXED: Using token-based auth from lib/auth-middleware.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET!;
+import { withAuth } from '@/lib/auth-middleware';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -241,50 +266,18 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-/**
- * Verify JWT token from Authorization header
- */
-function verifyToken(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as {
-      id: string;
-      email: string;
-      fullName: string;
-    };
-    return decoded;
-  } catch (error) {
-    console.error('Token verification failed:', error);
-    return null;
-  }
-}
-
 // ==========================================
 // GET - Get all subscribers for a specific website
 // ==========================================
-export async function GET(
+export const GET = withAuth(async (
   req: NextRequest,
+  user: { id: string; email: string },
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: websiteId } = await params;
 
-    // Verify JWT token
-    const user = verifyToken(req);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    console.log('[Website Subscribers GET] User:', user.email, 'Website:', websiteId);
 
     // Verify website ownership
     const { data: website, error: websiteError } = await supabase
@@ -295,11 +288,14 @@ export async function GET(
       .single();
 
     if (websiteError || !website) {
+      console.error('[Website Subscribers GET] Website not found or access denied');
       return NextResponse.json(
         { error: 'Website not found or access denied' },
         { status: 404 }
       );
     }
+
+    console.log('[Website Subscribers GET] Website verified:', website.name);
 
     // Get query parameters for filtering
     const { searchParams } = new URL(req.url);
@@ -335,6 +331,8 @@ export async function GET(
       );
     }
 
+    console.log('[Website Subscribers GET] Success, count:', count || 0);
+
     return NextResponse.json({
       success: true,
       website: {
@@ -350,34 +348,27 @@ export async function GET(
       },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Website Subscribers GET] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
-}
+});
 
 // ==========================================
 // POST - Add subscriber to specific website
 // ==========================================
-export async function POST(
+export const POST = withAuth(async (
   req: NextRequest,
+  user: { id: string; email: string },
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: websiteId } = await params;
 
-    // Verify JWT token
-    const user = verifyToken(req);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    console.log('[Website Subscribers POST] User:', user.email, 'Website:', websiteId);
 
     // Verify website ownership
     const { data: website, error: websiteError } = await supabase
@@ -435,6 +426,8 @@ export async function POST(
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
+      console.log('[Website Subscribers POST] Subscriber reactivated');
+
       return NextResponse.json({
         success: true,
         subscriber: data,
@@ -465,17 +458,19 @@ export async function POST(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    console.log('[Website Subscribers POST] New subscriber created');
+
     return NextResponse.json({
       success: true,
       subscriber: data,
       message: 'Subscriber added successfully',
     }, { status: 201 });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Website Subscribers POST] Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
-}
+});

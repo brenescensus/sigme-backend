@@ -1,4 +1,4 @@
-// app/api/subscribers/[id]/route.ts - CONSOLIDATED VERSION
+// app/api/subscribers/[id]/route.ts 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, getAuthenticatedClient, AuthUser } from '@/lib/auth-middleware';
 
