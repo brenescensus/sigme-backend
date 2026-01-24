@@ -786,18 +786,54 @@
   'use strict';
 
   console.log('[Sigme] Universal script loading...');
+  // ✅ FIXED: Get API URL dynamically from the script's origin
+  // const getCurrentScriptUrl = () => {
+  //   const scripts = document.getElementsByTagName('script');
+  //   for (let script of scripts) {
+  //     if (script.src && script.src.includes('sigme.js')) {
+  //       return new URL(script.src).origin;
+  //     }
+  //   }
+  //   return window.location.origin; // Fallback
+  // };
 
-  // ===================================================== 
-  // CONFIGURATION
-  // ===================================================== 
-  const API_BASE_URL = window.SIGME_API_URL || 'https://sigme-backend-fkde.vercel.app';
+   const getCurrentScriptUrl = () => {
+    const scripts = document.getElementsByTagName('script');
+    for (let script of scripts) {
+      if (script.src && script.src.includes('sigme.js')) {
+        const url = new URL(script.src);
+        console.log('[Sigme] Detected script URL:', url.origin);
+        return url.origin;
+      }
+    }
+
+
+    // Fallback to production backend
+    console.log('[Sigme] Could not detect script URL, using default');
+    return 'http://localhost:3000';
+  };
+
+  const API_BASE_URL = window.SIGME_API_URL || getCurrentScriptUrl();
   const SIGME_API = API_BASE_URL;
-  
+
+
   // ✅ Service worker must be on same origin as the website
   const SW_PATH = '/sigme-universal-sw.js';
 
   console.log('[Sigme] API URL:', SIGME_API);
   console.log('[Sigme] SW Path:', SW_PATH);
+
+  // ===================================================== 
+  // CONFIGURATION
+  // ===================================================== 
+  // const API_BASE_URL = window.SIGME_API_URL || 'https://sigme-backend-fkde.vercel.app';
+  // const SIGME_API = API_BASE_URL;
+  
+  // // ✅ Service worker must be on same origin as the website
+  // const SW_PATH = '/sigme-universal-sw.js';
+
+  // console.log('[Sigme] API URL:', SIGME_API);
+  // console.log('[Sigme] SW Path:', SW_PATH);
 
   // ===================================================== 
   // ENV CHECKS
@@ -900,7 +936,7 @@
       
       if (err.message.includes('ServiceWorker')) {
         console.error('[Sigme] Make sure sigme-universal-sw.js exists in your /public folder');
-        console.error('[Sigme] Download from: https://sigme-backend-fkde.vercel.app/sigme-universal-sw.js');
+        console.error('[Sigme] Download from: https://sigme-backend-fkde.vercel.app/sigme-universal-.js');
       }
     }
   }
