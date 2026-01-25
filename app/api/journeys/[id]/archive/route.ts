@@ -13,42 +13,24 @@ export const POST = withAuth(async (
   { params }: { params: { journeyId: string } }
 ) => {
   try {
-    // Get original journey
-    const { data: original, error: fetchError } = await supabase
+    const { data: journey, error } = await supabase
       .from('journeys')
-      .select('*')
+      .update({ status: 'archived' })
       .eq('id', params.journeyId)
       .eq('user_id', user.id)
+      .select()
       .single();
 
-    if (fetchError || !original) {
+    if (error || !journey) {
       return NextResponse.json(
         { error: 'Journey not found' },
         { status: 404 }
       );
     }
 
-    // Create duplicate
-    const { data: duplicate, error: createError } = await supabase
-      .from('journeys')
-      .insert({
-        user_id: user.id,
-        website_id: original.website_id,
-        name: `${original.name} (Copy)`,
-        description: original.description,
-        entry_trigger: original.entry_trigger,
-        flow_definition: original.flow_definition,
-        settings: original.settings,
-        status: 'draft',
-      })
-      .select()
-      .single();
-
-    if (createError) throw createError;
-
     return NextResponse.json({
       success: true,
-      journey: duplicate,
+      journey,
     });
   } catch (error: any) {
     return NextResponse.json(

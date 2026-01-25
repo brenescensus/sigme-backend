@@ -7,50 +7,49 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-export const POST = withAuth(async (
+// ✅ CORRECT: Export as GET, not GET_ANALYTICS
+export const GET = withAuth(async (
   request: NextRequest,
   user: AuthUser,
   { params }: { params: { journeyId: string } }
 ) => {
   try {
-    // Get original journey
-    const { data: original, error: fetchError } = await supabase
+    // Verify journey ownership first
+    const { data: journey } = await supabase
       .from('journeys')
-      .select('*')
+      .select('id')
       .eq('id', params.journeyId)
       .eq('user_id', user.id)
       .single();
 
-    if (fetchError || !original) {
+    if (!journey) {
       return NextResponse.json(
         { error: 'Journey not found' },
         { status: 404 }
       );
     }
 
-    // Create duplicate
-    const { data: duplicate, error: createError } = await supabase
-      .from('journeys')
-      .insert({
-        user_id: user.id,
-        website_id: original.website_id,
-        name: `${original.name} (Copy)`,
-        description: original.description,
-        entry_trigger: original.entry_trigger,
-        flow_definition: original.flow_definition,
-        settings: original.settings,
-        status: 'draft',
-      })
-      .select()
-      .single();
+    // Get journey stats
+    const { data: states, error: statesError } = await supabase
+      .from('user_journey_states')
+      .select('status')
+      .eq('journey_id', params.journeyId);
 
-    if (createError) throw createError;
+    if (statesError) throw statesError;
+
+    const analytics = {
+      total_entered: states?.length || 0,
+      active: states?.filter(s => s.status === 'active').length || 0,
+      completed: states?.filter(s => s.status === 'completed').length || 0,
+      exited: states?.filter(s => s.status === 'exited').length || 0,
+    };
 
     return NextResponse.json({
       success: true,
-      journey: duplicate,
+      analytics,
     });
   } catch (error: any) {
+    console.error('Error fetching journey analytics:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
