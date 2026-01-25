@@ -7,6 +7,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
+export interface ProcessingResult {
+  processed: number;
+  failed: number;
+  skipped: number;
+}
+
 export interface JourneyStep {
   id: string;
   type: 'send_notification' | 'delay' | 'wait_for_event' | 'condition' | 'split';
@@ -35,48 +41,76 @@ class JourneyProcessor {
   private lastProcessTime = 0;
   private MIN_PROCESS_INTERVAL = 5000; // 5 seconds between runs
 
-  async processDueSteps(): Promise<void> {
+  // ✅ KEEP ONLY THIS VERSION - with ProcessingResult return type
+  async processDueSteps(): Promise<ProcessingResult> {
     // Prevent concurrent processing
     if (this.processing) {
       console.log('[JourneyProcessor] Already processing, skipping');
-      return;
+      return { processed: 0, failed: 0, skipped: 0 };
     }
 
     // Rate limiting
     const now = Date.now();
     if (now - this.lastProcessTime < this.MIN_PROCESS_INTERVAL) {
       console.log('[JourneyProcessor] Too soon since last run, skipping');
-      return;
+      return { processed: 0, failed: 0, skipped: 0 };
     }
 
     this.processing = true;
     this.lastProcessTime = now;
 
+    let processedCount = 0;
+    let failedCount = 0;
+    let skippedCount = 0;
+
     try {
       console.log('[JourneyProcessor] Starting processing run');
-
-
 
       const { data: dueSteps, error } = await supabase
         .from('scheduled_journey_steps')
         .select(`
-    *,
-    user_journey_state:user_journey_states!scheduled_journey_steps_user_journey_state_id_fkey(*)
-  `)
+          *,
+          user_journey_state:user_journey_states!scheduled_journey_steps_user_journey_state_id_fkey(*)
+        `)
         .eq('status', 'pending')
         .lte('execute_at', new Date().toISOString())
         .order('execute_at', { ascending: true })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error('[JourneyProcessor] Query error:', error);
+        throw error;
+      }
 
-      console.log(`[JourneyProcessor] Found ${dueSteps?.length || 0} due steps`);
+      const totalSteps = dueSteps?.length || 0;
+      console.log(`[JourneyProcessor] Found ${totalSteps} due steps`);
 
       for (const scheduledStep of dueSteps || []) {
-        await this.executeScheduledStep(scheduledStep);
+        try {
+          await this.executeScheduledStep(scheduledStep);
+          processedCount++;
+          console.log(`[JourneyProcessor] ✅ Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
+        } catch (error: any) {
+          failedCount++;
+          console.error(`[JourneyProcessor] ❌ Step ${scheduledStep.id} failed:`, error.message);
+        }
       }
-    } catch (error) {
-      console.error('[JourneyProcessor] Error:', error);
+
+      console.log(`[JourneyProcessor] ✅ Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
+      
+      return { 
+        processed: processedCount, 
+        failed: failedCount,
+        skipped: skippedCount
+      };
+      
+    } catch (error: any) {
+      console.error('[JourneyProcessor] 💥 Fatal error:', error.message);
+      return { 
+        processed: processedCount, 
+        failed: failedCount,
+        skipped: skippedCount
+      };
     } finally {
       this.processing = false;
     }
