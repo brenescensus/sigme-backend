@@ -1,4 +1,6 @@
 // app/api/journeys/[id]/route.ts
+// SIMPLIFIED: Removes relationship joins to avoid 404 errors
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { withAuth, type AuthUser } from '@/lib/auth-middleware';
@@ -13,23 +15,27 @@ export const GET = withAuth(
   async (req: NextRequest, user: AuthUser, context: any) => {
     try {
       const params = await context.params;
-      const journeyId = params.id;
+      const journeyId = params?.id;
+
+      if (!journeyId) {
+        return NextResponse.json(
+          { success: false, error: 'Journey ID is required' },
+          { status: 400 }
+        );
+      }
 
       console.log('[Journey GET] User:', user.email, 'Journey:', journeyId);
 
-      // Fetch journey and verify ownership via website
+      // ✅ Simple query without relationships
       const { data: journey, error } = await supabase
         .from('journeys')
-        .select(`
-          *,
-          websites!inner(id, user_id, name)
-        `)
+        .select('*')
         .eq('id', journeyId)
-        .eq('websites.user_id', user.id)
+        .eq('user_id', user.id) // Direct ownership check
         .single();
 
       if (error || !journey) {
-        console.error('[Journey GET] Not found:', error);
+        console.error('[Journey GET] Not found:', error?.message);
         return NextResponse.json(
           { success: false, error: 'Journey not found or access denied' },
           { status: 404 }
@@ -57,23 +63,28 @@ export const PUT = withAuth(
   async (req: NextRequest, user: AuthUser, context: any) => {
     try {
       const params = await context.params;
-      const journeyId = params.id;
-      const body = await req.json();
+      const journeyId = params?.id;
 
+      if (!journeyId) {
+        return NextResponse.json(
+          { success: false, error: 'Journey ID is required' },
+          { status: 400 }
+        );
+      }
+
+      const body = await req.json();
       console.log('[Journey PUT] Updating journey:', journeyId);
 
-      // Verify ownership first
+      // ✅ Verify ownership with simple query
       const { data: existing } = await supabase
         .from('journeys')
-        .select(`
-          id,
-          websites!inner(id, user_id)
-        `)
+        .select('id')
         .eq('id', journeyId)
-        .eq('websites.user_id', user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (!existing) {
+        console.error('[Journey PUT] Not found or access denied');
         return NextResponse.json(
           { success: false, error: 'Journey not found or access denied' },
           { status: 404 }
@@ -101,7 +112,7 @@ export const PUT = withAuth(
       });
 
       // Update journey
-      const { data: journey, error } = await supabase
+      const { data: updatedJourney, error } = await supabase
         .from('journeys')
         .update(updates)
         .eq('id', journeyId)
@@ -120,7 +131,7 @@ export const PUT = withAuth(
 
       return NextResponse.json({
         success: true,
-        journey,
+        journey: updatedJourney,
       });
     } catch (error: any) {
       console.error('[Journey PUT] Error:', error);
@@ -137,50 +148,69 @@ export const DELETE = withAuth(
   async (req: NextRequest, user: AuthUser, context: any) => {
     try {
       const params = await context.params;
-      const journeyId = params.id;
+      const journeyId = params?.id;
+
+      if (!journeyId) {
+        return NextResponse.json(
+          { success: false, error: 'Journey ID is required' },
+          { status: 400 }
+        );
+      }
 
       console.log('[Journey DELETE] Deleting journey:', journeyId);
+      console.log('[Journey DELETE] User:', user.email, 'User ID:', user.id);
 
-      // Verify ownership first
-      const { data: existing } = await supabase
+      // ✅ Simple query - check ownership directly
+      const { data: journey, error: fetchError } = await supabase
         .from('journeys')
-        .select(`
-          id,
-          websites!inner(id, user_id)
-        `)
+        .select('id, name, user_id')
         .eq('id', journeyId)
-        .eq('websites.user_id', user.id)
         .single();
 
-      if (!existing) {
+      if (fetchError || !journey) {
+        console.error('[Journey DELETE] Journey not found:', fetchError?.message);
         return NextResponse.json(
-          { success: false, error: 'Journey not found or access denied' },
+          { success: false, error: 'Journey not found' },
           { status: 404 }
         );
       }
 
-      // Delete journey (cascade will handle related records)
-      const { error } = await supabase
+      console.log('[Journey DELETE] Found journey:', journey.name);
+      console.log('[Journey DELETE] Journey owner:', journey.user_id);
+
+      // ✅ Verify ownership
+      if (journey.user_id !== user.id) {
+        console.error('[Journey DELETE] Access denied - User does not own this journey');
+        return NextResponse.json(
+          { success: false, error: 'Access denied' },
+          { status: 403 }
+        );
+      }
+
+      console.log('[Journey DELETE] Ownership verified');
+
+      // ✅ Delete journey (cascade will handle related records)
+      const { error: deleteError } = await supabase
         .from('journeys')
         .delete()
         .eq('id', journeyId);
 
-      if (error) {
-        console.error('[Journey DELETE] Error:', error);
+      if (deleteError) {
+        console.error('[Journey DELETE] Delete error:', deleteError);
         return NextResponse.json(
-          { success: false, error: error.message },
+          { success: false, error: deleteError.message },
           { status: 500 }
         );
       }
 
-      console.log('[Journey DELETE] Deleted successfully');
+      console.log('[Journey DELETE] ✅ Deleted successfully');
 
       return NextResponse.json({
         success: true,
         message: 'Journey deleted successfully',
       });
     } catch (error: any) {
-      console.error('[Journey DELETE] Error:', error);
+      console.error('[Journey DELETE] Unexpected error:', error);
       return NextResponse.json(
         { success: false, error: error.message || 'Failed to delete journey' },
         { status: 500 }

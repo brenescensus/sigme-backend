@@ -49,7 +49,7 @@
 // //   id: string;
 // //   journey_id: string;
 // //   subscriber_id: string;
-// //   current_node_id: string;
+// //   current_step_id: string;
 // //   status: 'active' | 'completed' | 'exited';
 // //   next_execution_at: Date | null;
 // //   node_history: string[];
@@ -120,7 +120,7 @@
 // //       // Filter out subscribers already in this journey
 // //       const subscriberIds = [...new Set(newEvents.map(e => e.subscriber_id))];
 // //       const { data: existingStates } = await supabase
-// //         .from('journey_user_states')
+// //         .from('user_journey_states')
 // //         .select('subscriber_id')
 // //         .eq('journey_id', journey.id)
 // //         .in('subscriber_id', subscriberIds)
@@ -164,11 +164,11 @@
 
 // //     // Create user state
 // //     const { error } = await supabase
-// //       .from('journey_user_states')
+// //       .from('user_journey_states')
 // //       .insert({
 // //         journey_id: journeyId,
 // //         subscriber_id: subscriberId,
-// //         current_node_id: firstEdge.target,
+// //         current_step_id: firstEdge.target,
 // //         status: 'active',
 // //         next_execution_at: new Date().toISOString(),
 // //         node_history: [triggerNode.id],
@@ -186,7 +186,7 @@
 // //   async processUsersInJourney(journey: Journey): Promise<void> {
 // //     // Get users ready to be processed
 // //     const { data: userStates, error } = await supabase
-// //       .from('journey_user_states')
+// //       .from('user_journey_states')
 // //       .select('*')
 // //       .eq('journey_id', journey.id)
 // //       .eq('status', 'active')
@@ -211,11 +211,11 @@
 // //    */
 // //   async processUserStep(journey: Journey, userState: UserState): Promise<void> {
 // //     const currentNode = journey.flow_definition.nodes.find(
-// //       (n: FlowNode) => n.id === userState.current_node_id
+// //       (n: FlowNode) => n.id === userState.current_step_id
 // //     );
 
 // //     if (!currentNode) {
-// //       console.error(`[JourneyExecutor] Node ${userState.current_node_id} not found`);
+// //       console.error(`[JourneyExecutor] Node ${userState.current_step_id} not found`);
 // //       return;
 // //     }
 
@@ -329,9 +329,9 @@
 
 // //     // Update user state with next execution time
 // //     await supabase
-// //       .from('journey_user_states')
+// //       .from('user_journey_states')
 // //       .update({
-// //         current_node_id: nextEdge.target,
+// //         current_step_id: nextEdge.target,
 // //         next_execution_at: nextExecutionAt.toISOString(),
 // //         node_history: [...userState.node_history, node.id],
 // //         updated_at: new Date().toISOString()
@@ -365,9 +365,9 @@
 
 // //     // Update to next node
 // //     await supabase
-// //       .from('journey_user_states')
+// //       .from('user_journey_states')
 // //       .update({
-// //         current_node_id: targetEdge.target,
+// //         current_step_id: targetEdge.target,
 // //         next_execution_at: new Date().toISOString(),
 // //         node_history: [...userState.node_history, node.id],
 // //         updated_at: new Date().toISOString()
@@ -417,7 +417,7 @@
 // //     console.log(`[JourneyExecutor] User ${userState.subscriber_id} completing journey`);
 
 // //     await supabase
-// //       .from('journey_user_states')
+// //       .from('user_journey_states')
 // //       .update({
 // //         status: 'completed',
 // //         completed_at: new Date().toISOString(),
@@ -431,7 +431,7 @@
 // //    */
 // //   async moveToNextNode(journey: Journey, userState: UserState): Promise<void> {
 // //     const currentNode = journey.flow_definition.nodes.find(
-// //       (n: FlowNode) => n.id === userState.current_node_id
+// //       (n: FlowNode) => n.id === userState.current_step_id
 // //     );
 
 // //     if (!currentNode) return;
@@ -446,9 +446,9 @@
 // //     }
 
 // //     await supabase
-// //       .from('journey_user_states')
+// //       .from('user_journey_states')
 // //       .update({
-// //         current_node_id: nextEdge.target,
+// //         current_step_id: nextEdge.target,
 // //         next_execution_at: new Date().toISOString(),
 // //         node_history: [...userState.node_history, currentNode.id],
 // //         updated_at: new Date().toISOString()
@@ -531,7 +531,7 @@
 //   id: string;
 //   journey_id: string;
 //   subscriber_id: string;
-//   current_node_id: string;
+//   current_step_id: string;
 //   status: 'active' | 'completed' | 'exited';
 //   next_execution_at: Date | null;
 //   node_history: string[];
@@ -602,7 +602,7 @@
 //       // Filter out subscribers already in this journey
 //       const subscriberIds = [...new Set(newEvents.map(e => e.subscriber_id))];
 //       const { data: existingStates } = await supabase
-//         .from('journey_user_states')
+//         .from('user_journey_states')
 //         .select('subscriber_id')
 //         .eq('journey_id', journey.id)
 //         .in('subscriber_id', subscriberIds)
@@ -648,11 +648,11 @@
 
 //     // Create user state
 //     const { error } = await supabase
-//       .from('journey_user_states')
+//       .from('user_journey_states')
 //       .insert({
 //         journey_id: journeyId,
 //         subscriber_id: subscriberId,
-//         current_node_id: firstEdge.target,
+//         current_step_id: firstEdge.target,
 //         status: 'active',
 //         next_execution_at: new Date().toISOString(),
 //         node_history: [triggerNode.id],
@@ -670,7 +670,7 @@
 //   async processUsersInJourney(journey: Journey): Promise<void> {
 //     // Get users ready to be processed
 //     const { data: userStates, error } = await supabase
-//       .from('journey_user_states')
+//       .from('user_journey_states')
 //       .select('*')
 //       .eq('journey_id', journey.id)
 //       .eq('status', 'active')
@@ -695,11 +695,11 @@
 //    */
 //   async processUserStep(journey: Journey, userState: UserState): Promise<void> {
 //     const currentNode = journey.flow_definition.nodes.find(
-//       (n: FlowNode) => n.id === userState.current_node_id
+//       (n: FlowNode) => n.id === userState.current_step_id
 //     );
 
 //     if (!currentNode) {
-//       console.error(`[JourneyExecutor] Node ${userState.current_node_id} not found`);
+//       console.error(`[JourneyExecutor] Node ${userState.current_step_id} not found`);
 //       return;
 //     }
 
@@ -813,9 +813,9 @@
 
 //     // Update user state with next execution time
 //     await supabase
-//       .from('journey_user_states')
+//       .from('user_journey_states')
 //       .update({
-//         current_node_id: nextEdge.target,
+//         current_step_id: nextEdge.target,
 //         next_execution_at: nextExecutionAt.toISOString(),
 //         node_history: [...userState.node_history, node.id],
 //         updated_at: new Date().toISOString()
@@ -849,9 +849,9 @@
 
 //     // Update to next node
 //     await supabase
-//       .from('journey_user_states')
+//       .from('user_journey_states')
 //       .update({
-//         current_node_id: targetEdge.target,
+//         current_step_id: targetEdge.target,
 //         next_execution_at: new Date().toISOString(),
 //         node_history: [...userState.node_history, node.id],
 //         updated_at: new Date().toISOString()
@@ -901,7 +901,7 @@
 //     console.log(`[JourneyExecutor] User ${userState.subscriber_id} completing journey`);
 
 //     await supabase
-//       .from('journey_user_states')
+//       .from('user_journey_states')
 //       .update({
 //         status: 'completed',
 //         completed_at: new Date().toISOString(),
@@ -915,7 +915,7 @@
 //    */
 //   async moveToNextNode(journey: Journey, userState: UserState): Promise<void> {
 //     const currentNode = journey.flow_definition.nodes.find(
-//       (n: FlowNode) => n.id === userState.current_node_id
+//       (n: FlowNode) => n.id === userState.current_step_id
 //     );
 
 //     if (!currentNode) return;
@@ -930,9 +930,9 @@
 //     }
 
 //     await supabase
-//       .from('journey_user_states')
+//       .from('user_journey_states')
 //       .update({
-//         current_node_id: nextEdge.target,
+//         current_step_id: nextEdge.target,
 //         next_execution_at: new Date().toISOString(),
 //         node_history: [...userState.node_history, currentNode.id],
 //         updated_at: new Date().toISOString()
@@ -1015,7 +1015,7 @@ interface UserState {
   id: string;
   journey_id: string;
   subscriber_id: string;
-  current_node_id: string;
+  current_step_id: string;
   status: 'active' | 'completed' | 'exited';
   next_execution_at: Date | null;
   node_history: string[];
@@ -1086,7 +1086,7 @@ export class JourneyExecutor {
       // Filter out subscribers already in this journey
       const subscriberIds = [...new Set(newEvents.map(e => e.subscriber_id))];
       const { data: existingStates } = await supabase
-        .from('journey_user_states')
+        .from('user_journey_states')
         .select('subscriber_id')
         .eq('journey_id', journey.id)
         .in('subscriber_id', subscriberIds)
@@ -1132,11 +1132,11 @@ export class JourneyExecutor {
 
     // Create user state
     const { error } = await supabase
-      .from('journey_user_states')
+      .from('user_journey_states')
       .insert({
         journey_id: journeyId,
         subscriber_id: subscriberId,
-        current_node_id: firstEdge.target,
+        current_step_id: firstEdge.target,
         status: 'active',
         next_execution_at: new Date().toISOString(),
         node_history: [triggerNode.id],
@@ -1154,7 +1154,7 @@ export class JourneyExecutor {
   async processUsersInJourney(journey: Journey): Promise<void> {
     // Get users ready to be processed
     const { data: userStates, error } = await supabase
-      .from('journey_user_states')
+      .from('user_journey_states')
       .select('*')
       .eq('journey_id', journey.id)
       .eq('status', 'active')
@@ -1179,11 +1179,11 @@ export class JourneyExecutor {
    */
   async processUserStep(journey: Journey, userState: UserState): Promise<void> {
     const currentNode = journey.flow_definition.nodes.find(
-      (n: FlowNode) => n.id === userState.current_node_id
+      (n: FlowNode) => n.id === userState.current_step_id
     );
 
     if (!currentNode) {
-      console.error(`[JourneyExecutor] Node ${userState.current_node_id} not found`);
+      console.error(`[JourneyExecutor] Node ${userState.current_step_id} not found`);
       return;
     }
 
@@ -1300,9 +1300,9 @@ export class JourneyExecutor {
 
     // Update user state with next execution time
     await supabase
-      .from('journey_user_states')
+      .from('user_journey_states')
       .update({
-        current_node_id: nextEdge.target,
+        current_step_id: nextEdge.target,
         next_execution_at: nextExecutionAt.toISOString(),
         node_history: [...userState.node_history, node.id],
         updated_at: new Date().toISOString()
@@ -1336,9 +1336,9 @@ export class JourneyExecutor {
 
     // Update to next node
     await supabase
-      .from('journey_user_states')
+      .from('user_journey_states')
       .update({
-        current_node_id: targetEdge.target,
+        current_step_id: targetEdge.target,
         next_execution_at: new Date().toISOString(),
         node_history: [...userState.node_history, node.id],
         updated_at: new Date().toISOString()
@@ -1392,7 +1392,7 @@ export class JourneyExecutor {
     console.log(`[JourneyExecutor] User ${userState.subscriber_id} completing journey`);
 
     await supabase
-      .from('journey_user_states')
+      .from('user_journey_states')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
@@ -1406,7 +1406,7 @@ export class JourneyExecutor {
    */
   async moveToNextNode(journey: Journey, userState: UserState): Promise<void> {
     const currentNode = journey.flow_definition.nodes.find(
-      (n: FlowNode) => n.id === userState.current_node_id
+      (n: FlowNode) => n.id === userState.current_step_id
     );
 
     if (!currentNode) return;
@@ -1421,9 +1421,9 @@ export class JourneyExecutor {
     }
 
     await supabase
-      .from('journey_user_states')
+      .from('user_journey_states')
       .update({
-        current_node_id: nextEdge.target,
+        current_step_id: nextEdge.target,
         next_execution_at: new Date().toISOString(),
         node_history: [...userState.node_history, currentNode.id],
         updated_at: new Date().toISOString()
