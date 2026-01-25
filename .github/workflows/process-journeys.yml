@@ -1,0 +1,79 @@
+# .github/workflows/process-journeys.yml
+
+name: Journey Processor Safety Net
+
+on:
+  # Run every 5 minutes
+  schedule:
+    - cron: '*/5 * * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  process-journeys:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Process Journeys
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL || 'https://sigme-backend-fkde.vercel.app' }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+        run: |
+          echo "🚀 Triggering journey processor..."
+          echo "🔗 Endpoint: ${BACKEND_URL}/api/internal/process-journeys"
+          
+          # Make POST request to journey processor endpoint
+          RESPONSE=$(curl -X POST \
+            -H "Authorization: Bearer ${INTERNAL_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -w "\n%{http_code}" \
+            -s \
+            "${BACKEND_URL}/api/internal/process-journeys")
+          
+          # Extract HTTP code and body
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo ""
+          echo "📊 Response Body:"
+          echo "$BODY" | jq '.' 2>/dev/null || echo "$BODY"
+          echo ""
+          echo "📈 HTTP Status Code: $HTTP_CODE"
+          echo ""
+          
+          # Check if successful (200-299)
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Journey processing completed successfully"
+            
+            # Parse and display stats if available
+            STATS=$(echo "$BODY" | jq -r '.stats // empty' 2>/dev/null)
+            if [ ! -z "$STATS" ]; then
+              echo ""
+              echo "📊 Processing Statistics:"
+              echo "$STATS" | jq '.'
+            fi
+            
+            exit 0
+          elif [ "$HTTP_CODE" -eq 401 ]; then
+            echo "❌ Unauthorized - Check INTERNAL_API_KEY secret"
+            exit 1
+          elif [ "$HTTP_CODE" -eq 405 ]; then
+            echo "❌ Method Not Allowed - Endpoint doesn't accept POST"
+            echo "💡 Check that the route.ts file exports a POST function"
+            exit 1
+          else
+            echo "❌ Journey processing failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo ""
+          echo "⚠️ Journey processor failed!"
+          echo "Please check:"
+          echo "  1. BACKEND_URL is correct in GitHub secrets"
+          echo "  2. INTERNAL_API_KEY matches your .env variable"
+          echo "  3. Backend is deployed and running"
+          echo "  4. Route accepts POST requests"
