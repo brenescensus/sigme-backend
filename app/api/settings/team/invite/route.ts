@@ -168,7 +168,7 @@ export const POST = withAuth(
       });
 
     } catch (error: any) {
-      console.error('🔴 [Team Invite] Error:', error);
+      console.error(' [Team Invite] Error:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to invite team member', details: error.message },
         { status: 500 }

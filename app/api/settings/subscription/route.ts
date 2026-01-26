@@ -44,7 +44,7 @@
 //             .single();
 
 //           if (createError) {
-//             console.error('🔴 [Settings] Failed to create subscription:', createError);
+//             console.error(' [Settings] Failed to create subscription:', createError);
 //             throw createError;
 //           }
 
@@ -54,7 +54,7 @@
 //           });
 //         }
 
-//         console.error('🔴 [Settings] Subscription fetch error:', error);
+//         console.error(' [Settings] Subscription fetch error:', error);
 //         throw error;
 //       }
 
@@ -89,7 +89,7 @@
 //       });
 
 //     } catch (error: any) {
-//       console.error('🔴 [Settings] Subscription error:', error);
+//       console.error(' [Settings] Subscription error:', error);
 //       return NextResponse.json(
 //         { success: false, error: error.message || 'Failed to fetch subscription' },
 //         { status: 500 }

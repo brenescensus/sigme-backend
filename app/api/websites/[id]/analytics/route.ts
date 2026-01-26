@@ -57,7 +57,7 @@
 // //       .single();
 
 // //     if (websiteError || !website) {
-// //       console.error('🔴 [Analytics] Website not found or access denied');
+// //       console.error(' [Analytics] Website not found or access denied');
 // //       return NextResponse.json(
 // //         { success: false, error: 'Website not found or access denied' },
 // //         { status: 404 }
@@ -178,7 +178,7 @@
 // //     });
 
 // //   } catch (error: any) {
-// //     console.error('🔴 [Analytics] Error:', error);
+// //     console.error(' [Analytics] Error:', error);
 // //     return NextResponse.json(
 // //       { success: false, error: error.message || 'Failed to fetch analytics' },
 // //       { status: 500 }
@@ -272,7 +272,7 @@
 // //     });
 
 // //   } catch (error: any) {
-// //     console.error('🔴 [Analytics] Error:', error);
+// //     console.error(' [Analytics] Error:', error);
 // //     return NextResponse.json(
 // //       { success: false, error: error.message || 'Failed to fetch analytics' },
 // //       { status: 500 }
@@ -336,7 +336,7 @@
 //       .single();
 
 //     if (websiteError || !website) {
-//       console.error('🔴 [Analytics] Website not found or access denied');
+//       console.error(' [Analytics] Website not found or access denied');
 //       return NextResponse.json(
 //         { success: false, error: 'Website not found or access denied' },
 //         { status: 404 }
@@ -480,7 +480,7 @@
 //     });
 
 //   } catch (error: any) {
-//     console.error('🔴 [Analytics] Error:', error);
+//     console.error(' [Analytics] Error:', error);
 //     return NextResponse.json(
 //       { success: false, error: error.message || 'Failed to fetch analytics' },
 //       { status: 500 }
@@ -667,8 +667,8 @@ async function handleGetAnalytics(
     });
 
   } catch (error: any) {
-    console.error('🔴 [Analytics] Fatal error:', error);
-    console.error('🔴 [Analytics] Stack:', error.stack);
+    console.error(' [Analytics] Fatal error:', error);
+    console.error(' [Analytics] Stack:', error.stack);
     
     return NextResponse.json(
       { 

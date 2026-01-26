@@ -41,7 +41,7 @@
 // //   private lastProcessTime = 0;
 // //   private MIN_PROCESS_INTERVAL = 5000; // 5 seconds between runs
 
-// //   // ✅ KEEP ONLY THIS VERSION - with ProcessingResult return type
+// //   // current_step_id KEEP ONLY THIS VERSION - with ProcessingResult return type
 // //   async processDueSteps(): Promise<ProcessingResult> {
 // //     // Prevent concurrent processing
 // //     if (this.processing) {
@@ -89,14 +89,14 @@
 // //         try {
 // //           await this.executeScheduledStep(scheduledStep);
 // //           processedCount++;
-// //           console.log(`[JourneyProcessor] ✅ Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
+// //           console.log(`[JourneyProcessor] current_step_id Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
 // //         } catch (error: any) {
 // //           failedCount++;
 // //           console.error(`[JourneyProcessor] ❌ Step ${scheduledStep.id} failed:`, error.message);
 // //         }
 // //       }
 
-// //       console.log(`[JourneyProcessor] ✅ Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
+// //       console.log(`[JourneyProcessor] current_step_id Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
       
 // //       return { 
 // //         processed: processedCount, 
@@ -449,10 +449,10 @@
 
 // //     const stepType = nextStep.type || nextStep.data?.type;
 // // // If delay, schedule it
-// // if (stepType === 'delay' || stepType === 'wait') {  // ✅ Support both 'delay' and 'wait'
+// // if (stepType === 'delay' || stepType === 'wait') {  // current_step_id Support both 'delay' and 'wait'
 // //   const config = { ...(nextStep.data || {}), ...(nextStep.data?.config || {}) };
   
-// //   // ✅ Handle both formats: duration (seconds) and delay_value/delay_unit
+// //   // current_step_id Handle both formats: duration (seconds) and delay_value/delay_unit
 // //   let delayMs: number;
 // //   if (config.duration) {
 // //     // Frontend format: duration in seconds
@@ -640,14 +640,14 @@
 //         try {
 //           await this.executeScheduledStep(scheduledStep);
 //           processedCount++;
-//           console.log(`[JourneyProcessor] ✅ Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
+//           console.log(`[JourneyProcessor] current_step_id Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
 //         } catch (error: any) {
 //           failedCount++;
 //           console.error(`[JourneyProcessor] ❌ Step ${scheduledStep.id} failed:`, error.message);
 //         }
 //       }
 
-//       console.log(`[JourneyProcessor] ✅ Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
+//       console.log(`[JourneyProcessor] current_step_id Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
       
 //       return { 
 //         processed: processedCount, 
@@ -1180,14 +1180,14 @@ class JourneyProcessor {
         try {
           await this.executeScheduledStep(scheduledStep);
           processedCount++;
-          console.log(`[JourneyProcessor] ✅ Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
+          console.log(`[JourneyProcessor] current_step_id Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
         } catch (error: any) {
           failedCount++;
           console.error(`[JourneyProcessor] ❌ Step ${scheduledStep.id} failed:`, error.message);
         }
       }
 
-      console.log(`[JourneyProcessor] ✅ Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
+      console.log(`[JourneyProcessor] current_step_id Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
       
       return { 
         processed: processedCount, 
@@ -1282,7 +1282,7 @@ class JourneyProcessor {
         })
         .eq('id', id);
 
-      console.log(`[JourneyProcessor] ✅ Step ${step_id} completed`);
+      console.log(`[JourneyProcessor] current_step_id Step ${step_id} completed`);
 
       // Move to next step
       await this.advanceJourney({ ...journeyState, journey, flow_definition: flowDefinition }, step);
@@ -1422,7 +1422,7 @@ class JourneyProcessor {
       });
 
       await webpush.sendNotification(pushSubscription, notificationPayload);
-      console.log('[JourneyProcessor] ✅ Notification sent successfully');
+      console.log('[JourneyProcessor] current_step_id Notification sent successfully');
 
       // Log notification
       await supabase.from('notification_logs').insert({
@@ -1592,7 +1592,7 @@ class JourneyProcessor {
         metadata: {},
       });
 
-      console.log('[JourneyProcessor] ✅ Journey completed');
+      console.log('[JourneyProcessor] current_step_id Journey completed');
       return;
     }
 
@@ -1640,7 +1640,7 @@ class JourneyProcessor {
       step_type: stepType,
     });
 
-    console.log(`[JourneyProcessor] ✅ Next step scheduled`);
+    console.log(`[JourneyProcessor] current_step_id Next step scheduled`);
   }
 
   private calculateDelay(

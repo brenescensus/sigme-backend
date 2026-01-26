@@ -786,7 +786,7 @@
   'use strict';
 
   console.log('[Sigme] Universal script loading...');
-  // ✅ FIXED: Get API URL dynamically from the script's origin
+  // current_step_id FIXED: Get API URL dynamically from the script's origin
   // const getCurrentScriptUrl = () => {
   //   const scripts = document.getElementsByTagName('script');
   //   for (let script of scripts) {
@@ -817,7 +817,7 @@
   const SIGME_API = API_BASE_URL;
 
 
-  // ✅ Service worker must be on same origin as the website
+  // current_step_id Service worker must be on same origin as the website
   const SW_PATH = '/sigme-universal-sw.js';
 
   console.log('[Sigme] API URL:', SIGME_API);
@@ -829,7 +829,7 @@
   // const API_BASE_URL = window.SIGME_API_URL || 'https://sigme-backend-fkde.vercel.app';
   // const SIGME_API = API_BASE_URL;
   
-  // // ✅ Service worker must be on same origin as the website
+  // // current_step_id Service worker must be on same origin as the website
   // const SW_PATH = '/sigme-universal-sw.js';
 
   // console.log('[Sigme] API URL:', SIGME_API);

@@ -32,7 +32,7 @@ jobs:
           echo "$body" | jq '.' 2>/dev/null || echo "$body"
           
           if [ "$http_code" -eq 200 ]; then
-            echo "✅ Success"
+            echo " Success"
             exit 0
           else
             echo "❌ Failed"

@@ -115,11 +115,11 @@
 //     const { data: { user }, error } = await supabase.auth.getUser();
     
 //     if (error || !user) {
-//       console.error('🔴 [Auth] Token verification failed:', error?.message);
+//       console.error(' [Auth] Token verification failed:', error?.message);
 //       return null;
 //     }
 
-//     console.log('✅ [Auth] Token verified for:', user.email);
+//     console.log('current_step_id [Auth] Token verified for:', user.email);
 
 //     return {
 //       id: user.id,
@@ -127,7 +127,7 @@
 //       fullName: user.user_metadata?.full_name,
 //     };
 //   } catch (error: any) {
-//     console.error('🔴 [Auth] Verification error:', error.message);
+//     console.error(' [Auth] Verification error:', error.message);
 //     return null;
 //   }
 // }
@@ -155,7 +155,7 @@
 //     const user = await verifyToken(req);
     
 //     if (!user) {
-//       console.error('🔴 [Auth] Authentication failed');
+//       console.error(' [Auth] Authentication failed');
 //       const response = NextResponse.json(
 //         { error: 'Unauthorized - Invalid or missing token' },
 //         { status: 401 }
@@ -163,13 +163,13 @@
 //       return addAuthCorsHeaders(response, origin);
 //     }
     
-//     console.log('✅ [Auth] Authenticated:', user.email);
+//     console.log('current_step_id [Auth] Authenticated:', user.email);
     
 //     try {
 //       const response = await handler(req, user, ...args);
 //       return addAuthCorsHeaders(response, origin);
 //     } catch (error: any) {
-//       console.error('🔴 [Handler Error]:', error);
+//       console.error(' [Handler Error]:', error);
 //       const errorResponse = NextResponse.json(
 //         { error: error.message || 'Internal server error' },
 //         { status: 500 }
@@ -207,7 +207,7 @@
 //       const response = await handler(req, ...args);
 //       return addPublicCorsHeaders(response, origin);
 //     } catch (error: any) {
-//       console.error('🔴 [Handler Error]:', error);
+//       console.error(' [Handler Error]:', error);
 //       const errorResponse = NextResponse.json(
 //         { error: error.message || 'Internal server error' },
 //         { status: 500 }
@@ -427,11 +427,11 @@ export async function verifyToken(req: NextRequest): Promise<AuthUser | null> {
     const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error || !user) {
-      console.error('🔴 [Auth] Token verification failed:', error?.message);
+      console.error(' [Auth] Token verification failed:', error?.message);
       return null;
     }
 
-    console.log('✅ [Auth] Token verified for:', user.email);
+    console.log('current_step_id [Auth] Token verified for:', user.email);
 
     return {
       id: user.id,
@@ -439,7 +439,7 @@ export async function verifyToken(req: NextRequest): Promise<AuthUser | null> {
       fullName: user.user_metadata?.full_name,
     };
   } catch (error: any) {
-    console.error('🔴 [Auth] Verification error:', error.message);
+    console.error(' [Auth] Verification error:', error.message);
     return null;
   }
 }
@@ -489,7 +489,7 @@ export function withAuth(
     const user = await verifyToken(req);
     
     if (!user) {
-      console.error('🔴 [Auth] Authentication failed');
+      console.error(' [Auth] Authentication failed');
       const response = NextResponse.json(
         { error: 'Unauthorized - Invalid or missing token' },
         { status: 401 }
@@ -497,7 +497,7 @@ export function withAuth(
       return addAuthCorsHeaders(response, origin);
     }
     
-    console.log('✅ [Auth] Authenticated:', user.email);
+    console.log('current_step_id [Auth] Authenticated:', user.email);
     
     // 🚀 Trigger journey processing (non-blocking)
     triggerJourneyProcessing();
@@ -506,7 +506,7 @@ export function withAuth(
       const response = await handler(req, user, ...args);
       return addAuthCorsHeaders(response, origin);
     } catch (error: any) {
-      console.error('🔴 [Handler Error]:', error);
+      console.error(' [Handler Error]:', error);
       const errorResponse = NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }
@@ -549,7 +549,7 @@ export function withPublicCors(
       const response = await handler(req, ...args);
       return addPublicCorsHeaders(response, origin);
     } catch (error: any) {
-      console.error('🔴 [Handler Error]:', error);
+      console.error(' [Handler Error]:', error);
       const errorResponse = NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }

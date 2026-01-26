@@ -273,7 +273,7 @@
 //       .single();
 
 //     if (websiteError || !website) {
-//       console.error('🔴 [Register Subscriber] Website not found:', websiteId);
+//       console.error(' [Register Subscriber] Website not found:', websiteId);
 //       return NextResponse.json(
 //         { success: false, error: 'Website not found or inactive' },
 //         { status: 404 }
@@ -315,7 +315,7 @@
 //         .single();
 
 //       if (reactivateError) {
-//         console.error('🔴 [Register Subscriber] Reactivation error:', reactivateError);
+//         console.error(' [Register Subscriber] Reactivation error:', reactivateError);
 //         return NextResponse.json(
 //           { success: false, error: reactivateError.message },
 //           { status: 500 }
@@ -350,7 +350,7 @@
 //       .single();
 
 //     if (insertError) {
-//       console.error('🔴 [Register Subscriber] Insert error:', insertError);
+//       console.error(' [Register Subscriber] Insert error:', insertError);
 //       return NextResponse.json(
 //         { success: false, error: insertError.message },
 //         { status: 500 }
@@ -376,7 +376,7 @@
 //     );
 
 //   } catch (error: any) {
-//     console.error('🔴 [Register Subscriber] Error:', error);
+//     console.error(' [Register Subscriber] Error:', error);
 //     return NextResponse.json(
 //       { success: false, error: error.message || 'Internal server error' },
 //       { status: 500 }
@@ -414,7 +414,7 @@ async function handler(req: NextRequest) {
 
     // Validate required fields
     if (!websiteId || !endpoint || !p256dh || !auth) {
-      console.log('🔴 [Register Subscriber] Missing required fields');
+      console.log(' [Register Subscriber] Missing required fields');
       return NextResponse.json(
         { 
           success: false, 
@@ -439,7 +439,7 @@ async function handler(req: NextRequest) {
       .single();
 
     if (websiteError || !website) {
-      console.error('🔴 [Register Subscriber] Website not found:', websiteId);
+      console.error(' [Register Subscriber] Website not found:', websiteId);
       return NextResponse.json(
         { success: false, error: 'Website not found or inactive' },
         { status: 404 }
@@ -483,7 +483,7 @@ async function handler(req: NextRequest) {
         .single();
 
       if (reactivateError) {
-        console.error('🔴 [Register Subscriber] Reactivation error:', reactivateError);
+        console.error(' [Register Subscriber] Reactivation error:', reactivateError);
         return NextResponse.json(
           { success: false, error: reactivateError.message },
           { status: 500 }
@@ -518,7 +518,7 @@ async function handler(req: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('🔴 [Register Subscriber] Insert error:', insertError);
+      console.error(' [Register Subscriber] Insert error:', insertError);
       return NextResponse.json(
         { success: false, error: insertError.message },
         { status: 500 }
@@ -537,7 +537,7 @@ async function handler(req: NextRequest) {
     );
 
   } catch (error: any) {
-    console.error('🔴 [Register Subscriber] Error:', error);
+    console.error(' [Register Subscriber] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Internal server error' },
       { status: 500 }

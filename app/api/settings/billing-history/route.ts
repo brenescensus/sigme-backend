@@ -21,7 +21,7 @@
 //         .limit(20);
 
 //       if (error) {
-//         console.error('🔴 [Billing History] Fetch error:', error);
+//         console.error(' [Billing History] Fetch error:', error);
 //         throw error;
 //       }
 
@@ -33,7 +33,7 @@
 //       });
 
 //     } catch (error: any) {
-//       console.error('🔴 [Billing History] Error:', error);
+//       console.error(' [Billing History] Error:', error);
 //       return NextResponse.json(
 //         { success: false, error: error.message || 'Failed to fetch billing history' },
 //         { status: 500 }

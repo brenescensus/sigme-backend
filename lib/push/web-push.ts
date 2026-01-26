@@ -5,7 +5,7 @@
 
 // // import webpush from 'web-push';
 
-// // // ✅ FIX: Use a short, static VAPID subject (max 32 chars)
+// // // current_step_id FIX: Use a short, static VAPID subject (max 32 chars)
 // // // The subject should be a URL or mailto, but keep it SHORT
 // // const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:push@notify.app';
 
@@ -48,7 +48,7 @@
 // //   payload: NotificationPayload
 // // ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
 // //   try {
-// //     // ✅ FIX: Truncate topic to max 32 chars (web-push requirement)
+// //     // current_step_id FIX: Truncate topic to max 32 chars (web-push requirement)
 // //     const topic = payload.tag 
 // //       ? payload.tag.substring(0, 32) 
 // //       : undefined;
@@ -62,7 +62,7 @@
 // //       {
 // //         TTL: 86400, // 24 hours
 // //         urgency: 'high',
-// //         topic, // ✅ Use truncated topic
+// //         topic, // current_step_id Use truncated topic
 // //       }
 // //     );
 
@@ -137,7 +137,7 @@
 //     title: string;
 //     icon?: string;
 //   }>;
-//   // ✅ Add branding to the payload interface
+//   // current_step_id Add branding to the payload interface
 //   branding?: {
 //     primary_color: string;
 //     secondary_color: string;

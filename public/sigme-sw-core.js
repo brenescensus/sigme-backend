@@ -1257,7 +1257,7 @@ self.addEventListener('push', (event) => {
       const data = event.data.json();
       console.log('[Sigme SW Core] 📦 Push data:', data);
         if (data.data) {
-        console.log('[Sigme SW Core] ✅ Data object exists:', data.data);
+        console.log('[Sigme SW Core] current_step_id Data object exists:', data.data);
         console.log('[Sigme SW Core] 📋 subscriber_id:', data.data.subscriber_id);
         console.log('[Sigme SW Core] 📋 campaign_id:', data.data.campaign_id);
       } else {
@@ -1328,7 +1328,7 @@ self.addEventListener('notificationclick', (event) => {
 
   // Track notification click event
   if (notificationData.subscriber_id) {
-    console.log('[Sigme SW Core] ✅ Tracking click event');
+    console.log('[Sigme SW Core] current_step_id Tracking click event');
     
     const trackingPromise = trackEvent(
       'notification_clicked',
@@ -1398,7 +1398,7 @@ async function trackEvent(eventName, subscriberId, properties = {}) {
 
     if (response.ok) {
       const result = await response.json();
-      console.log(`[Sigme SW Core] ✅ Event tracked successfully:`, result);
+      console.log(`[Sigme SW Core] current_step_id Event tracked successfully:`, result);
       return result;
     } else {
       const errorText = await response.text();

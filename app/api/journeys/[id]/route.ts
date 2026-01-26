@@ -26,7 +26,6 @@ export const GET = withAuth(
 
       console.log('[Journey GET] User:', user.email, 'Journey:', journeyId);
 
-      // ✅ Simple query without relationships
       const { data: journey, error } = await supabase
         .from('journeys')
         .select('*')
@@ -59,6 +58,89 @@ export const GET = withAuth(
 );
 
 // PUT /api/journeys/[id] - Update journey
+// export const PUT = withAuth(
+//   async (req: NextRequest, user: AuthUser, context: any) => {
+//     try {
+//       const params = await context.params;
+//       const journeyId = params?.id;
+
+//       if (!journeyId) {
+//         return NextResponse.json(
+//           { success: false, error: 'Journey ID is required' },
+//           { status: 400 }
+//         );
+//       }
+
+//       const body = await req.json();
+//       console.log('[Journey PUT] Updating journey:', journeyId);
+
+//       // current_step_id Verify ownership with simple query
+//       const { data: existing } = await supabase
+//         .from('journeys')
+//         .select('id')
+//         .eq('id', journeyId)
+//         .eq('user_id', user.id)
+//         .single();
+
+//       if (!existing) {
+//         console.error('[Journey PUT] Not found or access denied');
+//         return NextResponse.json(
+//           { success: false, error: 'Journey not found or access denied' },
+//           { status: 404 }
+//         );
+//       }
+
+//       // Build update object
+//       const updates: any = {
+//         updated_at: new Date().toISOString(),
+//       };
+
+//       const allowedFields = [
+//         'name',
+//         'description',
+//         'entry_trigger',
+//         'flow_definition',
+//         'settings',
+//         'status',
+//       ];
+
+//       allowedFields.forEach((field) => {
+//         if (body[field] !== undefined) {
+//           updates[field] = body[field];
+//         }
+//       });
+
+//       // Update journey
+//       const { data: updatedJourney, error } = await supabase
+//         .from('journeys')
+//         .update(updates)
+//         .eq('id', journeyId)
+//         .select()
+//         .single();
+
+//       if (error) {
+//         console.error('[Journey PUT] Error:', error);
+//         return NextResponse.json(
+//           { success: false, error: error.message },
+//           { status: 500 }
+//         );
+//       }
+
+//       console.log('[Journey PUT] Updated successfully');
+
+//       return NextResponse.json({
+//         success: true,
+//         journey: updatedJourney,
+//       });
+//     } catch (error: any) {
+//       console.error('[Journey PUT] Error:', error);
+//       return NextResponse.json(
+//         { success: false, error: error.message || 'Failed to update journey' },
+//         { status: 500 }
+//       );
+//     }
+//   }
+// );
 export const PUT = withAuth(
   async (req: NextRequest, user: AuthUser, context: any) => {
     try {
@@ -75,7 +157,7 @@ export const PUT = withAuth(
       const body = await req.json();
       console.log('[Journey PUT] Updating journey:', journeyId);
 
-      // ✅ Verify ownership with simple query
+      // current_step_id Verify ownership with simple query
       const { data: existing } = await supabase
         .from('journeys')
         .select('id')
@@ -96,13 +178,17 @@ export const PUT = withAuth(
         updated_at: new Date().toISOString(),
       };
 
+      // current_step_id ADD website_id to allowed fields
       const allowedFields = [
         'name',
         'description',
         'entry_trigger',
+        'exit_rules',           // current_step_id Add this
+        're_entry_settings',    // current_step_id Add this
         'flow_definition',
         'settings',
         'status',
+        'website_id',           // current_step_id Add this
       ];
 
       allowedFields.forEach((field) => {
@@ -142,7 +228,6 @@ export const PUT = withAuth(
     }
   }
 );
-
 // DELETE /api/journeys/[id] - Delete journey
 export const DELETE = withAuth(
   async (req: NextRequest, user: AuthUser, context: any) => {
@@ -160,7 +245,7 @@ export const DELETE = withAuth(
       console.log('[Journey DELETE] Deleting journey:', journeyId);
       console.log('[Journey DELETE] User:', user.email, 'User ID:', user.id);
 
-      // ✅ Simple query - check ownership directly
+      // current_step_id Simple query - check ownership directly
       const { data: journey, error: fetchError } = await supabase
         .from('journeys')
         .select('id, name, user_id')
@@ -178,7 +263,7 @@ export const DELETE = withAuth(
       console.log('[Journey DELETE] Found journey:', journey.name);
       console.log('[Journey DELETE] Journey owner:', journey.user_id);
 
-      // ✅ Verify ownership
+      // current_step_id Verify ownership
       if (journey.user_id !== user.id) {
         console.error('[Journey DELETE] Access denied - User does not own this journey');
         return NextResponse.json(
@@ -189,7 +274,7 @@ export const DELETE = withAuth(
 
       console.log('[Journey DELETE] Ownership verified');
 
-      // ✅ Delete journey (cascade will handle related records)
+      // current_step_id Delete journey (cascade will handle related records)
       const { error: deleteError } = await supabase
         .from('journeys')
         .delete()
@@ -203,7 +288,7 @@ export const DELETE = withAuth(
         );
       }
 
-      console.log('[Journey DELETE] ✅ Deleted successfully');
+      console.log('[Journey DELETE] current_step_id Deleted successfully');
 
       return NextResponse.json({
         success: true,

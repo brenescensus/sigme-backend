@@ -101,7 +101,7 @@
 //         .single();
 
 //       if (websiteError || !website) {
-//         console.error('🔴 [Campaigns] Website not found or access denied');
+//         console.error(' [Campaigns] Website not found or access denied');
 //         return NextResponse.json(
 //           { success: false, error: 'Website not found or access denied' },
 //           { status: 404 }
@@ -117,14 +117,14 @@
 //         .limit(10);
 
 //       if (error) {
-//         console.error('🔴 [Campaigns] Fetch error:', error);
+//         console.error(' [Campaigns] Fetch error:', error);
 //         return NextResponse.json(
 //           { success: false, error: 'Failed to fetch campaigns' },
 //           { status: 500 }
 //         );
 //       }
 
-//       console.log(`✅ [Campaigns] Returning ${campaigns?.length || 0} campaigns`);
+//       console.log(`current_step_id [Campaigns] Returning ${campaigns?.length || 0} campaigns`);
 
 //       return NextResponse.json({
 //         success: true,
@@ -132,7 +132,7 @@
 //       });
 
 //     } catch (error: any) {
-//       console.error('🔴 [Campaigns] Error:', error);
+//       console.error(' [Campaigns] Error:', error);
 //       return NextResponse.json(
 //         { success: false, error: error.message || 'Failed to fetch campaigns' },
 //         { status: 500 }
@@ -165,7 +165,7 @@ async function handleGetCampaigns(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ✅ FIX: Await params
+    // current_step_id FIX: Await params
     const { id: websiteId } = await context.params;
 
     console.log(`📋 [Campaigns] Fetching for website: ${websiteId}`);
@@ -179,7 +179,7 @@ async function handleGetCampaigns(
       .single();
 
     if (websiteError || !website) {
-      console.error('🔴 [Campaigns] Website not found or access denied');
+      console.error(' [Campaigns] Website not found or access denied');
       return NextResponse.json(
         { success: false, error: 'Website not found or access denied' },
         { status: 404 }
@@ -195,14 +195,14 @@ async function handleGetCampaigns(
       .limit(10);
 
     if (error) {
-      console.error('🔴 [Campaigns] Fetch error:', error);
+      console.error(' [Campaigns] Fetch error:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch campaigns' },
         { status: 500 }
       );
     }
 
-    console.log(`✅ [Campaigns] Returning ${campaigns?.length || 0} campaigns`);
+    console.log(`current_step_id [Campaigns] Returning ${campaigns?.length || 0} campaigns`);
 
     return NextResponse.json({
       success: true,
@@ -210,7 +210,7 @@ async function handleGetCampaigns(
     });
 
   } catch (error: any) {
-    console.error('🔴 [Campaigns] Error:', error);
+    console.error(' [Campaigns] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch campaigns' },
       { status: 500 }

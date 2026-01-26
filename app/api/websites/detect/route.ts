@@ -16,7 +16,7 @@
 //     const domain = req.nextUrl.searchParams.get('domain');
     
 //     if (!domain) {
-//       console.log('🔴 [Detect Website] Missing domain parameter');
+//       console.log(' [Detect Website] Missing domain parameter');
 //       return NextResponse.json(
 //         { success: false, error: 'Domain parameter required' },
 //         { status: 400 }
@@ -42,7 +42,7 @@
 //       .order('created_at', { ascending: false }); // Most recent first
 
 //     if (error) {
-//       console.error('🔴 [Detect Website] Database error:', error);
+//       console.error(' [Detect Website] Database error:', error);
 //       return NextResponse.json(
 //         { success: false, error: 'Database error' },
 //         { status: 500 }
@@ -50,7 +50,7 @@
 //     }
 
 //     if (!websites || websites.length === 0) {
-//       console.log('🔴 [Detect Website] Not found:', normalizedDomain);
+//       console.log(' [Detect Website] Not found:', normalizedDomain);
 //       return NextResponse.json(
 //         { success: false, error: 'Website not found or inactive' },
 //         { status: 404 }
@@ -75,7 +75,7 @@
 //     console.log('🌐 [Detect Website] API URL:', apiUrl);
 
 //     if (!vapidPublicKey) {
-//       console.error('🔴 [Detect Website] VAPID public key not configured!');
+//       console.error(' [Detect Website] VAPID public key not configured!');
 //     }
 
 //     // Return configuration
@@ -101,7 +101,7 @@
 //     });
 
 //   } catch (err: any) {
-//     console.error('🔴 [Detect Website] Error:', err);
+//     console.error(' [Detect Website] Error:', err);
 //     return NextResponse.json(
 //       { success: false, error: err.message || 'Server error' },
 //       { status: 500 }
@@ -122,7 +122,7 @@ async function handler(req: NextRequest) {
     const domain = req.nextUrl.searchParams.get('domain');
 
     if (!domain) {
-      console.log('🔴 [Detect Website] Missing domain parameter');
+      console.log(' [Detect Website] Missing domain parameter');
       return NextResponse.json(
         { success: false, error: 'Domain parameter required' },
         { status: 400 }
@@ -154,7 +154,7 @@ async function handler(req: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('🔴 [Detect Website] Database error:', error);
+      console.error(' [Detect Website] Database error:', error);
       return NextResponse.json(
         { success: false, error: 'Database error' },
         { status: 500 }
@@ -162,7 +162,7 @@ async function handler(req: NextRequest) {
     }
 
     if (!websites || websites.length === 0) {
-      console.log('🔴 [Detect Website] Not found:', normalizedDomain);
+      console.log(' [Detect Website] Not found:', normalizedDomain);
       return NextResponse.json(
         { success: false, error: 'Website not found or inactive' },
         { status: 404 }
@@ -183,7 +183,7 @@ async function handler(req: NextRequest) {
     const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_APP_URL;
 
     if (!vapidPublicKey) {
-      console.error('🔴 [Detect Website] VAPID public key not configured!');
+      console.error(' [Detect Website] VAPID public key not configured!');
       return NextResponse.json(
         { success: false, error: 'Server configuration error - VAPID key missing' },
         { status: 500 }
@@ -215,7 +215,7 @@ async function handler(req: NextRequest) {
     });
 
   } catch (err: any) {
-    console.error('🔴 [Detect Website] Error:', err);
+    console.error(' [Detect Website] Error:', err);
     return NextResponse.json(
       { success: false, error: err.message || 'Server error' },
       { status: 500 }
