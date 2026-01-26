@@ -456,12 +456,12 @@ async function triggerJourneyProcessing(): Promise<void> {
     // Run in background, don't block the request
     setTimeout(() => {
       journeyProcessor.processDueSteps().catch((error) => {
-        console.error('⚠️ [Journey] Background processing error:', error.message);
+        console.error(' [Journey] Background processing error:', error.message);
       });
     }, 0);
   } catch (error: any) {
     // Silent fail - don't break the request if journey processing fails
-    console.error('⚠️ [Journey] Failed to trigger processing:', error.message);
+    console.error(' [Journey] Failed to trigger processing:', error.message);
   }
 }
 

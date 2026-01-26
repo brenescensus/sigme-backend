@@ -186,7 +186,7 @@ export const PATCH = withAuth(async (req: NextRequest, user: AuthUser) => {
       throw updateError;
     }
 
-    // ✅ Sign out all sessions for this user (invalidate all tokens)
+    //  Sign out all sessions for this user (invalidate all tokens)
     const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(user.id);
     
     if (signOutError) {
@@ -199,7 +199,7 @@ export const PATCH = withAuth(async (req: NextRequest, user: AuthUser) => {
     return NextResponse.json({
       success: true,
       message: 'Password updated successfully. Please log in again.',
-      require_reauth: true, // ✅ Signal to frontend to log out
+      require_reauth: true, //  Signal to frontend to log out
     });
   } catch (error: any) {
     console.error('[Settings Password] Error:', error);

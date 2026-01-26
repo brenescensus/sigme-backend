@@ -25,7 +25,7 @@
 //         throw error;
 //       }
 
-//       console.log(`✅ [Billing History] Returning ${history?.length || 0} records`);
+//       console.log(` [Billing History] Returning ${history?.length || 0} records`);
 
 //       return NextResponse.json({
 //         success: true,
@@ -97,7 +97,7 @@ export const GET = withAuth(
         );
       }
 
-      console.log(`✅ [Billing History] Returning ${billingHistory.length} records`);
+      console.log(` [Billing History] Returning ${billingHistory.length} records`);
 
       return NextResponse.json({
         success: true,

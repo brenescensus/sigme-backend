@@ -234,7 +234,6 @@
 
 
 // lib/push/sender.ts
-// Fixed version with proper Base64 validation
 
 import { sendWebPushNotification, WebPushSubscription, NotificationPayload } from './web-push';
 import { sendFCMNotification } from './fcm';

@@ -106,7 +106,7 @@
 //       );
 //     }
 
-//     // ✅ Fetch website with branding
+//     //  Fetch website with branding
 //     let website: any;
 //     let subscriber: any;
 
@@ -172,7 +172,7 @@
 //       subscriber = subscribers[0];
 //     }
 
-//     // ✅ Extract branding from website
+//     //  Extract branding from website
 //     const branding = website.notification_branding || {
 //       primary_color: '#667eea',
 //       secondary_color: '#764ba2',
@@ -192,7 +192,7 @@
 //       position: branding.notification_position,
 //     });
 
-//     // ✅ Build test notification with branding
+//     //  Build test notification with branding
 //     const notification = {
 //       title: title || '🎨 Test Notification',
 //       body: notifBody || 'This is how your branded notifications will look! If you can see this, everything is working perfectly.',
@@ -201,7 +201,7 @@
 //       image: image,
 //       url: url || website.url || '/',
 //       tag: `test-${Date.now()}`,
-//       // ✅ Include branding in the notification payload
+//       //  Include branding in the notification payload
 //       branding: {
 //         primary_color: branding.primary_color,
 //         secondary_color: branding.secondary_color,
@@ -380,7 +380,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ Fetch website with branding
+    //  Fetch website with branding
     let website: any;
     let subscriber: any;
 
@@ -446,7 +446,7 @@ export async function POST(req: NextRequest) {
       subscriber = subscribers[0];
     }
 
-    // ✅ Extract branding from website with type safety
+    //  Extract branding from website with type safety
     const branding = parseBranding(website.notification_branding);
 
     console.log('[Test Notification] Using branding:', {
@@ -456,7 +456,7 @@ export async function POST(req: NextRequest) {
       position: branding.notification_position,
     });
 
-    // ✅ Build test notification with branding
+    //  Build test notification with branding
     const notification = {
       title: title || '🎨 Test Notification',
       body: notifBody || 'This is how your branded notifications will look! If you can see this, everything is working perfectly.',
@@ -465,7 +465,7 @@ export async function POST(req: NextRequest) {
       image: image,
       url: url || website.url || '/',
       tag: `test-${Date.now()}`,
-      // ✅ Include branding in the notification payload
+      //  Include branding in the notification payload
       branding: {
         primary_color: branding.primary_color,
         secondary_color: branding.secondary_color,

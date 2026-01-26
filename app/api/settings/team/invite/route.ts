@@ -82,7 +82,7 @@ import { withAuth, getAuthenticatedClient, AuthUser } from '@/lib/auth-middlewar
 // ❌ REMOVE THIS - withAuth already handles OPTIONS
 // export async function OPTIONS(request: NextRequest) { ... }
 
-// ✅ Just use withAuth - it handles OPTIONS automatically
+//  Just use withAuth - it handles OPTIONS automatically
 export const POST = withAuth(
   async (req: NextRequest, user: AuthUser) => {
     try {
@@ -159,7 +159,7 @@ export const POST = withAuth(
 
       if (insertError) throw insertError;
 
-      console.log('✅ [Team Invite] Member invited:', member.id);
+      console.log(' [Team Invite] Member invited:', member.id);
 
       return NextResponse.json({
         success: true,

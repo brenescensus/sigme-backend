@@ -92,8 +92,8 @@
 // //     console.log('[Send Notification] Starting delivery to', subscribers.length, 'subscribers');
 
 // //     // Send notifications
-// //     let deliveredCount = 0;  // ✅ Successfully delivered
-// //     let failedCount = 0;     // ✅ Failed to deliver
+// //     let deliveredCount = 0;  //  Successfully delivered
+// //     let failedCount = 0;     //  Failed to deliver
 // //     const expiredSubscriberIds: string[] = [];
 // //     const results: any[] = [];
 
@@ -118,7 +118,7 @@
 // //             campaign_id: campaignId || null,
 // //             subscriber_id: subscriber.id,
 // //             website_id: websiteId,
-// //             status: 'delivered',  // ✅ Changed from 'sent' to 'delivered'
+// //             status: 'delivered',  //  Changed from 'sent' to 'delivered'
 // //             platform: result.value.platform,
 // //             sent_at: new Date().toISOString(),
 // //           });
@@ -171,7 +171,7 @@
 // //         .in('id', expiredSubscriberIds);
 // //     }
 
-// //     // ✅ DON'T update campaign stats here - let the campaign send endpoint do it
+// //     //  DON'T update campaign stats here - let the campaign send endpoint do it
 // //     // This prevents double-counting and conflicts
 
 // //     // Update website stats
@@ -183,7 +183,7 @@
 // //       })
 // //       .eq('id', websiteId);
 
-// //     // ✅ Return proper field names
+// //     //  Return proper field names
 // //     return NextResponse.json({
 // //       success: true,
 // //       sent: subscribers.length,           // Total sent (attempted)
@@ -234,7 +234,7 @@
 //       );
 //     }
 
-//     // ✅ Fetch website with branding
+//     //  Fetch website with branding
 //     const { data: website, error: websiteError } = await supabase
 //       .from('websites')
 //       .select('*')
@@ -249,7 +249,7 @@
 //       );
 //     }
 
-//     // ✅ Extract and prepare branding data
+//     //  Extract and prepare branding data
 //     const branding = website.notification_branding || {
 //       primary_color: '#667eea',
 //       secondary_color: '#764ba2',
@@ -303,7 +303,7 @@
 //       });
 //     }
 
-//     // ✅ Prepare notification payload WITH BRANDING
+//     //  Prepare notification payload WITH BRANDING
 //     const notificationPayload = {
 //       title: notification.title,
 //       body: notification.body,
@@ -314,7 +314,7 @@
 //       tag: notification.tag || `campaign-${campaignId || Date.now()}`,
 //       requireInteraction: notification.requireInteraction || false,
 //       actions: notification.actions || [],
-//       // ✅ Include branding data in the payload
+//       //  Include branding data in the payload
 //       branding: {
 //         primary_color: branding.primary_color,
 //         secondary_color: branding.secondary_color,
@@ -441,7 +441,6 @@
 // export const POST = withAuth(handler);
 
 // app/api/notifications/send/route.ts
-// Updated version with branding support
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthUser, getAuthenticatedClient } from '@/lib/auth-middleware';
@@ -469,7 +468,7 @@ async function handler(req: NextRequest, user: AuthUser) {
       );
     }
 
-    // ✅ Fetch website with branding
+    //  Fetch website with branding
     const { data: website, error: websiteError } = await supabase
       .from('websites')
       .select('*')
@@ -484,7 +483,7 @@ async function handler(req: NextRequest, user: AuthUser) {
       );
     }
 
-    // ✅ Extract and prepare branding data with type safety
+    //  Extract and prepare branding data with type safety
     const branding = parseBranding(website.notification_branding);
 
     console.log('[Send Notification] Using branding:', {
@@ -528,7 +527,7 @@ async function handler(req: NextRequest, user: AuthUser) {
       });
     }
 
-    // ✅ Prepare notification payload WITH BRANDING
+    //  Prepare notification payload WITH BRANDING
     const notificationPayload = {
       title: notification.title,
       body: notification.body,
@@ -539,7 +538,7 @@ async function handler(req: NextRequest, user: AuthUser) {
       tag: notification.tag || `campaign-${campaignId || Date.now()}`,
       requireInteraction: notification.requireInteraction || false,
       actions: notification.actions || [],
-      // ✅ Include branding data in the payload
+      //  Include branding data in the payload
       branding: {
         primary_color: branding.primary_color,
         secondary_color: branding.secondary_color,

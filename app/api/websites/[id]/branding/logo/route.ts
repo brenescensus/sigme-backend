@@ -240,7 +240,7 @@
 // export const POST = withAuth(
 //   async (req: NextRequest, user: AuthUser, context: { params: { id: string } }) => {
 //     try {
-//       // ✅ FIX: read params from context
+//       //  FIX: read params from context
 //       const websiteId = context.params.id;
 
 //       if (!websiteId) {
@@ -252,7 +252,7 @@
 
 //       const supabase = await getAuthenticatedClient(req);
 
-//       // ✅ Verify ownership
+//       //  Verify ownership
 //       const { data: website, error } = await supabase
 //         .from("websites")
 //         .select("notification_branding")
@@ -411,7 +411,7 @@ export const POST = withAuth(
     context: { params: Promise<{ id: string }> }
   ) => {
     try {
-      // ✅ FIX: await params (Next.js 15+ requirement)
+      //  FIX: await params (Next.js 15+ requirement)
       const { id: websiteId } = await context.params;
 
       if (!websiteId) {

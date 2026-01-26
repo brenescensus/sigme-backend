@@ -1,249 +1,12 @@
-
-
-// // // app/api/subscribers/register/route.ts
-// // // Register new push subscription )
-
-
-// // import { NextRequest, NextResponse } from 'next/server';
-// // import { createServiceClient } from '@/lib/supabase/server';
-
-// // export async function POST(req: NextRequest) {
-// //   try {
-// //     const supabase = createServiceClient(); // Use service role for public access
-
-// //     const body = await req.json();
-// //     const { 
-// //       websiteId, 
-// //       subscription, 
-// //       platform, 
-// //       browser, 
-// //       os, 
-// //       deviceType, 
-// //       country, 
-// //       city 
-// //     } = body;
-
-// //     // Validation
-// //     if (!websiteId || !subscription) {
-// //       return NextResponse.json(
-// //         { error: 'websiteId and subscription are required' },
-// //         { status: 400 }
-// //       );
-// //     }
-
-// //     // Verify website exists and is active
-// //     const { data: website, error: websiteError } = await supabase
-// //       .from('websites')
-// //       .select('id, status')
-// //       .eq('id', websiteId)
-// //       .maybeSingle();
-
-// //     if (websiteError || !website) {
-// //       return NextResponse.json(
-// //         { error: 'Invalid website ID' },
-// //         { status: 400 }
-// //       );
-// //     }
-
-// //     if (website.status !== 'active') {
-// //       return NextResponse.json(
-// //         { error: 'Website is not active' },
-// //         { status: 403 }
-// //       );
-// //     }
-
-// //     // Extract subscription details
-// //     const endpoint = subscription.endpoint;
-// //     const keys = subscription.keys || {};
-// //     const p256dhKey = keys.p256dh;
-// //     const authKey = keys.auth;
-
-// //     if (!endpoint || !p256dhKey || !authKey) {
-// //       return NextResponse.json(
-// //         { error: 'Invalid subscription format. Required: endpoint, keys.p256dh, keys.auth' },
-// //         { status: 400 }
-// //       );
-// //     }
-
-// //     // Get client info
-// //     const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0].trim() 
-// //                    || req.headers.get('x-real-ip') 
-// //                    || null;
-// //     const userAgent = req.headers.get('user-agent') || null;
-
-// //     // Check if subscription already exists
-// //     const { data: existing } = await supabase
-// //       .from('subscribers')
-// //       .select('id, status, platform, browser, os, device_type')
-// //       .eq('endpoint', endpoint)
-// //       .eq('website_id', websiteId)
-// //       .maybeSingle();
-
-// //     if (existing) {
-// //       // Update existing subscription
-// //       const { data, error } = await supabase
-// //         .from('subscribers')
-// //         .update({
-// //           status: 'active',
-// //           last_seen_at: new Date().toISOString(),
-// //           platform: platform || existing.platform || 'web',
-// //           browser: browser || existing.browser,
-// //           os: os || existing.os,
-// //           device_type: deviceType || existing.device_type,
-// //           user_agent: userAgent,
-// //           // Note: updated_at will be set automatically by your trigger
-// //         })
-// //         .eq('id', existing.id)
-// //         .select('id, status')
-// //         .single();
-
-// //       if (error) {
-// //         console.error('[Subscriber Register] Update error:', error);
-// //         return NextResponse.json({ error: error.message }, { status: 500 });
-// //       }
-
-// //       return NextResponse.json({
-// //         success: true,
-// //         subscriber: {
-// //           id: data.id,
-// //           status: data.status,
-// //         },
-// //         message: 'Subscription updated successfully',
-// //       });
-// //     }
-
-// //     // Create new subscription
-// //     const { data, error } = await supabase
-// //       .from('subscribers')
-// //       .insert({
-// //         website_id: websiteId,
-// //         endpoint,
-// //         p256dh_key: p256dhKey,
-// //         auth_key: authKey,
-// //         platform: platform || 'web',
-// //         browser,
-// //         os,
-// //         device_type: deviceType,
-// //         country,
-// //         city,
-// //         ip_address: ipAddress,
-// //         user_agent: userAgent,
-// //         status: 'active',
-// //         subscribed_at: new Date().toISOString(),
-// //         last_seen_at: new Date().toISOString(),
-// //         // Note: created_at and updated_at will be set automatically
-// //       })
-// //       .select('id, status')
-// //       .single();
-
-// //     if (error) {
-// //       console.error('[Subscriber Register] Insert error:', error);
-      
-// //       // Handle specific errors
-// //       if (error.code === '23505') { // Unique constraint violation
-// //         return NextResponse.json(
-// //           { error: 'Subscription already exists' },
-// //           { status: 409 }
-// //         );
-// //       }
-
-// //       // Handle constraint violations
-// //       if (error.code === '23514') { // Check constraint violation
-// //         return NextResponse.json(
-// //           { error: 'Invalid platform or status value' },
-// //           { status: 400 }
-// //         );
-// //       }
-      
-// //       return NextResponse.json({ error: error.message }, { status: 500 });
-// //     }
-
-// //     return NextResponse.json({
-// //       success: true,
-// //       subscriber: {
-// //         id: data.id,
-// //         status: data.status,
-// //       },
-// //       message: 'Subscription created successfully',
-// //     }, { status: 201 });
-
-// //   } catch (error: any) {
-// //     console.error('[Subscriber Register] Error:', error);
-// //     return NextResponse.json(
-// //       { error: 'Internal server error' },
-// //       { status: 500 }
-// //     );
-// //   }
-// // }
-
-// // /* ============================================================
-// //    DELETE - Unsubscribe (PUBLIC)
-// // ============================================================ */
-// // export async function DELETE(req: NextRequest) {
-// //   try {
-// //     const supabase = createServiceClient();
-
-// //     const body = await req.json();
-// //     const { websiteId, endpoint } = body;
-
-// //     if (!websiteId || !endpoint) {
-// //       return NextResponse.json(
-// //         { error: 'websiteId and endpoint are required' },
-// //         { status: 400 }
-// //       );
-// //     }
-
-// //     // Find and deactivate subscription
-// //     const { data, error } = await supabase
-// //       .from('subscribers')
-// //       .update({
-// //         status: 'inactive',
-// //         // Note: updated_at will be set automatically by your trigger
-// //       })
-// //       .eq('website_id', websiteId)
-// //       .eq('endpoint', endpoint)
-// //       .select('id')
-// //       .maybeSingle();
-
-// //     if (error) {
-// //       console.error('[Subscriber Unsubscribe] Error:', error);
-// //       return NextResponse.json({ error: error.message }, { status: 500 });
-// //     }
-
-// //     if (!data) {
-// //       return NextResponse.json(
-// //         { error: 'Subscription not found' },
-// //         { status: 404 }
-// //       );
-// //     }
-
-// //     return NextResponse.json({
-// //       success: true,
-// //       message: 'Unsubscribed successfully',
-// //     });
-
-// //   } catch (error: any) {
-// //     console.error('[Subscriber Unsubscribe] Error:', error);
-// //     return NextResponse.json(
-// //       { error: 'Internal server error' },
-// //       { status: 500 }
-// //     );
-// //   }
-// // }
-
 // // app/api/subscribers/register/route.ts
-// // PUBLIC endpoint - no authentication required
-// // Called by sigme.js on client websites
+// // PUBLIC endpoint - called by sigme.js on client websites
 
 // import { NextRequest, NextResponse } from 'next/server';
 // import { createClient } from '@supabase/supabase-js';
+// import { withPublicCors } from '@/lib/auth-middleware';
 // import type { Database } from '@/types/database';
 
-// /**
-//  * POST - Register a new subscriber (PUBLIC)
-//  * This endpoint is called by the public sigme.js script
-//  */
-// export async function POST(req: NextRequest) {
+// async function handler(req: NextRequest) {
 //   try {
 //     const body = await req.json();
 //     const { websiteId, endpoint, p256dh, auth, platform, browser, os } = body;
@@ -252,8 +15,12 @@
 
 //     // Validate required fields
 //     if (!websiteId || !endpoint || !p256dh || !auth) {
+//       console.log(' [Register Subscriber] Missing required fields');
 //       return NextResponse.json(
-//         { success: false, error: 'websiteId, endpoint, p256dh, and auth are required' },
+//         { 
+//           success: false, 
+//           error: 'Missing required fields: websiteId, endpoint, p256dh, auth' 
+//         },
 //         { status: 400 }
 //       );
 //     }
@@ -280,6 +47,8 @@
 //       );
 //     }
 
+//     console.log(' [Register Subscriber] Website verified:', website.name);
+
 //     // Check if subscriber already exists
 //     const { data: existing } = await supabase
 //       .from('subscribers')
@@ -290,7 +59,7 @@
 
 //     if (existing) {
 //       if (existing.status === 'active') {
-//         console.log('ℹ️ [Register Subscriber] Subscriber already exists:', existing.id);
+//         console.log('ℹ️ [Register Subscriber] Already subscribed:', existing.id);
 //         return NextResponse.json({
 //           success: true,
 //           subscriber: existing,
@@ -306,8 +75,8 @@
 //           p256dh_key: p256dh,
 //           auth_key: auth,
 //           platform: platform || 'web',
-//           browser,
-//           os,
+//           browser: browser || 'Unknown',
+//           os: os || 'Unknown',
 //           last_seen_at: new Date().toISOString(),
 //         })
 //         .eq('id', existing.id)
@@ -322,7 +91,7 @@
 //         );
 //       }
 
-//       console.log('✅ [Register Subscriber] Reactivated:', reactivated.id);
+//       console.log(' [Register Subscriber] Reactivated:', reactivated.id);
 //       return NextResponse.json({
 //         success: true,
 //         subscriber: reactivated,
@@ -341,7 +110,7 @@
 //         platform: platform || 'web',
 //         browser: browser || 'Unknown',
 //         os: os || 'Unknown',
-//         device_type: 'desktop', // Default, can be enhanced
+//         device_type: 'desktop',
 //         status: 'active',
 //         subscribed_at: new Date().toISOString(),
 //         last_seen_at: new Date().toISOString(),
@@ -357,7 +126,7 @@
 //       );
 //     }
 
-//     console.log('✅ [Register Subscriber] Created new subscriber:', newSubscriber.id);
+//     console.log(' [Register Subscriber] New subscriber created:', newSubscriber.id);
 
 //     return NextResponse.json(
 //       {
@@ -365,14 +134,7 @@
 //         subscriber: newSubscriber,
 //         message: 'Subscriber registered successfully',
 //       },
-//       { 
-//         status: 201,
-//         headers: {
-//           'Access-Control-Allow-Origin': '*',
-//           'Access-Control-Allow-Methods': 'POST, OPTIONS',
-//           'Access-Control-Allow-Headers': 'Content-Type',
-//         },
-//       }
+//       { status: 201 }
 //     );
 
 //   } catch (error: any) {
@@ -384,25 +146,17 @@
 //   }
 // }
 
-// // ✅ Enable CORS for public access
-// export async function OPTIONS(req: NextRequest) {
-//   return new NextResponse(null, {
-//     status: 200,
-//     headers: {
-//       'Access-Control-Allow-Origin': '*',
-//       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-//       'Access-Control-Allow-Headers': 'Content-Type',
-//     },
-//   });
-// }
+// // Export with public CORS (allows ANY origin)
+// export const POST = withPublicCors(handler);
 
 
 // app/api/subscribers/register/route.ts
-// PUBLIC endpoint - called by sigme.js on client websites
+// SIMPLIFIED VERSION - Using geolocation service utility
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { withPublicCors } from '@/lib/auth-middleware';
+import { getClientIP, getSubscriberMetadata } from '@/lib/geolocation-service';
 import type { Database } from '@/types/database';
 
 async function handler(req: NextRequest) {
@@ -414,7 +168,7 @@ async function handler(req: NextRequest) {
 
     // Validate required fields
     if (!websiteId || !endpoint || !p256dh || !auth) {
-      console.log(' [Register Subscriber] Missing required fields');
+      console.log('❌ [Register Subscriber] Missing required fields');
       return NextResponse.json(
         { 
           success: false, 
@@ -424,7 +178,7 @@ async function handler(req: NextRequest) {
       );
     }
 
-    // Use service role key for public registration
+    // Initialize Supabase
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -439,7 +193,7 @@ async function handler(req: NextRequest) {
       .single();
 
     if (websiteError || !website) {
-      console.error(' [Register Subscriber] Website not found:', websiteId);
+      console.error('❌ [Register Subscriber] Website not found:', websiteId);
       return NextResponse.json(
         { success: false, error: 'Website not found or inactive' },
         { status: 404 }
@@ -447,6 +201,22 @@ async function handler(req: NextRequest) {
     }
 
     console.log('✅ [Register Subscriber] Website verified:', website.name);
+
+    // Get IP and user agent
+    const ipAddress = getClientIP(req.headers);
+    const userAgent = req.headers.get('user-agent') || '';
+
+    console.log('🌐 [Register Subscriber] Client IP:', ipAddress);
+
+    // Fetch geolocation and device metadata
+    const metadata = await getSubscriberMetadata(ipAddress, userAgent);
+
+    console.log('📍 [Register Subscriber] Metadata:', {
+      city: metadata.city,
+      country: metadata.country,
+      device: metadata.device_type,
+      browser: metadata.browser
+    });
 
     // Check if subscriber already exists
     const { data: existing } = await supabase
@@ -459,6 +229,17 @@ async function handler(req: NextRequest) {
     if (existing) {
       if (existing.status === 'active') {
         console.log('ℹ️ [Register Subscriber] Already subscribed:', existing.id);
+        
+        // Update geo data even for existing subscribers
+        await supabase
+          .from('subscribers')
+          .update({
+            country: metadata.country,
+            city: metadata.city,
+            last_seen_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id);
+
         return NextResponse.json({
           success: true,
           subscriber: existing,
@@ -474,8 +255,12 @@ async function handler(req: NextRequest) {
           p256dh_key: p256dh,
           auth_key: auth,
           platform: platform || 'web',
-          browser: browser || 'Unknown',
-          os: os || 'Unknown',
+          browser: browser || metadata.browser,
+          os: os || metadata.os,
+          device_type: metadata.device_type,
+          user_agent: userAgent,
+          country: metadata.country,
+          city: metadata.city,
           last_seen_at: new Date().toISOString(),
         })
         .eq('id', existing.id)
@@ -483,14 +268,14 @@ async function handler(req: NextRequest) {
         .single();
 
       if (reactivateError) {
-        console.error(' [Register Subscriber] Reactivation error:', reactivateError);
+        console.error('❌ [Register Subscriber] Reactivation error:', reactivateError);
         return NextResponse.json(
           { success: false, error: reactivateError.message },
           { status: 500 }
         );
       }
 
-      console.log('✅ [Register Subscriber] Reactivated:', reactivated.id);
+      console.log('♻️ [Register Subscriber] Reactivated:', reactivated.id);
       return NextResponse.json({
         success: true,
         subscriber: reactivated,
@@ -498,7 +283,7 @@ async function handler(req: NextRequest) {
       });
     }
 
-    // Create new subscriber
+    // Create new subscriber with all metadata
     const { data: newSubscriber, error: insertError } = await supabase
       .from('subscribers')
       .insert({
@@ -507,9 +292,12 @@ async function handler(req: NextRequest) {
         p256dh_key: p256dh,
         auth_key: auth,
         platform: platform || 'web',
-        browser: browser || 'Unknown',
-        os: os || 'Unknown',
-        device_type: 'desktop',
+        browser: browser || metadata.browser,
+        os: os || metadata.os,
+        device_type: metadata.device_type,
+        user_agent: userAgent,
+        country: metadata.country,      // ✅ Geo data from IP
+        city: metadata.city,            // ✅ Geo data from IP
         status: 'active',
         subscribed_at: new Date().toISOString(),
         last_seen_at: new Date().toISOString(),
@@ -518,7 +306,7 @@ async function handler(req: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error(' [Register Subscriber] Insert error:', insertError);
+      console.error('❌ [Register Subscriber] Insert error:', insertError);
       return NextResponse.json(
         { success: false, error: insertError.message },
         { status: 500 }
@@ -526,18 +314,27 @@ async function handler(req: NextRequest) {
     }
 
     console.log('✅ [Register Subscriber] New subscriber created:', newSubscriber.id);
+    console.log('📍 [Register Subscriber] Location:', newSubscriber.city, newSubscriber.country);
 
     return NextResponse.json(
       {
         success: true,
-        subscriber: newSubscriber,
+        subscriber: {
+          id: newSubscriber.id,
+          country: newSubscriber.country,
+          city: newSubscriber.city,
+          browser: newSubscriber.browser,
+          device_type: newSubscriber.device_type,
+          status: newSubscriber.status,
+          created_at: newSubscriber.created_at
+        },
         message: 'Subscriber registered successfully',
       },
       { status: 201 }
     );
 
   } catch (error: any) {
-    console.error(' [Register Subscriber] Error:', error);
+    console.error('❌ [Register Subscriber] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Internal server error' },
       { status: 500 }

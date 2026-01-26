@@ -19,7 +19,7 @@
 // //   context: { params: Promise<{ id: string }> }
 // // ) {
 // //   try {
-// //     // ✅ FIX: Await params in Next.js 15
+// //     //  FIX: Await params in Next.js 15
 // //     const { id: websiteId } = await context.params;
     
 // //     const { searchParams } = new URL(req.url);
@@ -156,7 +156,7 @@
 // //       ...stats
 // //     }));
 
-// //     console.log('✅ [Analytics] Returning data:', {
+// //     console.log(' [Analytics] Returning data:', {
 // //       subscribers: totalSubscribers,
 // //       notifications: totalNotificationsSent,
 // //       clickRate: avgClickRate.toFixed(2)
@@ -298,7 +298,7 @@
 //   context: { params: Promise<{ id: string }> }
 // ) {
 //   try {
-//     // ✅ Await params in Next.js 15
+//     //  Await params in Next.js 15
 //     const { id: websiteId } = await context.params;
     
 //     const { searchParams } = new URL(req.url);
@@ -452,7 +452,7 @@
 //       ...stats
 //     }));
 
-//     console.log('✅ [Analytics] Returning data:', {
+//     console.log(' [Analytics] Returning data:', {
 //       subscribers: totalSubscribers,
 //       notifications: totalNotificationsSent,
 //       clicked: totalClicked,
@@ -570,7 +570,7 @@ async function handleGetAnalytics(
       );
     }
 
-    console.log('✅ [Analytics] Website verified:', website.name);
+    console.log(' [Analytics] Website verified:', website.name);
 
     // Get total subscribers
     console.log('📊 [Analytics] Fetching subscriber counts...');
@@ -659,7 +659,7 @@ async function handleGetAnalytics(
       period
     };
 
-    console.log('✅ [Analytics] Returning analytics:', analyticsData);
+    console.log(' [Analytics] Returning analytics:', analyticsData);
 
     return NextResponse.json({
       success: true,

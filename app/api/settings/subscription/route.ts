@@ -73,7 +73,7 @@
 //         }
 //       }
 
-//       console.log('✅ [Settings] Subscription fetched:', {
+//       console.log(' [Settings] Subscription fetched:', {
 //         plan: subscription.plan_tier,
 //         status: subscription.status,
 //         hasPaymentMethod: !!subscription.payment_method,
@@ -119,7 +119,7 @@ export const GET = withAuth(
     try {
       console.log(`📊 [Settings] Fetching subscription for user: ${user.email}`);
 
-      // ✅ Get subscription from user_subscriptions table
+      //  Get subscription from user_subscriptions table
       const { data: subscription, error: subError } = await supabase
         .from('user_subscriptions')
         .select('*')
@@ -160,7 +160,7 @@ export const GET = withAuth(
           throw createError;
         }
 
-        console.log('✅ [Settings] Created free subscription');
+        console.log(' [Settings] Created free subscription');
         
         return NextResponse.json({
           success: true,
@@ -168,7 +168,7 @@ export const GET = withAuth(
         });
       }
 
-      console.log('✅ [Settings] Subscription found:', {
+      console.log(' [Settings] Subscription found:', {
         plan: subscription.plan_tier,
         status: subscription.status,
         websites: `${subscription.websites_used}/${subscription.websites_limit}`,

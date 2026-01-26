@@ -61,9 +61,9 @@
 //     const website = websites[0];
 
 //     if (websites.length > 1) {
-//       console.log(`⚠️ [Detect Website] Found ${websites.length} websites with domain "${normalizedDomain}", using most recent: ${website.name} (${website.id})`);
+//       console.log(` [Detect Website] Found ${websites.length} websites with domain "${normalizedDomain}", using most recent: ${website.name} (${website.id})`);
 //     } else {
-//       console.log('✅ [Detect Website] Found website:', website.name);
+//       console.log(' [Detect Website] Found website:', website.name);
 //     }
 
 //     // ⭐ FIX: Use NEXT_PUBLIC_ prefix instead of VITE_
@@ -173,9 +173,9 @@ async function handler(req: NextRequest) {
     const website = websites[0];
 
     if (websites.length > 1) {
-      console.log(`⚠️ [Detect Website] Found ${websites.length} websites, using most recent: ${website.name}`);
+      console.log(` [Detect Website] Found ${websites.length} websites, using most recent: ${website.name}`);
     } else {
-      console.log('✅ [Detect Website] Found:', website.name);
+      console.log(' [Detect Website] Found:', website.name);
     }
 
     // Get VAPID public key from environment
@@ -190,7 +190,7 @@ async function handler(req: NextRequest) {
       );
     }
 
-    console.log('✅ [Detect Website] Sending config for:', website.name);
+    console.log(' [Detect Website] Sending config for:', website.name);
 
     // Return configuration
     return NextResponse.json({
