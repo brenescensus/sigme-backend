@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@huggingface/inference": "^4.13.10",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.90.1",
     "bcryptjs": "^3.0.3",
