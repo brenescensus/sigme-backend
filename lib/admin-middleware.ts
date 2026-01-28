@@ -60,13 +60,13 @@ async function verifyAdminToken(req: NextRequest): Promise<AdminAuthUser | null>
     const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('❌ [Admin Auth] No authorization header');
+      console.error(' [Admin Auth] No authorization header');
       return null;
     }
 
     const token = authHeader.substring(7).trim();
     if (!token) {
-      console.error('❌ [Admin Auth] Empty token');
+      console.error(' [Admin Auth] Empty token');
       return null;
     }
 
@@ -75,14 +75,14 @@ async function verifyAdminToken(req: NextRequest): Promise<AdminAuthUser | null>
     const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error || !user) {
-      console.error('❌ [Admin Auth] Token verification failed:', error?.message);
+      console.error(' [Admin Auth] Token verification failed:', error?.message);
       return null;
     }
 
     // Get role from user metadata
     const role = user.user_metadata?.role || 'user';
     
-    console.log('✅ [Admin Auth] User verified:', {
+    console.log(' [Admin Auth] User verified:', {
       email: user.email,
       role,
       userId: user.id,
@@ -95,7 +95,7 @@ async function verifyAdminToken(req: NextRequest): Promise<AdminAuthUser | null>
       fullName: user.user_metadata?.full_name,
     };
   } catch (error: any) {
-    console.error('❌ [Admin Auth] Verification error:', error.message);
+    console.error(' [Admin Auth] Verification error:', error.message);
     return null;
   }
 }
@@ -117,7 +117,7 @@ export async function requireSuperAdmin(req: NextRequest) {
   }
 
   if (user.role !== 'super_admin') {
-    console.error('❌ [Admin Auth] Super admin required, got:', user.role);
+    console.error(' [Admin Auth] Super admin required, got:', user.role);
     return {
       error: NextResponse.json(
         { error: 'Super admin access required' },
@@ -127,7 +127,7 @@ export async function requireSuperAdmin(req: NextRequest) {
     };
   }
 
-  console.log('✅ [Admin Auth] Super admin access granted:', user.email);
+  console.log(' [Admin Auth] Super admin access granted:', user.email);
   
   return {
     user,
@@ -152,7 +152,7 @@ export async function requireAdmin(req: NextRequest) {
   }
 
   if (user.role !== 'admin' && user.role !== 'super_admin') {
-    console.error('❌ [Admin Auth] Admin required, got:', user.role);
+    console.error(' [Admin Auth] Admin required, got:', user.role);
     return {
       error: NextResponse.json(
         { error: 'Admin access required' },
@@ -162,7 +162,7 @@ export async function requireAdmin(req: NextRequest) {
     };
   }
 
-  console.log('✅ [Admin Auth] Admin access granted:', user.email);
+  console.log(' [Admin Auth] Admin access granted:', user.email);
   
   return {
     user,
@@ -230,7 +230,7 @@ export function withSuperAdmin(
       const response = await handler(req, auth.user!, ...args);
       return addAdminCorsHeaders(response, origin);
     } catch (error: any) {
-      console.error('❌ [Super Admin] Handler error:', error);
+      console.error(' [Super Admin] Handler error:', error);
       const errorResponse = NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }
@@ -268,7 +268,7 @@ export function withAdmin(
       const response = await handler(req, auth.user!, ...args);
       return addAdminCorsHeaders(response, origin);
     } catch (error: any) {
-      console.error('❌ [Admin] Handler error:', error);
+      console.error(' [Admin] Handler error:', error);
       const errorResponse = NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }
@@ -301,13 +301,13 @@ export async function logAdminActivity(
       ip_address: ipAddress,
     });
     
-    console.log('✅ [Activity Log]', {
+    console.log(' [Activity Log]', {
       admin: adminId,
       action,
       target: targetType,
     });
   } catch (error: any) {
-    console.error('❌ [Activity Log] Failed to log:', error.message);
+    console.error(' [Activity Log] Failed to log:', error.message);
     // Don't throw - logging failure shouldn't break the request
   }
 }

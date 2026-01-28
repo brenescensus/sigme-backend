@@ -700,7 +700,7 @@ class NotificationGenerator {
       // Extract the generated content
       const generatedText = response.choices[0]?.message?.content || '';
       
-      console.log('✅ [AI] Response received:', generatedText.substring(0, 100) + '...');
+      console.log(' [AI] Response received:', generatedText.substring(0, 100) + '...');
 
       // Parse the generated text into structured suggestions
       const suggestions = this.parseGeneratedText(generatedText, includeEmojis);

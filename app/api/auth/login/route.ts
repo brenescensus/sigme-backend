@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     });
 
     if (error) {
-      console.error('❌ [Login] Auth error:', error.message);
+      console.error(' [Login] Auth error:', error.message);
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
 
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     const role = data.user.user_metadata?.role || 'user';
     const isSuperAdmin = role === 'super_admin';
 
-    console.log('✅ [Login] User authenticated:', {
+    console.log(' [Login] User authenticated:', {
       email: data.user.email,
       role,
       isSuperAdmin,
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (e: any) {
-    console.error('❌ [Login] Error:', e.message);
+    console.error(' [Login] Error:', e.message);
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }

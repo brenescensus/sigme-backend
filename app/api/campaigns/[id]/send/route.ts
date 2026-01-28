@@ -187,7 +187,7 @@
 //         console.log(`[Campaign Send]  Successfully sent to ${subscriber.id}`);
 
 //       } catch (error: any) {
-//         console.error(`[Campaign Send] ❌ Failed to send to ${subscriber.id}:`, error.message);
+//         console.error(`[Campaign Send]  Failed to send to ${subscriber.id}:`, error.message);
 //         failed++;
 
 //         // Log failure
@@ -230,7 +230,7 @@
 //     });
 
 //   } catch (error: any) {
-//     console.error('[Campaign Send] ❌ Fatal error:', error);
+//     console.error('[Campaign Send]  Fatal error:', error);
 //     console.error('[Campaign Send] Error stack:', error.stack);
     
 //     return NextResponse.json(
@@ -468,10 +468,10 @@ export async function POST(
           delivered_at: new Date().toISOString()
         });
 
-        console.log(`[Campaign Send] ✅ Successfully sent to ${subscriber.id}`);
+        console.log(`[Campaign Send]  Successfully sent to ${subscriber.id}`);
 
       } catch (error: any) {
-        console.error(`[Campaign Send] ❌ Failed to send to ${subscriber.id}:`, error.message);
+        console.error(`[Campaign Send]  Failed to send to ${subscriber.id}:`, error.message);
         failed++;
 
         // Log failure
@@ -503,7 +503,7 @@ export async function POST(
       console.error('[Campaign Send] Error updating campaign:', updateError);
     }
 
-    console.log(`[Campaign Send] ✅ Complete - Sent: ${sent}, Delivered: ${delivered}, Failed: ${failed}`);
+    console.log(`[Campaign Send]  Complete - Sent: ${sent}, Delivered: ${delivered}, Failed: ${failed}`);
 
     return NextResponse.json({
       success: true,
@@ -514,7 +514,7 @@ export async function POST(
     });
 
   } catch (error: any) {
-    console.error('[Campaign Send] ❌ Fatal error:', error);
+    console.error('[Campaign Send]  Fatal error:', error);
     console.error('[Campaign Send] Error stack:', error.stack);
     
     return NextResponse.json(

@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-// ✅ CORRECT: Export as GET, not GET_ANALYTICS
+//  CORRECT: Export as GET, not GET_ANALYTICS
 export const GET = withAuth(async (
   request: NextRequest,
   user: AuthUser,

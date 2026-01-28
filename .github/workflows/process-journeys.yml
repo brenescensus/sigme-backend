@@ -35,6 +35,6 @@ jobs:
             echo " Success"
             exit 0
           else
-            echo "❌ Failed"
+            echo " Failed"
             exit 1
           fi

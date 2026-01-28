@@ -79,7 +79,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, getAuthenticatedClient, AuthUser } from '@/lib/auth-middleware';
 
-// ❌ REMOVE THIS - withAuth already handles OPTIONS
+//  REMOVE THIS - withAuth already handles OPTIONS
 // export async function OPTIONS(request: NextRequest) { ... }
 
 //  Just use withAuth - it handles OPTIONS automatically

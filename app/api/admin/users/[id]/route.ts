@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withSuperAdmin, logAdminActivity, getAdminClient } from '@/lib/admin-middleware';
 
+
+export const PUT = withSuperAdmin(async (req, user, context: { params: Promise<{ id: string }> }) => {
+    const { id: userId } = await context.params;  // 
 // PUT /api/admin/users/[id]
-export const PUT = withSuperAdmin(async (req, user, { params }: { params: { userId: string } }) => {
-  const { userId } = params;
+
   const body = await req.json();
   const { first_name, last_name, email, role } = body;
 

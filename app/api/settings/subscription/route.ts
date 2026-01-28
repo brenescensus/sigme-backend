@@ -181,7 +181,7 @@ export const GET = withAuth(
         subscription,
       });
     } catch (error: any) {
-      console.error('❌ [Settings] Subscription fetch error:', error);
+      console.error(' [Settings] Subscription fetch error:', error);
       return NextResponse.json(
         { success: false, error: error.message || 'Failed to fetch subscription' },
         { status: 500 }

@@ -555,7 +555,7 @@ async function handleGetAnalytics(
       .single();
 
     if (websiteError) {
-      console.error('❌ [Analytics] Website query error:', websiteError);
+      console.error(' [Analytics] Website query error:', websiteError);
       return NextResponse.json(
         { success: false, error: 'Database error: ' + websiteError.message },
         { status: 500 }
@@ -563,7 +563,7 @@ async function handleGetAnalytics(
     }
 
     if (!website) {
-      console.error('❌ [Analytics] Website not found or access denied');
+      console.error(' [Analytics] Website not found or access denied');
       return NextResponse.json(
         { success: false, error: 'Website not found or access denied' },
         { status: 404 }
@@ -580,7 +580,7 @@ async function handleGetAnalytics(
       .eq('website_id', websiteId);
 
     if (subCountError) {
-      console.error('❌ [Analytics] Subscriber count error:', subCountError);
+      console.error(' [Analytics] Subscriber count error:', subCountError);
     }
 
     // Get active subscribers
@@ -605,7 +605,7 @@ async function handleGetAnalytics(
       .gte('created_at', startDate.toISOString());
 
     if (logsError) {
-      console.error('❌ [Analytics] Logs error:', logsError);
+      console.error(' [Analytics] Logs error:', logsError);
     } else {
       console.log('📝 [Analytics] Found', logs?.length || 0, 'notification logs');
     }
@@ -620,7 +620,7 @@ async function handleGetAnalytics(
       .gte('created_at', startDate.toISOString());
 
     if (clickError) {
-      console.error('❌ [Analytics] Click events error:', clickError);
+      console.error(' [Analytics] Click events error:', clickError);
     } else {
       console.log('🖱️ [Analytics] Found', clickEvents?.length || 0, 'click events');
     }

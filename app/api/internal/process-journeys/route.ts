@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const expectedAuth = `Bearer ${process.env.INTERNAL_API_KEY}`;
     
     if (!process.env.INTERNAL_API_KEY) {
-      console.error('❌ [Journey Processor] INTERNAL_API_KEY not configured');
+      console.error(' [Journey Processor] INTERNAL_API_KEY not configured');
       return NextResponse.json(
         { 
           success: false, 
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
     
     if (auth !== expectedAuth) {
-      console.error('❌ [Journey Processor] Unauthorized access attempt');
+      console.error(' [Journey Processor] Unauthorized access attempt');
       return NextResponse.json(
         { 
           success: false, 

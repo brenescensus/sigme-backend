@@ -42,7 +42,7 @@ async function handleTrackEvent(request: NextRequest) {
 
     // Validate required fields
     if (!subscriber_id || !event_name) {
-      console.error('[Event Track] ❌ Missing required fields');
+      console.error('[Event Track]  Missing required fields');
       return NextResponse.json(
         {
           success: false,
@@ -63,7 +63,7 @@ async function handleTrackEvent(request: NextRequest) {
       .single();
     
     if (subError) {
-      console.error('[Event Track] ❌ Subscriber not found:', subError);
+      console.error('[Event Track]  Subscriber not found:', subError);
       return NextResponse.json(
         { success: false, error: 'Subscriber not found' },
         { status: 404 }
@@ -74,7 +74,7 @@ async function handleTrackEvent(request: NextRequest) {
     finalWebsiteId = finalWebsiteId || subscriber.website_id;
 
     if (!finalWebsiteId) {
-      console.error('[Event Track] ❌ Could not determine website_id');
+      console.error('[Event Track]  Could not determine website_id');
       return NextResponse.json(
         { success: false, error: 'website_id is required' },
         { status: 400 }
@@ -138,7 +138,7 @@ async function handleTrackEvent(request: NextRequest) {
             
           }
         } catch (error: any) {
-          console.error('[Event Track] ❌ Error in click tracking:', error);
+          console.error('[Event Track]  Error in click tracking:', error);
         }
       }
     }
@@ -166,7 +166,7 @@ async function handleTrackEvent(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('[Event Track] ❌ Error inserting event:', insertError);
+      console.error('[Event Track]  Error inserting event:', insertError);
       return NextResponse.json(
         {
           success: false,
@@ -206,7 +206,7 @@ async function handleTrackEvent(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('[Event Track] ❌ Fatal error:', error);
+    console.error('[Event Track]  Fatal error:', error);
     console.error('[Event Track] Error stack:', error.stack);
     return NextResponse.json(
       {

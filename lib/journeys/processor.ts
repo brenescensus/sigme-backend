@@ -92,7 +92,7 @@
 // //           console.log(`[JourneyProcessor] current_step_id Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
 // //         } catch (error: any) {
 // //           failedCount++;
-// //           console.error(`[JourneyProcessor] ❌ Step ${scheduledStep.id} failed:`, error.message);
+// //           console.error(`[JourneyProcessor]  Step ${scheduledStep.id} failed:`, error.message);
 // //         }
 // //       }
 
@@ -643,7 +643,7 @@
 //           console.log(`[JourneyProcessor] current_step_id Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
 //         } catch (error: any) {
 //           failedCount++;
-//           console.error(`[JourneyProcessor] ❌ Step ${scheduledStep.id} failed:`, error.message);
+//           console.error(`[JourneyProcessor]  Step ${scheduledStep.id} failed:`, error.message);
 //         }
 //       }
 
@@ -1183,7 +1183,7 @@ class JourneyProcessor {
           console.log(`[JourneyProcessor] current_step_id Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
         } catch (error: any) {
           failedCount++;
-          console.error(`[JourneyProcessor] ❌ Step ${scheduledStep.id} failed:`, error.message);
+          console.error(`[JourneyProcessor]  Step ${scheduledStep.id} failed:`, error.message);
         }
       }
 

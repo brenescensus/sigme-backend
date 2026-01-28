@@ -10,10 +10,10 @@ const supabase = createClient(
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> } // ✅ params is a Promise
+  context: { params: Promise<{ id: string }> } //  params is a Promise
 ) {
   try {
-    const params = await context.params; // ✅ Await params first
+    const params = await context.params; //  Await params first
     const { id } = params;
     
     const { searchParams } = new URL(request.url);

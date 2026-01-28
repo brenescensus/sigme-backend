@@ -299,7 +299,7 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
 
     // Validate input
     if (!prompt || prompt.trim().length === 0) {
-      console.error('❌ [AI Generate] Empty prompt');
+      console.error(' [AI Generate] Empty prompt');
       return NextResponse.json(
         { success: false, error: 'Prompt is required' },
         { status: 400 }
@@ -326,14 +326,14 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
         .single();
 
       if (websiteError || !website) {
-        console.error('❌ [AI Generate] Website not found or access denied');
+        console.error(' [AI Generate] Website not found or access denied');
         return NextResponse.json(
           { success: false, error: 'Website not found or access denied' },
           { status: 404 }
         );
       }
 
-      console.log('✅ [AI Generate] Website found:', website.name);
+      console.log(' [AI Generate] Website found:', website.name);
 
       // Fetch historical campaign data for AI context
       const { data: campaigns, error: campaignsError } = await supabase
@@ -380,14 +380,14 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
     );
 
     if (!result.success) {
-      console.error('❌ [AI Generate] Generation failed:', result.error);
+      console.error(' [AI Generate] Generation failed:', result.error);
       return NextResponse.json(
         { success: false, error: result.error || 'AI generation failed' },
         { status: 500 }
       );
     }
 
-    console.log('✅ [AI Generate] Generated', result.suggestions.length, 'suggestions');
+    console.log(' [AI Generate] Generated', result.suggestions.length, 'suggestions');
 
     // Analyze optimal send time from historical data
     const optimalTime = context?.previousCampaigns && context.previousCampaigns.length > 0
@@ -411,7 +411,7 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
     });
 
   } catch (error: any) {
-    console.error('❌ [AI Generate] Unexpected error:', error);
+    console.error(' [AI Generate] Unexpected error:', error);
     console.error('Stack trace:', error.stack);
     
     return NextResponse.json(

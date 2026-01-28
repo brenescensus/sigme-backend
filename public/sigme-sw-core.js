@@ -255,8 +255,8 @@ self.addEventListener('push', (event) => {
         console.log('[Sigme SW Core] 📋 subscriber_id:', data.data.subscriber_id);
         console.log('[Sigme SW Core] 📋 campaign_id:', data.data.campaign_id);
       } else {
-        console.error('[Sigme SW Core] ❌ NO DATA OBJECT IN PUSH!');
-        console.error('[Sigme SW Core] ❌ Push payload:', JSON.stringify(data));
+        console.error('[Sigme SW Core]  NO DATA OBJECT IN PUSH!');
+        console.error('[Sigme SW Core]  Push payload:', JSON.stringify(data));
       }
       notification = {
         title: data.title || notification.title,
@@ -339,7 +339,7 @@ self.addEventListener('notificationclick', (event) => {
 
     event.waitUntil(trackingPromise);
   } else {
-    console.error('[Sigme SW Core] ❌ Cannot track click - missing subscriber_id');
+    console.error('[Sigme SW Core]  Cannot track click - missing subscriber_id');
     console.error('[Sigme SW Core] 📋 Available data:', notificationData);
   }
 
@@ -396,10 +396,10 @@ async function trackEvent(eventName, subscriberId, properties = {}) {
       return result;
     } else {
       const errorText = await response.text();
-      console.error(`[Sigme SW Core] ❌ Tracking failed (${response.status}):`, errorText);
+      console.error(`[Sigme SW Core]  Tracking failed (${response.status}):`, errorText);
     }
   } catch (err) {
-    console.error(`[Sigme SW Core] ❌ Tracking error:`, err);
+    console.error(`[Sigme SW Core]  Tracking error:`, err);
   }
 }
 

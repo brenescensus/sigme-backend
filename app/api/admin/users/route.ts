@@ -264,7 +264,7 @@ export const POST = withSuperAdmin(async (req, user) => {
     );
   }
 
-  // ✅ Allow 'user', 'admin', or 'super_admin'
+  //  Allow 'user', 'admin', or 'super_admin'
   if (!['user', 'admin', 'super_admin'].includes(role)) {
     return NextResponse.json(
       { error: 'Invalid role. Must be "user", "admin", or "super_admin"' },
@@ -275,7 +275,7 @@ export const POST = withSuperAdmin(async (req, user) => {
   const supabase = getAdminClient();
 
   try {
-    // ✅ Check admin limit (count both 'admin' and 'super_admin')
+    //  Check admin limit (count both 'admin' and 'super_admin')
     if (role === 'admin' || role === 'super_admin') {
       const { data: { users } } = await supabase.auth.admin.listUsers();
       const adminCount = users?.filter(u => 
@@ -364,7 +364,7 @@ export const DELETE = withSuperAdmin(async (req, user) => {
   const supabase = getAdminClient();
 
   try {
-    // ✅ Prevent deleting yourself
+    //  Prevent deleting yourself
     if (userId === user.id) {
       return NextResponse.json(
         { error: 'Cannot delete your own account' },

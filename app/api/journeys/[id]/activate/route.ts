@@ -10,10 +10,10 @@
 // export const POST = withAuth(async (
 //   request: NextRequest,
 //   user: AuthUser,
-//   context: { params: Promise<{ id: string }> }  // ✅ params is a Promise
+//   context: { params: Promise<{ id: string }> }  //  params is a Promise
 // ) => {
 //   try {
-//     const params = await context.params;  // ✅ Await it first
+//     const params = await context.params;  //  Await it first
 //     const journeyId = params.id;
     
 //     console.log('🚀 [Activate] Journey ID:', journeyId);
@@ -61,7 +61,7 @@
 //       .select()
 //       .single();
 
-//     console.log('✅ [Activate] Update result:', { journey, error });
+//     console.log(' [Activate] Update result:', { journey, error });
 
 //     if (error || !journey) {
 //       return NextResponse.json(
@@ -78,7 +78,7 @@
 //       journey,
 //     });
 //   } catch (error: any) {
-//     console.error('❌ [Activate] Error:', error);
+//     console.error(' [Activate] Error:', error);
 //     return NextResponse.json(
 //       { success: false, error: error.message },
 //       { status: 500 }
@@ -128,21 +128,21 @@ export const POST = withAuth(async (
       .single();
 
     if (error || !journey) {
-      console.error('❌ [Activate] Error:', error);
+      console.error(' [Activate] Error:', error);
       return NextResponse.json(
         { error: 'Journey not found or access denied' },
         { status: 404 }
       );
     }
 
-    console.log('✅ [Activate] Journey activated:', journey.name);
+    console.log(' [Activate] Journey activated:', journey.name);
 
     return NextResponse.json({
       success: true,
       journey,
     });
   } catch (error: any) {
-    console.error('❌ [Activate] Error:', error);
+    console.error(' [Activate] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
