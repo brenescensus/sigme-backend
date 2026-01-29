@@ -1,128 +1,95 @@
-// import { NextRequest, NextResponse } from 'next/server';
-// import { createClient } from '@supabase/supabase-js';
-// import { withAuth, AuthUser } from '@/lib/auth-middleware';
-
-// const supabase = createClient(
-//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//   process.env.SUPABASE_SERVICE_ROLE_KEY!,
-// );
-
-// export const POST = withAuth(async (
-//   request: NextRequest,
-//   user: AuthUser,
-//   { params }: { params: { journeyId: string } }
-// ) => {
-//   try {
-//     // Get original journey
-//     const { data: original, error: fetchError } = await supabase
-//       .from('journeys')
-//       .select('*')
-//       .eq('id', params.journeyId)
-//       .eq('user_id', user.id)
-//       .single();
-
-//     if (fetchError || !original) {
-//       return NextResponse.json(
-//         { error: 'Journey not found' },
-//         { status: 404 }
-//       );
-//     }
-
-//     // Create duplicate
-//     const { data: duplicate, error: createError } = await supabase
-//       .from('journeys')
-//       .insert({
-//         user_id: user.id,
-//         website_id: original.website_id,
-//         name: `${original.name} (Copy)`,
-//         description: original.description,
-//         entry_trigger: original.entry_trigger,
-//         flow_definition: original.flow_definition,
-//         settings: original.settings,
-//         status: 'draft',
-//       })
-//       .select()
-//       .single();
-
-//     if (createError) throw createError;
-
-//     return NextResponse.json({
-//       success: true,
-//       journey: duplicate,
-//     });
-//   } catch (error: any) {
-//     return NextResponse.json(
-//       { success: false, error: error.message },
-//       { status: 500 }
-//     );
-//   }
-// });
-import { NextRequest, NextResponse } from 'next/server';
+// pages/api/journeys/[id]/duplicate.ts
+import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import { withAuth, AuthUser } from '@/lib/auth-middleware';
+import type { Database } from '@/types/database';
 
-const supabase = createClient(
+const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export const POST = withAuth(async (
-  request: NextRequest,
-  user: AuthUser,
-  context: any
-) => {
+/**
+ * POST /api/journeys/[id]/duplicate - Duplicate a journey
+ */
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { id } = req.query;
+
+  if (!id || typeof id !== 'string') {
+    return res.status(400).json({ error: 'Journey ID is required' });
+  }
+
+  // Extract user ID from Authorization header
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const token = authHeader.substring(7);
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+  if (authError || !user) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+
   try {
-    const params = await context.params;
-    const journeyId = params?.id;
-
-    if (!journeyId) {
-      return NextResponse.json(
-        { error: 'Journey ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Get original journey
-    const { data: original, error: fetchError } = await supabase
+    // Fetch the journey to duplicate
+    const { data: journey, error: fetchError } = await supabase
       .from('journeys')
       .select('*')
-      .eq('id', journeyId)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single();
 
-    if (fetchError || !original) {
-      return NextResponse.json(
-        { error: 'Journey not found or access denied' },
-        { status: 404 }
-      );
+    if (fetchError || !journey) {
+      return res.status(404).json({ error: 'Journey not found' });
     }
 
-    // Create duplicate
-    const { data: duplicate, error: createError } = await supabase
+    // Create duplicate with modified name
+    const duplicateName = `${journey.name} (Copy)`;
+    
+    const { data: duplicateJourney, error: createError } = await supabase
       .from('journeys')
       .insert({
+        website_id: journey.website_id,
         user_id: user.id,
-        website_id: original.website_id,
-        name: `${original.name} (Copy)`,
-        description: original.description,
-        entry_trigger: original.entry_trigger,
-        flow_definition: original.flow_definition,
-        settings: original.settings,
-        status: 'draft',
+        name: duplicateName,
+        description: journey.description,
+        entry_trigger: journey.entry_trigger,
+        flow_definition: journey.flow_definition,
+        exit_rules: journey.exit_rules,
+        re_entry_settings: journey.re_entry_settings,
+        settings: journey.settings,
+        status: 'draft', // Always create duplicates as draft
+        total_entered: 0,
+        total_active: 0,
+        total_completed: 0,
       })
       .select()
       .single();
 
-    if (createError) throw createError;
+    if (createError) {
+      throw createError;
+    }
 
-    return NextResponse.json({
+    console.log(`[Journey ${id}] Duplicated to ${duplicateJourney.id}`);
+
+    return res.status(201).json({
       success: true,
-      journey: duplicate,
+      message: 'Journey duplicated successfully',
+      journey: duplicateJourney,
     });
+
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    console.error('[Journey Duplicate] Error:', error);
+    return res.status(500).json({ 
+      error: error.message || 'Failed to duplicate journey' 
+    });
   }
-});
+}

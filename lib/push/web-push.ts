@@ -139,3 +139,44 @@ export function validateWebPushSubscription(subscription: any): boolean {
 
   return true;
 }
+
+
+// Add this to your existing lib/push/web-push.ts
+
+/**
+ * Legacy sendNotification function for backward compatibility
+ * Wraps the new sendWebPushNotification with simpler parameters
+ */
+export async function sendNotification(
+  endpoint: string,
+  p256dh: string,
+  auth: string,
+  notificationData: {
+    title: string;
+    body: string;
+    icon?: string;
+    url?: string;
+  },
+  websiteId: string
+): Promise<void> {
+  const subscription: WebPushSubscription = {
+    endpoint,
+    keys: {
+      p256dh,
+      auth,
+    },
+  };
+
+  const payload: NotificationPayload = {
+    title: notificationData.title,
+    body: notificationData.body,
+    icon: notificationData.icon,
+    url: notificationData.url,
+  };
+
+  const result = await sendWebPushNotification(subscription, payload);
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to send notification');
+  }
+}

@@ -1,947 +1,831 @@
-// // // backend/lib/journeys/processor.ts
-// // import { createClient } from '@supabase/supabase-js';
-// // import webpush from 'web-push';
+// // // lib/journeys/processor.ts
+// /**
+//  * Journey Execution Engine - Brevo-Style Implementation
+//  * Handles multi-step journey flows with advanced triggers and conditions
+//  */
 
-// // const supabase = createClient(
-// //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-// //   process.env.SUPABASE_SERVICE_ROLE_KEY!,
-// // );
-
-// // export interface ProcessingResult {
-// //   processed: number;
-// //   failed: number;
-// //   skipped: number;
-// // }
-
-// // export interface JourneyStep {
-// //   id: string;
-// //   type: 'send_notification' | 'delay' | 'wait_for_event' | 'condition' | 'split';
-// //   config: {
-// //     title?: string;
-// //     body?: string;
-// //     click_url?: string;
-// //     icon_url?: string;
-// //     delay_value?: number;
-// //     delay_unit?: 'minutes' | 'hours' | 'days';
-// //     event_name?: string;
-// //     timeout_value?: number;
-// //     timeout_unit?: 'minutes' | 'hours' | 'days';
-// //     condition?: {
-// //       field: string;
-// //       operator: 'equals' | 'contains' | 'greater_than' | 'less_than';
-// //       value: any;
-// //     };
-// //   };
-// //   next_step_id?: string;
-// //   fallback_step_id?: string;
-// // }
-
-// // class JourneyProcessor {
-// //   private processing = false;
-// //   private lastProcessTime = 0;
-// //   private MIN_PROCESS_INTERVAL = 5000; // 5 seconds between runs
-
-// //   // current_step_id KEEP ONLY THIS VERSION - with ProcessingResult return type
-// //   async processDueSteps(): Promise<ProcessingResult> {
-// //     // Prevent concurrent processing
-// //     if (this.processing) {
-// //       console.log('[JourneyProcessor] Already processing, skipping');
-// //       return { processed: 0, failed: 0, skipped: 0 };
-// //     }
-
-// //     // Rate limiting
-// //     const now = Date.now();
-// //     if (now - this.lastProcessTime < this.MIN_PROCESS_INTERVAL) {
-// //       console.log('[JourneyProcessor] Too soon since last run, skipping');
-// //       return { processed: 0, failed: 0, skipped: 0 };
-// //     }
-
-// //     this.processing = true;
-// //     this.lastProcessTime = now;
-
-// //     let processedCount = 0;
-// //     let failedCount = 0;
-// //     let skippedCount = 0;
-
-// //     try {
-// //       console.log('[JourneyProcessor] Starting processing run');
-
-// //       const { data: dueSteps, error } = await supabase
-// //         .from('scheduled_journey_steps')
-// //         .select(`
-// //           *,
-// //           user_journey_state:user_journey_states!scheduled_journey_steps_user_journey_state_id_fkey(*)
-// //         `)
-// //         .eq('status', 'pending')
-// //         .lte('execute_at', new Date().toISOString())
-// //         .order('execute_at', { ascending: true })
-// //         .limit(50);
-
-// //       if (error) {
-// //         console.error('[JourneyProcessor] Query error:', error);
-// //         throw error;
-// //       }
-
-// //       const totalSteps = dueSteps?.length || 0;
-// //       console.log(`[JourneyProcessor] Found ${totalSteps} due steps`);
-
-// //       for (const scheduledStep of dueSteps || []) {
-// //         try {
-// //           await this.executeScheduledStep(scheduledStep);
-// //           processedCount++;
-// //           console.log(`[JourneyProcessor] current_step_id Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
-// //         } catch (error: any) {
-// //           failedCount++;
-// //           console.error(`[JourneyProcessor]  Step ${scheduledStep.id} failed:`, error.message);
-// //         }
-// //       }
-
-// //       console.log(`[JourneyProcessor] current_step_id Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
-      
-// //       return { 
-// //         processed: processedCount, 
-// //         failed: failedCount,
-// //         skipped: skippedCount
-// //       };
-      
-// //     } catch (error: any) {
-// //       console.error('[JourneyProcessor] 💥 Fatal error:', error.message);
-// //       return { 
-// //         processed: processedCount, 
-// //         failed: failedCount,
-// //         skipped: skippedCount
-// //       };
-// //     } finally {
-// //       this.processing = false;
-// //     }
-// //   }
-
-// //   private async executeScheduledStep(scheduledStep: any): Promise<void> {
-// //     const { id, user_journey_state_id, step_id, payload } = scheduledStep;
-
-// //     try {
-// //       console.log(`[JourneyProcessor] Executing step ${step_id}`);
-
-// //       // Mark as executing
-// //       await supabase
-// //         .from('scheduled_journey_steps')
-// //         .update({ status: 'executing' })
-// //         .eq('id', id)
-// //         .eq('status', 'pending'); // Only if still pending
-
-      
-// //       const { data: journeyState } = await supabase
-// //         .from('user_journey_states')
-// //         .select(`
-// //           *,
-// //           journey:journeys(*)
-// //         `)
-// //         .eq('id', user_journey_state_id)
-// //         .single();
-
-// //       if (!journeyState) {
-// //         throw new Error('Journey state not found');
-// //       }
-
-// //       // Find the step in journey definition
-// //       const journey = journeyState.journey;
-// //       const step = journey.flow_definition.nodes.find(
-// //         (n: any) => n.id === step_id
-// //       );
-
-// //       if (!step) {
-// //         throw new Error(`Step ${step_id} not found in journey`);
-// //       }
-
-// //       // Execute the step
-// //       await this.executeStep(journeyState, step, payload);
-
-// //       // Mark as completed
-// //       await supabase
-// //         .from('scheduled_journey_steps')
-// //         .update({
-// //           status: 'completed',
-// //           executed_at: new Date().toISOString(),
-// //         })
-// //         .eq('id', id);
-
-// //       // Move to next step
-// //       await this.advanceJourney(journeyState, step);
-
-// //     } catch (error: any) {
-// //       console.error(`[JourneyProcessor] Failed step ${id}:`, error);
-
-// //       await supabase
-// //         .from('scheduled_journey_steps')
-// //         .update({
-// //           status: 'failed',
-// //           payload: { ...payload, error: error.message },
-// //         })
-// //         .eq('id', id);
-// //     }
-// //   }
-
-// //   private async executeStep(
-// //     journeyState: any,
-// //     step: any,
-// //     payload?: any
-// //   ): Promise<void> {
-// //     const stepType = step.type || step.data?.type;
-
-// //     console.log(`[JourneyProcessor] Executing ${stepType} step`);
-
-// //     switch (stepType) {
-// //       case 'send_notification':
-// //         await this.executeSendNotification(journeyState, step);
-// //         break;
-
-// //       case 'delay':
-// //         console.log('[JourneyProcessor] Delay step completed');
-// //         break;
-
-// //       case 'wait_for_event':
-// //         await this.executeWaitForEvent(journeyState, step);
-// //         break;
-
-// //       case 'condition':
-// //         await this.executeCondition(journeyState, step);
-// //         break;
-
-// //       case 'split':
-// //         await this.executeSplit(journeyState, step);
-// //         break;
-
-// //       default:
-// //         console.warn(`[JourneyProcessor] Unknown step type: ${stepType}`);
-// //     }
-
-// //     // Log event
-// //     await supabase.from('journey_events').insert({
-// //       journey_id: journeyState.journey_id,
-// //       subscriber_id: journeyState.subscriber_id,
-// //       user_journey_state_id: journeyState.id,
-// //       step_id: step.id,
-// //       event_type: 'step_executed',
-// //       metadata: { step_type: stepType },
-// //     });
-// //   }
-
-// //   private async executeSendNotification(
-// //     journeyState: any,
-// //     step: any
-// //   ): Promise<void> {
-// //     const config = step.config || step.data?.config || {};
-// //     const { title, body, click_url, icon_url } = config;
-
-// //     // Get subscriber
-// //     const { data: subscriber } = await supabase
-// //       .from('subscribers')
-// //       .select('*')
-// //       .eq('id', journeyState.subscriber_id)
-// //       .single();
-
-// //     if (!subscriber || !subscriber.endpoint) {
-// //       console.log('[JourneyProcessor] Subscriber has no valid subscription');
-// //       return;
-// //     }
-
-// //     // Get website VAPID keys
-// //     const { data: website } = await supabase
-// //       .from('websites')
-// //       .select('vapid_public_key, vapid_private_key')
-// //       .eq('id', journeyState.journey.website_id)
-// //       .single();
-
-// //     if (!website?.vapid_public_key || !website?.vapid_private_key) {
-// //       throw new Error('Website VAPID keys not configured');
-// //     }
-
-// //     // Set VAPID details
-// //     webpush.setVapidDetails(
-// //       'mailto:support@yourapp.com',
-// //       website.vapid_public_key,
-// //       website.vapid_private_key
-// //     );
-
-// //     // Build push subscription
-// //     const pushSubscription = {
-// //       endpoint: subscriber.endpoint,
-// //       keys: {
-// //         p256dh: subscriber.p256dh_key,
-// //         auth: subscriber.auth_key,
-// //       },
-// //     };
-
-// //     // Send notification
-// //     const payload = JSON.stringify({
-// //       title: title || 'Notification',
-// //       body: body || '',
-// //       icon: icon_url,
-// //       data: {
-// //         url: click_url,
-// //         journey_id: journeyState.journey_id,
-// //       },
-// //     });
-
-// //     try {
-// //       await webpush.sendNotification(pushSubscription, payload);
-// //       console.log('[JourneyProcessor] Notification sent successfully');
-
-// //       // Log notification
-// //       await supabase.from('notification_logs').insert({
-// //         website_id: journeyState.journey.website_id,
-// //         subscriber_id: subscriber.id,
-// //         status: 'delivered',
-// //         sent_at: new Date().toISOString(),
-// //         delivered_at: new Date().toISOString(),
-// //       });
-// //     } catch (error: any) {
-// //       console.error('[JourneyProcessor] Failed to send notification:', error);
-
-// //       await supabase.from('notification_logs').insert({
-// //         website_id: journeyState.journey.website_id,
-// //         subscriber_id: subscriber.id,
-// //         status: 'failed',
-// //         error_message: error.message,
-// //         sent_at: new Date().toISOString(),
-// //       });
-
-// //       throw error;
-// //     }
-// //   }
-
-// //   private async executeWaitForEvent(
-// //     journeyState: any,
-// //     step: any
-// //   ): Promise<void> {
-// //     const config = step.config || step.data?.config || {};
-// //     const { event_name, timeout_value = 24, timeout_unit = 'hours' } = config;
-
-// //     // Calculate timeout
-// //     const timeoutMs = this.calculateDelay(timeout_value, timeout_unit);
-// //     const timeoutAt = new Date(Date.now() + timeoutMs);
-
-// //     // Update journey state to waiting
-// //     await supabase
-// //       .from('user_journey_states')
-// //       .update({
-// //         status: 'waiting',
-// //         current_step_id: step.id,
-// //         context: {
-// //           ...journeyState.context,
-// //           waiting_for_event: event_name,
-// //           timeout_at: timeoutAt.toISOString(),
-// //         },
-// //       })
-// //       .eq('id', journeyState.id);
-
-// //     // Schedule timeout fallback
-// //     const connections = journeyState.journey.flow_definition.edges || [];
-// //     const fallbackEdge = connections.find(
-// //       (e: any) => e.from === step.id && e.condition === 'timeout'
-// //     );
-
-// //     if (fallbackEdge) {
-// //       await this.scheduleStep(
-// //         journeyState.id,
-// //         fallbackEdge.to,
-// //         timeoutAt,
-// //         { reason: 'timeout' }
-// //       );
-// //     }
-
-// //     console.log(`[JourneyProcessor] Waiting for event: ${event_name}`);
-// //   }
-
-// //   private async executeCondition(
-// //     journeyState: any,
-// //     step: any
-// //   ): Promise<void> {
-// //     const config = step.config || step.data?.config || {};
-// //     const { condition } = config;
-
-// //     if (!condition) {
-// //       console.warn('[JourneyProcessor] Condition config missing');
-// //       return;
-// //     }
-
-// //     // Evaluate condition
-// //     const result = await this.evaluateCondition(journeyState, condition);
-// //     console.log(`[JourneyProcessor] Condition result: ${result}`);
-
-// //     // Find next step based on result
-// //     const connections = journeyState.journey.flow_definition.edges || [];
-// //     const nextEdge = connections.find(
-// //       (e: any) => e.from === step.id && e.condition === (result ? 'yes' : 'no')
-// //     );
-
-// //     if (nextEdge) {
-// //       await supabase
-// //         .from('user_journey_states')
-// //         .update({ current_step_id: nextEdge.to })
-// //         .eq('id', journeyState.id);
-// //     }
-// //   }
-
-// //   private async executeSplit(journeyState: any, step: any): Promise<void> {
-// //     // Random 50/50 split
-// //     const takeMainBranch = Math.random() < 0.5;
-
-// //     const connections = journeyState.journey.flow_definition.edges || [];
-// //     const nextEdge = connections.find(
-// //       (e: any) => e.from === step.id && e.condition === (takeMainBranch ? 'A' : 'B')
-// //     );
-
-// //     if (nextEdge) {
-// //       await supabase
-// //         .from('user_journey_states')
-// //         .update({
-// //           current_step_id: nextEdge.to,
-// //           context: {
-// //             ...journeyState.context,
-// //             split_branch: takeMainBranch ? 'A' : 'B',
-// //           },
-// //         })
-// //         .eq('id', journeyState.id);
-// //     }
-
-// //     console.log(`[JourneyProcessor] Split: ${takeMainBranch ? 'A' : 'B'}`);
-// //   }
-
-// //   private async advanceJourney(
-// //     journeyState: any,
-// //     currentStep: any
-// //   ): Promise<void> {
-// //     // Find next step connection
-// //     const connections = journeyState.journey.flow_definition.edges || [];
-// //     const nextEdge = connections.find(
-// //       (e: any) => e.from === currentStep.id && !e.condition
-// //     );
-
-// //     if (!nextEdge) {
-// //       // Journey complete
-// //       await supabase
-// //         .from('user_journey_states')
-// //         .update({
-// //           status: 'completed',
-// //           completed_at: new Date().toISOString(),
-// //         })
-// //         .eq('id', journeyState.id);
-
-// //       console.log('[JourneyProcessor] Journey completed');
-// //       return;
-// //     }
-
-// //     const nextStep = journeyState.journey.flow_definition.nodes.find(
-// //       (n: any) => n.id === nextEdge.to
-// //     );
-
-// //     if (!nextStep) {
-// //       console.warn(`[JourneyProcessor] Next step ${nextEdge.to} not found`);
-// //       return;
-// //     }
-
-// //     // Update current step
-// //     await supabase
-// //       .from('user_journey_states')
-// //       .update({ current_step_id: nextStep.id })
-// //       .eq('id', journeyState.id);
-
-// //     const stepType = nextStep.type || nextStep.data?.type;
-// // // If delay, schedule it
-// // if (stepType === 'delay' || stepType === 'wait') {  // current_step_id Support both 'delay' and 'wait'
-// //   const config = { ...(nextStep.data || {}), ...(nextStep.data?.config || {}) };
-  
-// //   // current_step_id Handle both formats: duration (seconds) and delay_value/delay_unit
-// //   let delayMs: number;
-// //   if (config.duration) {
-// //     // Frontend format: duration in seconds
-// //     delayMs = config.duration * 1000;
-// //   } else {
-// //     // Backend format: delay_value and delay_unit
-// //     const { delay_value = 1, delay_unit = 'hours' } = config;
-// //     delayMs = this.calculateDelay(delay_value, delay_unit);
-// //   }
-  
-// //   const executeAt = new Date(Date.now() + delayMs);
-
-// //   await this.scheduleStep(journeyState.id, nextStep.id, executeAt, {
-// //     delay_value: config.delay_value,
-// //     delay_unit: config.delay_unit,
-// //     duration: config.duration,
-// //   });
-
-// //   console.log(`[JourneyProcessor] Scheduled delay for ${executeAt}`);
-// // }
-// //     // // If delay, schedule it
-// //     // if (stepType === 'delay') {
-// //     //   const config = nextStep.config || nextStep.data?.config || {};
-// //     //   const { delay_value = 1, delay_unit = 'hours' } = config;
-// //     //   const delayMs = this.calculateDelay(delay_value, delay_unit);
-// //     //   const executeAt = new Date(Date.now() + delayMs);
-
-// //     //   await this.scheduleStep(journeyState.id, nextStep.id, executeAt, {
-// //     //     delay_value,
-// //     //     delay_unit,
-// //     //   });
-
-// //     //   console.log(`[JourneyProcessor] Scheduled delay for ${executeAt}`);
-// //     // } 
-// //     else {
-// //       // Execute immediately
-// //       await this.executeStep(journeyState, nextStep);
-// //       await this.advanceJourney(journeyState, nextStep);
-// //     }
-// //   }
-
-// //   private calculateDelay(
-// //     value: number,
-// //     unit: 'minutes' | 'hours' | 'days'
-// //   ): number {
-// //     const multipliers = {
-// //       minutes: 60 * 1000,
-// //       hours: 60 * 60 * 1000,
-// //       days: 24 * 60 * 60 * 1000,
-// //     };
-// //     return value * multipliers[unit];
-// //   }
-
-// //   private async evaluateCondition(
-// //     journeyState: any,
-// //     condition: any
-// //   ): Promise<boolean> {
-// //     const value = journeyState.context?.[condition.field];
-
-// //     switch (condition.operator) {
-// //       case 'equals':
-// //         return value === condition.value;
-// //       case 'contains':
-// //         return String(value).includes(condition.value);
-// //       case 'greater_than':
-// //         return Number(value) > Number(condition.value);
-// //       case 'less_than':
-// //         return Number(value) < Number(condition.value);
-// //       default:
-// //         return false;
-// //     }
-// //   }
-
-// //   private async scheduleStep(
-// //     journeyStateId: string,
-// //     stepId: string,
-// //     executeAt: Date,
-// //     payload: any
-// //   ): Promise<void> {
-// //     await supabase.from('scheduled_journey_steps').insert({
-// //       user_journey_state_id: journeyStateId,
-// //       step_id: stepId,
-// //       execute_at: executeAt.toISOString(),
-// //       status: 'pending',
-// //       payload,
-// //     });
-// //   }
-// // }
-
-// // export const journeyProcessor = new JourneyProcessor();
-
-// // backend/lib/journeys/processor.ts
 // import { createClient } from '@supabase/supabase-js';
-// import webpush from 'web-push';
+// import type { Database } from '@/types/database';
+// import { sendWebPushNotification, type WebPushSubscription, type NotificationPayload } from '@/lib/push/web-push';
 
-// const supabase = createClient(
+// const supabase = createClient<Database>(
 //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//   process.env.SUPABASE_SERVICE_ROLE_KEY!,
+//   process.env.SUPABASE_SERVICE_ROLE_KEY!
 // );
 
-// export interface ProcessingResult {
+// // ============================================================================
+// // TYPE DEFINITIONS
+// // ============================================================================
+
+// interface JourneyNode {
+//   id: string;
+//   type: 'send_notification' | 'wait' | 'condition' | 'ab_split' | 'entry' | 'exit';
+//   position: { x: number; y: number };
+//   data: any;
+// }
+
+// interface JourneyEdge {
+//   id?: string;
+//   from: string;
+//   to: string;
+//   type?: 'yes' | 'no' | 'default' | 'branch' | 'success' | 'timeout';
+//   branchId?: string;
+//   condition?: string;
+// }
+
+// interface FlowDefinition {
+//   nodes: JourneyNode[];
+//   edges: JourneyEdge[];
+//   start_step_id?: string;
+// }
+
+// interface JourneyState {
+//   id: string;
+//   journey_id: string;
+//   subscriber_id: string;
+//   current_step_id: string | null;
+//   status: 'active' | 'completed' | 'exited' | 'waiting' | null;
+//   context: any;
+//   node_history: string[];
+//   entered_at: string | null;
+//   next_execution_at: string | null;
+//   last_processed_at?: string | null;
+//   completed_at?: string | null;
+// }
+
+// interface ProcessingResult {
 //   processed: number;
 //   failed: number;
 //   skipped: number;
+//   total: number;
+//   errors?: string[];
 // }
 
-// export interface JourneyStep {
-//   id: string;
-//   type: 'send_notification' | 'delay' | 'wait' | 'wait_for_event' | 'condition' | 'split';
-//   config: {
-//     title?: string;
-//     body?: string;
-//     click_url?: string;
-//     icon_url?: string;
-//     delay_value?: number;
-//     delay_unit?: 'minutes' | 'hours' | 'days';
-//     duration?: number; // in seconds (old format)
-//     event_name?: string;
-//     timeout_value?: number;
-//     timeout_unit?: 'minutes' | 'hours' | 'days';
-//     condition?: {
-//       field: string;
-//       operator: 'equals' | 'contains' | 'greater_than' | 'less_than';
-//       value: any;
-//     };
+// // ============================================================================
+// // UTILITY FUNCTIONS
+// // ============================================================================
+
+// function parseFlowDefinition(data: any): FlowDefinition {
+//   if (!data || typeof data !== 'object') {
+//     console.warn('[Processor] Invalid flow definition, returning empty flow');
+//     return { nodes: [], edges: [] };
+//   }
+//   return {
+//     nodes: Array.isArray(data.nodes) ? data.nodes : [],
+//     edges: Array.isArray(data.edges) ? data.edges : [],
+//     start_step_id: data.start_step_id,
 //   };
-//   next_step_id?: string;
-//   fallback_step_id?: string;
 // }
 
-// // Helper function to merge step data and config
-// function getStepConfig(step: any): any {
-//   return { ...(step.data || {}), ...(step.data?.config || {}) };
+// function toJourneyState(dbRow: any): JourneyState {
+//   return {
+//     id: dbRow.id,
+//     journey_id: dbRow.journey_id,
+//     subscriber_id: dbRow.subscriber_id,
+//     current_step_id: dbRow.current_step_id,
+//     status: dbRow.status || 'active',
+//     context: dbRow.context || {},
+//     node_history: Array.isArray(dbRow.node_history) ? dbRow.node_history : [],
+//     entered_at: dbRow.entered_at,
+//     next_execution_at: dbRow.next_execution_at,
+//     last_processed_at: dbRow.last_processed_at,
+//     completed_at: dbRow.completed_at,
+//   };
 // }
 
-// class JourneyProcessor {
-//   private processing = false;
-//   private lastProcessTime = 0;
-//   private MIN_PROCESS_INTERVAL = 5000; // 5 seconds between runs
-
-//   async processDueSteps(): Promise<ProcessingResult> {
-//     // Prevent concurrent processing
-//     if (this.processing) {
-//       console.log('[JourneyProcessor] Already processing, skipping');
-//       return { processed: 0, failed: 0, skipped: 0 };
-//     }
-
-//     // Rate limiting
-//     const now = Date.now();
-//     if (now - this.lastProcessTime < this.MIN_PROCESS_INTERVAL) {
-//       console.log('[JourneyProcessor] Too soon since last run, skipping');
-//       return { processed: 0, failed: 0, skipped: 0 };
-//     }
-
-//     this.processing = true;
-//     this.lastProcessTime = now;
-
-//     let processedCount = 0;
-//     let failedCount = 0;
-//     let skippedCount = 0;
-
-//     try {
-//       console.log('[JourneyProcessor] Starting processing run');
-
-//       const { data: dueSteps, error } = await supabase
-//         .from('scheduled_journey_steps')
-//         .select(`
-//           *,
-//           user_journey_state:user_journey_states!scheduled_journey_steps_user_journey_state_id_fkey(*)
-//         `)
-//         .eq('status', 'pending')
-//         .lte('execute_at', new Date().toISOString())
-//         .order('execute_at', { ascending: true })
-//         .limit(50);
-
-//       if (error) {
-//         console.error('[JourneyProcessor] Query error:', error);
-//         throw error;
-//       }
-
-//       const totalSteps = dueSteps?.length || 0;
-//       console.log(`[JourneyProcessor] Found ${totalSteps} due steps`);
-
-//       for (const scheduledStep of dueSteps || []) {
-//         try {
-//           await this.executeScheduledStep(scheduledStep);
-//           processedCount++;
-//           console.log(`[JourneyProcessor] current_step_id Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
-//         } catch (error: any) {
-//           failedCount++;
-//           console.error(`[JourneyProcessor]  Step ${scheduledStep.id} failed:`, error.message);
-//         }
-//       }
-
-//       console.log(`[JourneyProcessor] current_step_id Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
-      
-//       return { 
-//         processed: processedCount, 
-//         failed: failedCount,
-//         skipped: skippedCount
-//       };
-      
-//     } catch (error: any) {
-//       console.error('[JourneyProcessor] 💥 Fatal error:', error.message);
-//       return { 
-//         processed: processedCount, 
-//         failed: failedCount,
-//         skipped: skippedCount
-//       };
-//     } finally {
-//       this.processing = false;
-//     }
+// function getNextNodeId(flowDefinition: FlowDefinition, currentNodeId: string, condition?: string): string | null {
+//   // First try to find edge with specific condition
+//   if (condition) {
+//     const conditionalEdge = flowDefinition.edges.find(
+//       e => e.from === currentNodeId && (e.type === condition || e.condition === condition)
+//     );
+//     if (conditionalEdge) return conditionalEdge.to;
 //   }
 
-//   private async executeScheduledStep(scheduledStep: any): Promise<void> {
-//     const { id, user_journey_state_id, step_id, payload } = scheduledStep;
+//   // Then try default edge
+//   const defaultEdge = flowDefinition.edges.find(
+//     e => e.from === currentNodeId && (!e.type || e.type === 'default')
+//   );
+  
+//   return defaultEdge ? defaultEdge.to : null;
+// }
 
-//     try {
-//       console.log(`[JourneyProcessor] Executing step ${step_id}`);
-
-//       // Mark as executing
-//       await supabase
-//         .from('scheduled_journey_steps')
-//         .update({ status: 'executing' })
-//         .eq('id', id)
-//         .eq('status', 'pending');
-
-//       const { data: journeyState } = await supabase
-//         .from('user_journey_states')
-//         .select(`
-//           *,
-//           journey:journeys(*)
-//         `)
-//         .eq('id', user_journey_state_id)
-//         .single();
-
-//       if (!journeyState) {
-//         throw new Error('Journey state not found');
-//       }
-
-//       // Find the step in journey definition
-//       const journey = journeyState.journey;
-//       const step = journey.flow_definition.nodes.find(
-//         (n: any) => n.id === step_id
-//       );
-
-//       if (!step) {
-//         throw new Error(`Step ${step_id} not found in journey`);
-//       }
-
-//       // Execute the step
-//       await this.executeStep(journeyState, step, payload);
-
-//       // Mark as completed
-//       await supabase
-//         .from('scheduled_journey_steps')
-//         .update({
-//           status: 'completed',
-//           executed_at: new Date().toISOString(),
-//         })
-//         .eq('id', id);
-
-//       // Move to next step
-//       await this.advanceJourney(journeyState, step);
-
-//     } catch (error: any) {
-//       console.error(`[JourneyProcessor] Failed step ${id}:`, error);
-
-//       await supabase
-//         .from('scheduled_journey_steps')
-//         .update({
-//           status: 'failed',
-//           payload: { ...payload, error: error.message },
-//         })
-//         .eq('id', id);
-//     }
-//   }
-
-//   private async executeStep(
-//     journeyState: any,
-//     step: any,
-//     payload?: any
-//   ): Promise<void> {
-//     const stepType = step.type || step.data?.type;
-
-//     console.log(`[JourneyProcessor] Executing ${stepType} step`);
-
-//     switch (stepType) {
-//       case 'send_notification':
-//         await this.executeSendNotification(journeyState, step);
-//         break;
-
-//       case 'delay':
-//       case 'wait':
-//         console.log('[JourneyProcessor] Delay/wait step completed');
-//         break;
-
-//       case 'wait_for_event':
-//         await this.executeWaitForEvent(journeyState, step);
-//         break;
-
-//       case 'condition':
-//         await this.executeCondition(journeyState, step);
-//         break;
-
-//       case 'split':
-//         await this.executeSplit(journeyState, step);
-//         break;
-
-//       default:
-//         console.warn(`[JourneyProcessor] Unknown step type: ${stepType}`);
-//     }
-
-//     // Log event
+// async function logJourneyEvent(
+//   journeyId: string,
+//   subscriberId: string,
+//   stateId: string,
+//   eventType: string,
+//   metadata?: any,
+//   stepId?: string
+// ) {
+//   try {
 //     await supabase.from('journey_events').insert({
-//       journey_id: journeyState.journey_id,
-//       subscriber_id: journeyState.subscriber_id,
-//       user_journey_state_id: journeyState.id,
-//       step_id: step.id,
-//       event_type: 'step_executed',
-//       metadata: { step_type: stepType },
+//       journey_id: journeyId,
+//       subscriber_id: subscriberId,
+//       user_journey_state_id: stateId,
+//       event_type: eventType,
+//       step_id: stepId || null,
+//       metadata: metadata || {},
 //     });
+//   } catch (error: any) {
+//     console.error('[Processor] Failed to log event:', error.message);
 //   }
+// }
 
-//   private async executeSendNotification(
-//     journeyState: any,
-//     step: any
-//   ): Promise<void> {
-//     // Use helper to get merged config
-//     const config = getStepConfig(step);
-//     const { title, body, url, click_url, icon_url } = config;
+// // ============================================================================
+// // CORE PROCESSING FUNCTIONS
+// // ============================================================================
 
-//     // Get subscriber
-//     const { data: subscriber } = await supabase
-//       .from('subscribers')
+// /**
+//  * ✅ MAIN FUNCTION: Process all due steps
+//  * Called by cron job every 1-5 minutes
+//  */
+// export async function processDueSteps(): Promise<ProcessingResult> {
+//   console.log('⏰ [Processor] Starting scheduled step processing...');
+//   const startTime = Date.now();
+
+//   try {
+//     const now = new Date().toISOString();
+
+//     // Fetch all pending steps that are due
+//     const { data: dueSteps, error } = await supabase
+//       .from('scheduled_journey_steps')
 //       .select('*')
-//       .eq('id', journeyState.subscriber_id)
+//       .eq('status', 'pending')
+//       .lte('execute_at', now)
+//       .order('execute_at', { ascending: true })
+//       .limit(100);
+
+//     if (error) {
+//       console.error('[Processor] Error fetching due steps:', error);
+//       throw error;
+//     }
+
+//     if (!dueSteps || dueSteps.length === 0) {
+//       console.log('✅ [Processor] No due steps found');
+//       return { processed: 0, failed: 0, skipped: 0, total: 0 };
+//     }
+
+//     console.log(`📋 [Processor] Found ${dueSteps.length} due steps to process`);
+
+//     let processed = 0;
+//     let failed = 0;
+//     let skipped = 0;
+//     const errors: string[] = [];
+
+//     // Process each step
+//     for (const step of dueSteps) {
+//       try {
+//         console.log(`🔄 [Processor] Processing step ${step.id} (type: ${step.payload?.step_type})`);
+
+//         // Mark as processing
+//         await supabase
+//           .from('scheduled_journey_steps')
+//           .update({ 
+//             status: 'processing',
+//             started_at: new Date().toISOString(),
+//           })
+//           .eq('id', step.id);
+
+//         // Verify journey state still exists and is valid
+//         const { data: stateData, error: stateError } = await supabase
+//           .from('user_journey_states')
+//           .select('*')
+//           .eq('id', step.user_journey_state_id)
+//           .single();
+
+//         if (stateError || !stateData) {
+//           console.warn(`[Processor] Journey state ${step.user_journey_state_id} not found, skipping`);
+//           await supabase
+//             .from('scheduled_journey_steps')
+//             .update({ 
+//               status: 'skipped',
+//               error: 'Journey state not found',
+//               completed_at: new Date().toISOString(),
+//             })
+//             .eq('id', step.id);
+//           skipped++;
+//           continue;
+//         }
+
+//         const state = toJourneyState(stateData);
+
+//         // Skip if journey is no longer active/waiting
+//         if (state.status !== 'active' && state.status !== 'waiting') {
+//           console.log(`[Processor] Journey ${state.id} status is ${state.status}, skipping`);
+//           await supabase
+//             .from('scheduled_journey_steps')
+//             .update({ 
+//               status: 'skipped',
+//               error: `Journey status is ${state.status}`,
+//               completed_at: new Date().toISOString(),
+//             })
+//             .eq('id', step.id);
+//           skipped++;
+//           continue;
+//         }
+
+//         // Update state to active if it was waiting
+//         if (state.status === 'waiting') {
+//           await supabase
+//             .from('user_journey_states')
+//             .update({ 
+//               status: 'active',
+//               next_execution_at: null,
+//             })
+//             .eq('id', step.user_journey_state_id);
+//         }
+
+//         // Process the journey step
+//         await processJourneyStep(step.user_journey_state_id);
+
+//         // Mark step as completed
+//         await supabase
+//           .from('scheduled_journey_steps')
+//           .update({ 
+//             status: 'completed',
+//             completed_at: new Date().toISOString(),
+//           })
+//           .eq('id', step.id);
+
+//         processed++;
+//         console.log(`✅ [Processor] Step ${step.id} completed successfully`);
+
+//       } catch (stepError: any) {
+//         console.error(`❌ [Processor] Step ${step.id} failed:`, stepError.message);
+        
+//         // Mark step as failed
+//         await supabase
+//           .from('scheduled_journey_steps')
+//           .update({ 
+//             status: 'failed',
+//             error: stepError.message,
+//             completed_at: new Date().toISOString(),
+//           })
+//           .eq('id', step.id);
+
+//         failed++;
+//         errors.push(`Step ${step.id}: ${stepError.message}`);
+//       }
+//     }
+
+//     const duration = Date.now() - startTime;
+//     const total = processed + failed + skipped;
+    
+//     console.log(`✅ [Processor] Completed in ${duration}ms - Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}, Total: ${total}`);
+    
+//     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
+
+//   } catch (error: any) {
+//     console.error('❌ [Processor] Fatal error in processDueSteps:', error.message);
+//     throw error;
+//   }
+// }
+
+// /**
+//  * ✅ Enroll a subscriber in a journey
+//  */
+// export async function enrollSubscriber(
+//   journeyId: string,
+//   subscriberId: string,
+//   initialContext: any = {}
+// ): Promise<any> {
+//   console.log('📝 [Processor] Enrolling subscriber:', { journeyId, subscriberId });
+
+//   try {
+//     // Fetch journey
+//     const { data: journey, error: journeyError } = await supabase
+//       .from('journeys')
+//       .select('*')
+//       .eq('id', journeyId)
 //       .single();
 
-//     if (!subscriber || !subscriber.endpoint) {
-//       console.log('[JourneyProcessor] Subscriber has no valid subscription');
+//     if (journeyError || !journey) {
+//       throw new Error('Journey not found');
+//     }
+
+//     if (journey.status !== 'active') {
+//       throw new Error(`Journey is not active (status: ${journey.status})`);
+//     }
+
+//     // Parse flow definition
+//     const flowDefinition = parseFlowDefinition(journey.flow_definition);
+    
+//     if (!flowDefinition.nodes || flowDefinition.nodes.length === 0) {
+//       throw new Error('Journey has no steps defined');
+//     }
+
+//     // Find entry node or use first node
+//     const entryNode = flowDefinition.nodes.find(n => n.type === 'entry');
+//     const startNode = entryNode || flowDefinition.nodes[0];
+
+//     console.log(`[Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
+
+//     // Check re-entry rules
+//     const canEnter = await checkReEntryRules(subscriberId, journey);
+//     if (!canEnter) {
+//       console.log('[Processor] Re-entry rules prevent enrollment');
+//       throw new Error('Subscriber cannot re-enter this journey at this time');
+//     }
+
+//     // Create journey state
+//     const { data: journeyState, error: stateError } = await supabase
+//       .from('user_journey_states')
+//       .insert({
+//         journey_id: journeyId,
+//         subscriber_id: subscriberId,
+//         current_step_id: startNode.id,
+//         status: 'active',
+//         context: {
+//           ...initialContext,
+//           entry_timestamp: new Date().toISOString(),
+//         },
+//         node_history: [startNode.id],
+//         entered_at: new Date().toISOString(),
+//         last_processed_at: new Date().toISOString(),
+//       })
+//       .select()
+//       .single();
+
+//     if (stateError) {
+//       console.error('[Processor] Failed to create journey state:', stateError);
+//       throw stateError;
+//     }
+
+//     // Log entry event
+//     await logJourneyEvent(
+//       journeyId,
+//       subscriberId,
+//       journeyState.id,
+//       'journey_entered',
+//       { context: initialContext }
+//     );
+
+//     // Update journey counters
+//     await supabase.rpc('increment', {
+//       table_name: 'journeys',
+//       column_name: 'total_entered',
+//       row_id: journeyId,
+//     });
+
+//     await supabase.rpc('increment', {
+//       table_name: 'journeys',
+//       column_name: 'total_active',
+//       row_id: journeyId,
+//     });
+
+//     // If entry node, move to first real step
+//     if (startNode.type === 'entry') {
+//       const nextNodeId = getNextNodeId(flowDefinition, startNode.id);
+//       if (nextNodeId) {
+//         await supabase
+//           .from('user_journey_states')
+//           .update({ current_step_id: nextNodeId })
+//           .eq('id', journeyState.id);
+//       }
+//     }
+
+//     // Process the first step
+//     await processJourneyStep(journeyState.id);
+
+//     console.log('✅ [Processor] Subscriber enrolled successfully');
+//     return journeyState;
+
+//   } catch (error: any) {
+//     console.error('❌ [Processor] Enrollment error:', error.message);
+//     throw error;
+//   }
+// }
+
+// /**
+//  * ✅ Process a single journey step
+//  */
+// export async function processJourneyStep(journeyStateId: string): Promise<void> {
+//   console.log('🔄 [Processor] Processing journey step:', journeyStateId);
+
+//   try {
+//     // Fetch current state
+//     const { data: stateData, error: stateError } = await supabase
+//       .from('user_journey_states')
+//       .select('*')
+//       .eq('id', journeyStateId)
+//       .single();
+
+//     if (stateError || !stateData) {
+//       throw new Error('Journey state not found');
+//     }
+
+//     const state = toJourneyState(stateData);
+
+//     // Verify state is processable
+//     if (state.status !== 'active' && state.status !== 'waiting') {
+//       console.log(`[Processor] Journey state is ${state.status}, cannot process`);
 //       return;
 //     }
 
-//     // Get website VAPID keys
-//     const { data: website } = await supabase
-//       .from('websites')
-//       .select('vapid_public_key, vapid_private_key')
-//       .eq('id', journeyState.journey.website_id)
+//     // Fetch journey
+//     const { data: journey, error: journeyError } = await supabase
+//       .from('journeys')
+//       .select('*')
+//       .eq('id', state.journey_id)
 //       .single();
 
-//     if (!website?.vapid_public_key || !website?.vapid_private_key) {
-//       throw new Error('Website VAPID keys not configured');
+//     if (journeyError || !journey) {
+//       throw new Error('Journey not found');
 //     }
 
-//     // Set VAPID details
-//     webpush.setVapidDetails(
-//       'mailto:support@yourapp.com',
-//       website.vapid_public_key,
-//       website.vapid_private_key
-//     );
+//     // Parse flow
+//     const flowDefinition = parseFlowDefinition(journey.flow_definition);
+    
+//     // Find current node
+//     const currentNode = flowDefinition.nodes.find(n => n.id === state.current_step_id);
 
-//     // Build push subscription
-//     const pushSubscription = {
-//       endpoint: subscriber.endpoint,
+//     if (!currentNode) {
+//       console.log('[Processor] Current step not found in flow, completing journey');
+//       await completeJourney(journeyStateId);
+//       return;
+//     }
+
+//     console.log(`📍 [Processor] Current node: ${currentNode.id} (type: ${currentNode.type})`);
+
+//     // Update node history
+//     const nodeHistory = Array.isArray(state.node_history) ? state.node_history : [];
+//     if (!nodeHistory.includes(currentNode.id)) {
+//       nodeHistory.push(currentNode.id);
+//       await supabase
+//         .from('user_journey_states')
+//         .update({ 
+//           node_history: nodeHistory,
+//           last_processed_at: new Date().toISOString(),
+//         })
+//         .eq('id', journeyStateId);
+//     }
+
+//     // Process based on node type
+//     switch (currentNode.type) {
+//       case 'send_notification':
+//         await processSendNotification(state, currentNode, flowDefinition);
+//         break;
+      
+//       case 'wait':
+//         await processWaitNode(state, currentNode, flowDefinition);
+//         break;
+      
+//       case 'condition':
+//         await processConditionNode(state, currentNode, flowDefinition);
+//         break;
+      
+//       case 'ab_split':
+//         await processAbSplitNode(state, currentNode, flowDefinition);
+//         break;
+      
+//       case 'exit':
+//         await exitJourney(journeyStateId, 'reached_exit_node');
+//         break;
+      
+//       case 'entry':
+//         // Entry nodes are just markers, move to next
+//         await moveToNextNode(state, flowDefinition, currentNode.id);
+//         break;
+      
+//       default:
+//         console.warn(`[Processor] Unknown node type: ${currentNode.type}, moving to next`);
+//         await moveToNextNode(state, flowDefinition, currentNode.id);
+//     }
+
+//   } catch (error: any) {
+//     console.error('❌ [Processor] Step processing error:', error.message);
+    
+//     // Log error event
+//     const { data: stateData } = await supabase
+//       .from('user_journey_states')
+//       .select('*')
+//       .eq('id', journeyStateId)
+//       .single();
+
+//     if (stateData) {
+//       const state = toJourneyState(stateData);
+//       await logJourneyEvent(
+//         state.journey_id,
+//         state.subscriber_id,
+//         journeyStateId,
+//         'step_error',
+//         { error: error.message },
+//         state.current_step_id || undefined
+//       );
+//     }
+    
+//     throw error;
+//   }
+// }
+
+// // ============================================================================
+// // NODE PROCESSORS
+// // ============================================================================
+
+// async function processSendNotification(
+//   state: JourneyState,
+//   node: JourneyNode,
+//   flowDefinition: FlowDefinition
+// ): Promise<void> {
+//   console.log('📨 [Processor] Sending notification');
+
+//   try {
+//     // Fetch subscriber
+//     const { data: subscriber, error: subError } = await supabase
+//       .from('subscribers')
+//       .select('*')
+//       .eq('id', state.subscriber_id)
+//       .single();
+
+//     if (subError || !subscriber) {
+//       throw new Error('Subscriber not found');
+//     }
+
+//     // Fetch website for branding
+//     const { data: website } = await supabase
+//       .from('websites')
+//       .select('*')
+//       .eq('id', subscriber.website_id)
+//       .single();
+
+//     if (!website) {
+//       throw new Error('Website not found');
+//     }
+
+//     // Prepare push subscription
+//     const subscription: WebPushSubscription = {
+//       endpoint: subscriber.endpoint!,
 //       keys: {
-//         p256dh: subscriber.p256dh_key,
-//         auth: subscriber.auth_key,
+//         p256dh: subscriber.p256dh_key!,
+//         auth: subscriber.auth_key!,
 //       },
 //     };
 
+//     // Prepare notification payload
+//     const notificationPayload: NotificationPayload = {
+//       title: node.data.title || 'Notification',
+//       body: node.data.body || '',
+//       icon: node.data.icon_url || (website.notification_branding as any)?.logo_url,
+//       url: node.data.url || node.data.click_url || '/',
+//       branding: website.notification_branding as any,
+//     };
+
 //     // Send notification
-//     const notificationPayload = JSON.stringify({
-//       title: title || 'Notification',
-//       body: body || '',
-//       icon: icon_url,
-//       data: {
-//         url: click_url || url || '/',
-//         journey_id: journeyState.journey_id,
-//       },
+//     const result = await sendWebPushNotification(subscription, notificationPayload);
+
+//     // Log notification
+//     await supabase.from('notification_logs').insert({
+//       website_id: subscriber.website_id,
+//       subscriber_id: subscriber.id,
+//       journey_id: state.journey_id,
+//       journey_step_id: node.id,
+//       user_journey_state_id: state.id,
+//       status: result.success ? 'sent' : 'failed',
+//       platform: 'web',
+//       sent_at: new Date().toISOString(),
+//       error_message: result.error,
 //     });
 
-//     try {
-//       await webpush.sendNotification(pushSubscription, notificationPayload);
-//       console.log('[JourneyProcessor] Notification sent successfully');
+//     // Log event
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       result.success ? 'notification_sent' : 'notification_failed',
+//       { 
+//         title: notificationPayload.title,
+//         error: result.error 
+//       },
+//       node.id
+//     );
 
-//       // Log notification
-//       await supabase.from('notification_logs').insert({
-//         website_id: journeyState.journey.website_id,
-//         subscriber_id: subscriber.id,
-//         status: 'delivered',
-//         sent_at: new Date().toISOString(),
-//         delivered_at: new Date().toISOString(),
-//       });
-//     } catch (error: any) {
-//       console.error('[JourneyProcessor] Failed to send notification:', error);
+//     // Move to next node regardless of send success (Brevo behavior)
+//     await moveToNextNode(state, flowDefinition, node.id);
 
-//       await supabase.from('notification_logs').insert({
-//         website_id: journeyState.journey.website_id,
-//         subscriber_id: subscriber.id,
-//         status: 'failed',
-//         error_message: error.message,
-//         sent_at: new Date().toISOString(),
-//       });
+//   } catch (error: any) {
+//     console.error('❌ [Processor] Notification error:', error.message);
+    
+//     // Log error but continue
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       'notification_error',
+//       { error: error.message },
+//       node.id
+//     );
+    
+//     // Move to next node anyway
+//     await moveToNextNode(state, flowDefinition, node.id);
+//   }
+// }
 
-//       throw error;
-//     }
+// async function processWaitNode(
+//   state: JourneyState,
+//   node: JourneyNode,
+//   flowDefinition: FlowDefinition
+// ): Promise<void> {
+//   console.log('⏰ [Processor] Processing wait node');
+
+//   // Check if wait was already scheduled
+//   if (state.status === 'waiting') {
+//     console.log('✅ [Processor] Wait period completed, advancing');
+//     await moveToNextNode(state, flowDefinition, node.id);
+//     return;
 //   }
 
-//   private async executeWaitForEvent(
-//     journeyState: any,
-//     step: any
-//   ): Promise<void> {
-//     const config = getStepConfig(step);
-//     const { event_name, timeout_value = 24, timeout_unit = 'hours' } = config;
+//   // Schedule new wait
+//   const waitMode = node.data.mode || 'duration';
 
-//     // Calculate timeout
-//     const timeoutMs = this.calculateDelay(timeout_value, timeout_unit);
-//     const timeoutAt = new Date(Date.now() + timeoutMs);
+//   if (waitMode === 'duration') {
+//     // Duration-based wait
+//     const durationSeconds = node.data.duration || node.data.delay_value * getDelayMultiplier(node.data.delay_unit || 'hours');
+//     const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-//     // Update journey state to waiting
+//     console.log(`⏰ [Processor] Scheduling wait for ${durationSeconds} seconds (until ${executeAt.toISOString()})`);
+
+//     // Update state to waiting
 //     await supabase
 //       .from('user_journey_states')
 //       .update({
 //         status: 'waiting',
-//         current_step_id: step.id,
+//         next_execution_at: executeAt.toISOString(),
+//       })
+//       .eq('id', state.id);
+
+//     // Schedule step
+//     await supabase.from('scheduled_journey_steps').insert({
+//       user_journey_state_id: state.id,
+//       step_id: node.id,
+//       execute_at: executeAt.toISOString(),
+//       status: 'pending',
+//       payload: { 
+//         next_node_id: getNextNodeId(flowDefinition, node.id),
+//         mode: 'duration'
+//       },
+//     });
+
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       'wait_started',
+//       { duration_seconds: durationSeconds, until: executeAt.toISOString() },
+//       node.id
+//     );
+
+//   } else if (waitMode === 'until_event') {
+//     // Event-based wait
+//     const eventName = node.data.event?.name || node.data.event_name;
+//     const timeoutSeconds = node.data.event?.timeout_seconds || node.data.timeout_seconds || 604800; // 7 days default
+//     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
+
+//     console.log(`⏰ [Processor] Waiting for event "${eventName}" (timeout: ${timeoutAt.toISOString()})`);
+
+//     // Update state
+//     await supabase
+//       .from('user_journey_states')
+//       .update({
+//         status: 'waiting',
+//         next_execution_at: timeoutAt.toISOString(),
 //         context: {
-//           ...journeyState.context,
-//           waiting_for_event: event_name,
-//           timeout_at: timeoutAt.toISOString(),
+//           ...state.context,
+//           waiting_for_event: eventName,
 //         },
 //       })
-//       .eq('id', journeyState.id);
+//       .eq('id', state.id);
 
-//     // Schedule timeout fallback
-//     const connections = journeyState.journey.flow_definition.edges || [];
-//     const fallbackEdge = connections.find(
-//       (e: any) => e.from === step.id && e.condition === 'timeout'
+//     // Schedule timeout step
+//     await supabase.from('scheduled_journey_steps').insert({
+//       user_journey_state_id: state.id,
+//       step_id: node.id,
+//       execute_at: timeoutAt.toISOString(),
+//       status: 'pending',
+//       payload: { 
+//         next_node_id: getNextNodeId(flowDefinition, node.id, 'timeout'),
+//         mode: 'event_timeout',
+//         event_name: eventName
+//       },
+//     });
+
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       'wait_for_event_started',
+//       { event_name: eventName, timeout: timeoutAt.toISOString() },
+//       node.id
+//     );
+//   }
+// }
+
+// async function processConditionNode(
+//   state: JourneyState,
+//   node: JourneyNode,
+//   flowDefinition: FlowDefinition
+// ): Promise<void> {
+//   console.log('🔀 [Processor] Processing condition');
+
+//   const conditionType = node.data.check || node.data.condition_type;
+//   const lookbackSeconds = node.data.lookback || node.data.lookback_seconds || 86400;
+//   const lookbackDate = new Date(Date.now() - lookbackSeconds * 1000);
+
+//   let conditionMet = false;
+
+//   try {
+//     switch (conditionType) {
+//       case 'clicked_notification':
+//       case 'clicked_link':
+//         const { data: clicks } = await supabase
+//           .from('notification_logs')
+//           .select('id')
+//           .eq('subscriber_id', state.subscriber_id)
+//           .not('clicked_at', 'is', null)
+//           .gte('clicked_at', lookbackDate.toISOString())
+//           .limit(1);
+//         conditionMet = (clicks && clicks.length > 0) || false;
+//         break;
+
+//       case 'visited_page':
+//       case 'page_view':
+//         const targetUrl = node.data.url || node.data.target_url;
+//         let query = supabase
+//           .from('subscriber_events')
+//           .select('id')
+//           .eq('subscriber_id', state.subscriber_id)
+//           .eq('event_name', 'page_view')
+//           .gte('created_at', lookbackDate.toISOString());
+        
+//         if (targetUrl) {
+//           query = query.contains('event_data', { url: targetUrl });
+//         }
+        
+//         const { data: events } = await query.limit(1);
+//         conditionMet = (events && events.length > 0) || false;
+//         break;
+
+//       case 'completed_action':
+//       case 'custom_event':
+//         const actionName = node.data.action_name || node.data.event_name;
+//         const { data: actionEvents } = await supabase
+//           .from('subscriber_events')
+//           .select('id')
+//           .eq('subscriber_id', state.subscriber_id)
+//           .eq('event_name', actionName)
+//           .gte('created_at', lookbackDate.toISOString())
+//           .limit(1);
+//         conditionMet = (actionEvents && actionEvents.length > 0) || false;
+//         break;
+
+//       case 'has_tag':
+//         const { data: subscriber } = await supabase
+//           .from('subscribers')
+//           .select('tags')
+//           .eq('id', state.subscriber_id)
+//           .single();
+//         const tags = subscriber?.tags || [];
+//         const requiredTag = node.data.tag || node.data.tag_name;
+//         conditionMet = Array.isArray(tags) && tags.includes(requiredTag);
+//         break;
+
+//       case 'attribute_equals':
+//       case 'has_attribute':
+//         const { data: sub } = await supabase
+//           .from('subscribers')
+//           .select('custom_attributes')
+//           .eq('id', state.subscriber_id)
+//           .single();
+//         const attributes = sub?.custom_attributes || {};
+//         const attrKey = node.data.attribute_key;
+//         const attrValue = node.data.attribute_value;
+        
+//         if (conditionType === 'has_attribute') {
+//           conditionMet = attributes[attrKey] !== undefined;
+//         } else {
+//           conditionMet = attributes[attrKey] === attrValue;
+//         }
+//         break;
+
+//       default:
+//         console.warn(`[Processor] Unknown condition type: ${conditionType}`);
+//         conditionMet = false;
+//     }
+
+//     // Log condition result
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       'condition_evaluated',
+//       { condition_type: conditionType, result: conditionMet },
+//       node.id
 //     );
 
-//     if (fallbackEdge) {
-//       await this.scheduleStep(
-//         journeyState.id,
-//         fallbackEdge.to,
-//         timeoutAt,
-//         { reason: 'timeout' }
-//       );
-//     }
-
-//     console.log(`[JourneyProcessor] Waiting for event: ${event_name}`);
-//   }
-
-//   private async executeCondition(
-//     journeyState: any,
-//     step: any
-//   ): Promise<void> {
-//     const config = getStepConfig(step);
-//     const { condition } = config;
-
-//     if (!condition) {
-//       console.warn('[JourneyProcessor] Condition config missing');
-//       return;
-//     }
-
-//     // Evaluate condition
-//     const result = await this.evaluateCondition(journeyState, condition);
-//     console.log(`[JourneyProcessor] Condition result: ${result}`);
-
-//     // Find next step based on result
-//     const connections = journeyState.journey.flow_definition.edges || [];
-//     const nextEdge = connections.find(
-//       (e: any) => e.from === step.id && e.condition === (result ? 'yes' : 'no')
-//     );
-
-//     if (nextEdge) {
-//       await supabase
-//         .from('user_journey_states')
-//         .update({ current_step_id: nextEdge.to })
-//         .eq('id', journeyState.id);
-//     }
-//   }
-
-//   private async executeSplit(journeyState: any, step: any): Promise<void> {
-//     // Random 50/50 split
-//     const takeMainBranch = Math.random() < 0.5;
-
-//     const connections = journeyState.journey.flow_definition.edges || [];
-//     const nextEdge = connections.find(
-//       (e: any) => e.from === step.id && e.condition === (takeMainBranch ? 'A' : 'B')
+//     // Find appropriate branch
+//     const branchType = conditionMet ? 'yes' : 'no';
+//     const nextEdge = flowDefinition.edges.find(
+//       e => e.from === node.id && (e.type === branchType || e.condition === branchType)
 //     );
 
 //     if (nextEdge) {
@@ -949,594 +833,1278 @@
 //         .from('user_journey_states')
 //         .update({
 //           current_step_id: nextEdge.to,
-//           context: {
-//             ...journeyState.context,
-//             split_branch: takeMainBranch ? 'A' : 'B',
-//           },
+//           status: 'active',
 //         })
-//         .eq('id', journeyState.id);
-//     }
+//         .eq('id', state.id);
 
-//     console.log(`[JourneyProcessor] Split: ${takeMainBranch ? 'A' : 'B'}`);
-//   }
-
-//   private async advanceJourney(
-//     journeyState: any,
-//     currentStep: any
-//   ): Promise<void> {
-//     // Find next step connection
-//     const connections = journeyState.journey.flow_definition.edges || [];
-//     const nextEdge = connections.find(
-//       (e: any) => e.from === currentStep.id && !e.condition
-//     );
-
-//     if (!nextEdge) {
-//       // Journey complete
-//       await supabase
-//         .from('user_journey_states')
-//         .update({
-//           status: 'completed',
-//           completed_at: new Date().toISOString(),
-//         })
-//         .eq('id', journeyState.id);
-
-//       console.log('[JourneyProcessor] Journey completed');
-//       return;
-//     }
-
-//     const nextStep = journeyState.journey.flow_definition.nodes.find(
-//       (n: any) => n.id === nextEdge.to
-//     );
-
-//     if (!nextStep) {
-//       console.warn(`[JourneyProcessor] Next step ${nextEdge.to} not found`);
-//       return;
-//     }
-
-//     // Update current step
-//     await supabase
-//       .from('user_journey_states')
-//       .update({ current_step_id: nextStep.id })
-//       .eq('id', journeyState.id);
-
-//     const stepType = nextStep.type || nextStep.data?.type;
-
-//     // If delay/wait, schedule it
-//     if (stepType === 'delay' || stepType === 'wait') {
-//       const config = getStepConfig(nextStep);
-      
-//       // Handle both formats: duration (seconds) and delay_value/delay_unit
-//       let delayMs: number;
-//       if (config.duration) {
-//         // Frontend format: duration in seconds
-//         delayMs = config.duration * 1000;
-//       } else {
-//         // Backend format: delay_value and delay_unit
-//         const { delay_value = 1, delay_unit = 'hours' } = config;
-//         delayMs = this.calculateDelay(delay_value, delay_unit);
-//       }
-      
-//       const executeAt = new Date(Date.now() + delayMs);
-
-//       await this.scheduleStep(journeyState.id, nextStep.id, executeAt, {
-//         delay_value: config.delay_value,
-//         delay_unit: config.delay_unit,
-//         duration: config.duration,
-//       });
-
-//       console.log(`[JourneyProcessor] Scheduled delay for ${executeAt}`);
+//       await processJourneyStep(state.id);
 //     } else {
-//       // Execute immediately
-//       await this.scheduleStep(journeyState.id, nextStep.id, new Date(), {});
-//       console.log(`[JourneyProcessor] Scheduled immediate execution for ${stepType}`);
+//       console.log(`[Processor] No ${branchType} branch found, completing journey`);
+//       await completeJourney(state.id);
 //     }
-//   }
 
-//   private calculateDelay(
-//     value: number,
-//     unit: 'minutes' | 'hours' | 'days'
-//   ): number {
-//     const multipliers = {
-//       minutes: 60 * 1000,
-//       hours: 60 * 60 * 1000,
-//       days: 24 * 60 * 60 * 1000,
-//     };
-//     return value * multipliers[unit];
-//   }
-
-//   private async evaluateCondition(
-//     journeyState: any,
-//     condition: any
-//   ): Promise<boolean> {
-//     const value = journeyState.context?.[condition.field];
-
-//     switch (condition.operator) {
-//       case 'equals':
-//         return value === condition.value;
-//       case 'contains':
-//         return String(value).includes(condition.value);
-//       case 'greater_than':
-//         return Number(value) > Number(condition.value);
-//       case 'less_than':
-//         return Number(value) < Number(condition.value);
-//       default:
-//         return false;
+//   } catch (error: any) {
+//     console.error('❌ [Processor] Condition error:', error.message);
+    
+//     // On error, take 'no' path
+//     const noEdge = flowDefinition.edges.find(e => e.from === node.id && (e.type === 'no' || e.condition === 'no'));
+//     if (noEdge) {
+//       await supabase.from('user_journey_states').update({ current_step_id: noEdge.to }).eq('id', state.id);
+//       await processJourneyStep(state.id);
+//     } else {
+//       await completeJourney(state.id);
 //     }
-//   }
-
-//   private async scheduleStep(
-//     journeyStateId: string,
-//     stepId: string,
-//     executeAt: Date,
-//     payload: any
-//   ): Promise<void> {
-//     await supabase.from('scheduled_journey_steps').insert({
-//       user_journey_state_id: journeyStateId,
-//       step_id: stepId,
-//       execute_at: executeAt.toISOString(),
-//       status: 'pending',
-//       payload,
-//     });
 //   }
 // }
 
-// export const journeyProcessor = new JourneyProcessor();
+// async function processAbSplitNode(
+//   state: JourneyState,
+//   node: JourneyNode,
+//   flowDefinition: FlowDefinition
+// ): Promise<void> {
+//   console.log('🎲 [Processor] Processing A/B split');
 
+//   const branches = node.data.branches || [];
+  
+//   if (!branches || branches.length === 0) {
+//     console.warn('[Processor] No branches defined, completing journey');
+//     await completeJourney(state.id);
+//     return;
+//   }
 
+//   // Select branch based on percentage
+//   const random = Math.random() * 100;
+//   let cumulative = 0;
+//   let selectedBranch = branches[0];
 
+//   for (const branch of branches) {
+//     cumulative += branch.percentage || 0;
+//     if (random <= cumulative) {
+//       selectedBranch = branch;
+//       break;
+//     }
+//   }
 
+//   console.log(`[Processor] Selected branch: ${selectedBranch.id} (${selectedBranch.name})`);
 
+//   // Find edge for selected branch
+//   const nextEdge = flowDefinition.edges.find(
+//     e => e.from === node.id && e.type === 'branch' && e.branchId === selectedBranch.id
+//   );
 
+//   if (nextEdge) {
+//     await supabase
+//       .from('user_journey_states')
+//       .update({
+//         current_step_id: nextEdge.to,
+//         status: 'active',
+//         context: { 
+//           ...state.context, 
+//           ab_variant: selectedBranch.id,
+//           ab_variant_name: selectedBranch.name 
+//         },
+//       })
+//       .eq('id', state.id);
 
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       'ab_split_selected',
+//       { branch_id: selectedBranch.id, branch_name: selectedBranch.name },
+//       node.id
+//     );
 
+//     await processJourneyStep(state.id);
+//   } else {
+//     console.warn('[Processor] No edge found for selected branch');
+//     await completeJourney(state.id);
+//   }
+// }
 
+// // ============================================================================
+// // JOURNEY STATE MANAGEMENT
+// // ============================================================================
 
+// async function moveToNextNode(
+//   state: JourneyState,
+//   flowDefinition: FlowDefinition,
+//   currentNodeId: string
+// ): Promise<void> {
+//   const nextNodeId = getNextNodeId(flowDefinition, currentNodeId);
 
+//   if (nextNodeId) {
+//     console.log(`[Processor] Moving to next node: ${nextNodeId}`);
+    
+//     await supabase
+//       .from('user_journey_states')
+//       .update({ 
+//         current_step_id: nextNodeId, 
+//         status: 'active',
+//         last_processed_at: new Date().toISOString(),
+//       })
+//       .eq('id', state.id);
 
+//     // Process next step
+//     await processJourneyStep(state.id);
+//   } else {
+//     console.log('[Processor] No next node found, completing journey');
+//     await completeJourney(state.id);
+//   }
+// }
 
+// async function completeJourney(journeyStateId: string): Promise<void> {
+//   console.log('🏁 [Processor] Completing journey:', journeyStateId);
 
+//   try {
+//     const { data: stateData } = await supabase
+//       .from('user_journey_states')
+//       .select('*')
+//       .eq('id', journeyStateId)
+//       .single();
 
+//     if (!stateData) return;
 
-// backend/lib/journeys/processor.ts
+//     const state = toJourneyState(stateData);
+
+//     // Update state
+//     await supabase
+//       .from('user_journey_states')
+//       .update({
+//         status: 'completed',
+//         completed_at: new Date().toISOString(),
+//         current_step_id: null,
+//       })
+//       .eq('id', journeyStateId);
+
+//     // Log event
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       journeyStateId,
+//       'journey_completed'
+//     );
+
+//     // Update counters
+//     await supabase.rpc('increment', {
+//       table_name: 'journeys',
+//       column_name: 'total_completed',
+//       row_id: state.journey_id,
+//     });
+
+//     // Decrement active count
+//     const { data: journey } = await supabase
+//       .from('journeys')
+//       .select('total_active')
+//       .eq('id', state.journey_id)
+//       .single();
+
+//     if (journey && journey.total_active && journey.total_active > 0) {
+//       await supabase
+//         .from('journeys')
+//         .update({ total_active: journey.total_active - 1 })
+//         .eq('id', state.journey_id);
+//     }
+
+//     console.log('✅ [Processor] Journey completed successfully');
+
+//   } catch (error: any) {
+//     console.error('❌ [Processor] Error completing journey:', error.message);
+//   }
+// }
+
+// async function exitJourney(journeyStateId: string, reason: string): Promise<void> {
+//   console.log('🚪 [Processor] Exiting journey:', journeyStateId, 'Reason:', reason);
+
+//   try {
+//     const { data: stateData } = await supabase
+//       .from('user_journey_states')
+//       .select('*')
+//       .eq('id', journeyStateId)
+//       .single();
+
+//     if (!stateData) return;
+
+//     const state = toJourneyState(stateData);
+
+//     // Update state
+//     await supabase
+//       .from('user_journey_states')
+//       .update({
+//         status: 'exited',
+//         completed_at: new Date().toISOString(),
+//         current_step_id: null,
+//         context: {
+//           ...state.context,
+//           exit_reason: reason
+//         }
+//       })
+//       .eq('id', journeyStateId);
+
+//     // Log event
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       journeyStateId,
+//       'journey_exited',
+//       { reason }
+//     );
+
+//     // Update counters
+//     await supabase.rpc('increment', {
+//       table_name: 'journeys',
+//       column_name: 'total_exited',
+//       row_id: state.journey_id,
+//     });
+
+//     // Decrement active count
+//     const { data: journey } = await supabase
+//       .from('journeys')
+//       .select('total_active')
+//       .eq('id', state.journey_id)
+//       .single();
+
+//     if (journey && journey.total_active && journey.total_active > 0) {
+//       await supabase
+//         .from('journeys')
+//         .update({ total_active: journey.total_active - 1 })
+//         .eq('id', state.journey_id);
+//     }
+
+//   } catch (error: any) {
+//     console.error('❌ [Processor] Error exiting journey:', error.message);
+//   }
+// }
+
+// // ============================================================================
+// // HELPER FUNCTIONS
+// // ============================================================================
+
+// async function checkReEntryRules(subscriberId: string, journey: any): Promise<boolean> {
+//   const reEntrySettings = journey.re_entry_settings || {};
+//   const allowReEntry = reEntrySettings.allow_re_entry || false;
+
+//   // Get previous states
+//   const { data: states } = await supabase
+//     .from('user_journey_states')
+//     .select('*')
+//     .eq('subscriber_id', subscriberId)
+//     .eq('journey_id', journey.id)
+//     .order('entered_at', { ascending: false });
+
+//   if (!states || states.length === 0) {
+//     return true; // First time
+//   }
+
+//   // Check if already active
+//   const activeState = states.find(s => s.status === 'active' || s.status === 'waiting');
+//   if (activeState) {
+//     console.log('[Processor] Already active in journey');
+//     return false;
+//   }
+
+//   // Check if re-entry allowed
+//   if (!allowReEntry) {
+//     console.log('[Processor] Re-entry not allowed');
+//     return false;
+//   }
+
+//   // Check max entries
+//   const maxEntries = reEntrySettings.max_entries || 0;
+//   if (maxEntries > 0 && states.length >= maxEntries) {
+//     console.log(`[Processor] Max entries (${maxEntries}) reached`);
+//     return false;
+//   }
+
+//   // Check cooldown
+//   const cooldownDays = reEntrySettings.cooldown_days || 0;
+//   if (cooldownDays > 0 && states.length > 0) {
+//     const lastEntry = new Date(states[0].entered_at);
+//     const daysSince = (Date.now() - lastEntry.getTime()) / (1000 * 60 * 60 * 24);
+    
+//     if (daysSince < cooldownDays) {
+//       console.log(`[Processor] Cooldown period (${cooldownDays} days) not met`);
+//       return false;
+//     }
+//   }
+
+//   return true;
+// }
+
+// function getDelayMultiplier(unit: string): number {
+//   switch (unit) {
+//     case 'minutes': return 60;
+//     case 'hours': return 3600;
+//     case 'days': return 86400;
+//     default: return 3600;
+//   }
+// }
+
+// /**
+//  * Handle subscriber events (for wait-until-event nodes)
+//  */
+// export async function handleSubscriberEvent(
+//   subscriberId: string,
+//   eventName: string,
+//   eventData: any = {}
+// ): Promise<void> {
+//   console.log('📥 [Processor] Handling subscriber event:', { subscriberId, eventName });
+
+//   try {
+//     // Find waiting states for this event
+//     const { data: waitingStates } = await supabase
+//       .from('user_journey_states')
+//       .select('*')
+//       .eq('subscriber_id', subscriberId)
+//       .eq('status', 'waiting')
+//       .contains('context', { waiting_for_event: eventName });
+
+//     if (!waitingStates || waitingStates.length === 0) {
+//       console.log('[Processor] No waiting states for this event');
+//       return;
+//     }
+
+//     console.log(`[Processor] Found ${waitingStates.length} waiting state(s)`);
+
+//     for (const stateData of waitingStates) {
+//       const state = toJourneyState(stateData);
+      
+//       // Cancel scheduled timeout
+//       await supabase
+//         .from('scheduled_journey_steps')
+//         .update({ status: 'cancelled' })
+//         .eq('user_journey_state_id', state.id)
+//         .eq('status', 'pending');
+
+//       // Update context
+//       await supabase
+//         .from('user_journey_states')
+//         .update({
+//           status: 'active',
+//           next_execution_at: null,
+//           context: {
+//             ...state.context,
+//             waiting_for_event: null,
+//             received_event: eventName,
+//             received_event_data: eventData
+//           }
+//         })
+//         .eq('id', state.id);
+
+//       // Log event
+//       await logJourneyEvent(
+//         state.journey_id,
+//         state.subscriber_id,
+//         state.id,
+//         'event_received',
+//         { event_name: eventName, event_data: eventData },
+//         state.current_step_id || undefined
+//       );
+
+//       // Fetch journey to get flow
+//       const { data: journey } = await supabase
+//         .from('journeys')
+//         .select('flow_definition')
+//         .eq('id', state.journey_id)
+//         .single();
+
+//       if (journey) {
+//         const flowDefinition = parseFlowDefinition(journey.flow_definition);
+//         const currentNode = flowDefinition.nodes.find(n => n.id === state.current_step_id);
+        
+//         if (currentNode) {
+//           // Move to success path
+//           await moveToNextNode(state, flowDefinition, currentNode.id);
+//         }
+//       }
+//     }
+
+//   } catch (error: any) {
+//     console.error('❌ [Processor] Error handling event:', error.message);
+//   }
+// }
+
+// // ============================================================================
+// // EXPORTS
+// // ============================================================================
+
+// export const journeyProcessor = {
+//   enrollSubscriber,
+//   processJourneyStep,
+//   processDueSteps,
+//   handleSubscriberEvent,
+// };
+
+// export default journeyProcessor;
+
+// lib/journeys/processor.ts
+/**
+ * Journey Execution Engine - Brevo-Style Implementation
+ * Handles multi-step journey flows with advanced triggers and conditions
+ */
+
 import { createClient } from '@supabase/supabase-js';
-import webpush from 'web-push';
+import type { Database } from '@/types/database';
+import { sendWebPushNotification, type WebPushSubscription, type NotificationPayload } from '@/lib/push/web-push';
 
-const supabase = createClient(
+const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export interface ProcessingResult {
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+interface JourneyNode {
+  id: string;
+  type: 'send_notification' | 'wait' | 'condition' | 'ab_split' | 'entry' | 'exit';
+  position: { x: number; y: number };
+  data: any;
+}
+
+interface JourneyEdge {
+  id?: string;
+  from: string;
+  to: string;
+  type?: 'yes' | 'no' | 'default' | 'branch' | 'success' | 'timeout';
+  branchId?: string;
+  condition?: string;
+}
+
+interface FlowDefinition {
+  nodes: JourneyNode[];
+  edges: JourneyEdge[];
+  start_step_id?: string;
+}
+
+interface JourneyState {
+  id: string;
+  journey_id: string;
+  subscriber_id: string;
+  current_step_id: string | null;
+  status: 'active' | 'completed' | 'exited' | 'waiting' | null;
+  context: any;
+  node_history: string[];
+  entered_at: string | null;
+  next_execution_at: string | null;
+  last_processed_at?: string | null;
+  completed_at?: string | null;
+}
+
+interface ProcessingResult {
   processed: number;
   failed: number;
   skipped: number;
   total: number;
+  errors?: string[];
 }
 
-export interface JourneyStep {
-  id: string;
-  type: 'send_notification' | 'delay' | 'wait' | 'wait_for_event' | 'condition' | 'split';
-  data?: any;
-  config?: any;
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+function parseFlowDefinition(data: any): FlowDefinition {
+  if (!data || typeof data !== 'object') {
+    console.warn('[Processor] Invalid flow definition, returning empty flow');
+    return { nodes: [], edges: [] };
+  }
+  return {
+    nodes: Array.isArray(data.nodes) ? data.nodes : [],
+    edges: Array.isArray(data.edges) ? data.edges : [],
+    start_step_id: data.start_step_id,
+  };
 }
 
-// Helper function to merge step data and config
-function getStepConfig(step: any): any {
-  return { ...(step.data || {}), ...(step.data?.config || {}) };
+function toJourneyState(dbRow: any): JourneyState {
+  return {
+    id: dbRow.id,
+    journey_id: dbRow.journey_id,
+    subscriber_id: dbRow.subscriber_id,
+    current_step_id: dbRow.current_step_id,
+    status: dbRow.status || 'active',
+    context: dbRow.context || {},
+    node_history: Array.isArray(dbRow.node_history) ? dbRow.node_history : [],
+    entered_at: dbRow.entered_at,
+    next_execution_at: dbRow.next_execution_at,
+    last_processed_at: dbRow.last_processed_at,
+    completed_at: dbRow.completed_at,
+  };
 }
 
-class JourneyProcessor {
-  private processing = false;
-  private lastProcessTime = 0;
-  private MIN_PROCESS_INTERVAL = 5000; // 5 seconds between runs
-
-  async processDueSteps(): Promise<ProcessingResult> {
-    // Prevent concurrent processing
-    if (this.processing) {
-      console.log('[JourneyProcessor] Already processing, skipping');
-      return { processed: 0, failed: 0, skipped: 0, total: 0 };
-    }
-
-    // Rate limiting
-    const now = Date.now();
-    if (now - this.lastProcessTime < this.MIN_PROCESS_INTERVAL) {
-      console.log('[JourneyProcessor] Too soon since last run, skipping');
-      return { processed: 0, failed: 0, skipped: 0, total: 0 };
-    }
-
-    this.processing = true;
-    this.lastProcessTime = now;
-
-    let processedCount = 0;
-    let failedCount = 0;
-    let skippedCount = 0;
-
-    try {
-      console.log('[JourneyProcessor] Starting processing run');
-
-      // Query due steps
-      const { data: dueSteps, error } = await supabase
-        .from('scheduled_journey_steps')
-        .select('*')
-        .eq('status', 'pending')
-        .lte('execute_at', new Date().toISOString())
-        .order('execute_at', { ascending: true })
-        .limit(50);
-
-      if (error) {
-        console.error('[JourneyProcessor] Query error:', error);
-        throw error;
-      }
-
-      const totalSteps = dueSteps?.length || 0;
-      console.log(`[JourneyProcessor] Found ${totalSteps} due steps`);
-
-      if (totalSteps === 0) {
-        return { processed: 0, failed: 0, skipped: 0, total: 0 };
-      }
-
-      // Process each step
-      for (const scheduledStep of dueSteps || []) {
-        try {
-          await this.executeScheduledStep(scheduledStep);
-          processedCount++;
-          console.log(`[JourneyProcessor] current_step_id Step ${scheduledStep.id} processed (${processedCount}/${totalSteps})`);
-        } catch (error: any) {
-          failedCount++;
-          console.error(`[JourneyProcessor]  Step ${scheduledStep.id} failed:`, error.message);
-        }
-      }
-
-      console.log(`[JourneyProcessor] current_step_id Completed: ${processedCount} processed, ${failedCount} failed, ${skippedCount} skipped`);
-      
-      return { 
-        processed: processedCount, 
-        failed: failedCount,
-        skipped: skippedCount,
-        total: totalSteps
-      };
-      
-    } catch (error: any) {
-      console.error('[JourneyProcessor] 💥 Fatal error:', error.message);
-      return { 
-        processed: processedCount, 
-        failed: failedCount,
-        skipped: skippedCount,
-        total: processedCount + failedCount
-      };
-    } finally {
-      this.processing = false;
-    }
+function getNextNodeId(flowDefinition: FlowDefinition, currentNodeId: string, condition?: string): string | null {
+  // First try to find edge with specific condition
+  if (condition) {
+    const conditionalEdge = flowDefinition.edges.find(
+      e => e.from === currentNodeId && (e.type === condition || e.condition === condition)
+    );
+    if (conditionalEdge) return conditionalEdge.to;
   }
 
-  private async executeScheduledStep(scheduledStep: any): Promise<void> {
-    const { id, user_journey_state_id, step_id, payload } = scheduledStep;
+  // Then try default edge
+  const defaultEdge = flowDefinition.edges.find(
+    e => e.from === currentNodeId && (!e.type || e.type === 'default')
+  );
+  
+  return defaultEdge ? defaultEdge.to : null;
+}
 
-    try {
-      console.log(`[JourneyProcessor] Executing step ${step_id}`);
+async function logJourneyEvent(
+  journeyId: string,
+  subscriberId: string,
+  stateId: string,
+  eventType: string,
+  metadata?: any,
+  stepId?: string
+) {
+  try {
+    await supabase.from('journey_events').insert({
+      journey_id: journeyId,
+      subscriber_id: subscriberId,
+      user_journey_state_id: stateId,
+      event_type: eventType,
+      step_id: stepId || null,
+      metadata: metadata || {},
+    });
+  } catch (error: any) {
+    console.error('[Processor] Failed to log event:', error.message);
+  }
+}
 
-      // Note: Database uses 'executed' not 'completed', and 'cancelled' for failures
-      // Valid statuses: 'pending', 'executed', 'cancelled'
+// ============================================================================
+// CORE PROCESSING FUNCTIONS
+// ============================================================================
 
-      // Get journey state with journey data
-      // Use specific relationship name to avoid ambiguity
-      const { data: journeyState, error: stateError } = await supabase
-        .from('user_journey_states')
-        .select(`
-          *,
-          journeys!fk_user_journey_journey (*)
-        `)
-        .eq('id', user_journey_state_id)
-        .single();
+/**
+ * ✅ MAIN FUNCTION: Process all due steps
+ * Called by cron job every 1-5 minutes
+ */
+/**
+ * 🔧 FIXED VERSION: Process all due steps
+ * This version properly handles completed/cancelled steps to prevent infinite loops
+ */
+export async function processDueSteps(): Promise<ProcessingResult> {
+  console.log('⏰ [Processor] Starting scheduled step processing...');
+  const startTime = Date.now();
 
-      if (stateError) {
-        console.error('[JourneyProcessor] State query error:', stateError);
-        throw new Error(`Failed to fetch journey state: ${stateError.message}`);
-      }
+  try {
+    const now = new Date().toISOString();
 
-      if (!journeyState) {
-        throw new Error('Journey state not found');
-      }
+    // Fetch all pending steps that are due
+    const { data: dueSteps, error } = await supabase
+      .from('scheduled_journey_steps')
+      .select('*')
+      .eq('status', 'pending')
+      .lte('execute_at', now)
+      .order('execute_at', { ascending: true })
+      .limit(100);
 
-      // Handle journey data (can be array or object depending on Supabase response)
-      const journey = Array.isArray(journeyState.journeys) 
-        ? journeyState.journeys[0] 
-        : journeyState.journeys;
-
-      if (!journey) {
-        throw new Error('Journey not found in journey state');
-      }
-
-      console.log(`[JourneyProcessor] Journey: ${journey.name || journey.id}`);
-
-      // Parse flow_definition if it's a string
-      const flowDefinition = typeof journey.flow_definition === 'string'
-        ? JSON.parse(journey.flow_definition)
-        : journey.flow_definition;
-
-      if (!flowDefinition || !flowDefinition.nodes) {
-        throw new Error('Invalid flow definition');
-      }
-
-      // Find the step in journey definition
-      const step = flowDefinition.nodes.find(
-        (n: any) => n.id === step_id
-      );
-
-      if (!step) {
-        throw new Error(`Step ${step_id} not found in journey flow`);
-      }
-
-      const stepType = step.type || step.data?.type;
-      console.log(`[JourneyProcessor] Step type: ${stepType}`);
-
-      // Execute the step
-      await this.executeStep({ ...journeyState, journey, flow_definition: flowDefinition }, step, payload);
-
-      // Mark as executed (not 'completed' - DB constraint uses 'executed')
-      await supabase
-        .from('scheduled_journey_steps')
-        .update({
-          status: 'executed',
-          executed_at: new Date().toISOString(),
-        })
-        .eq('id', id);
-
-      console.log(`[JourneyProcessor] current_step_id Step ${step_id} completed`);
-
-      // Move to next step
-      await this.advanceJourney({ ...journeyState, journey, flow_definition: flowDefinition }, step);
-
-    } catch (error: any) {
-      console.error(`[JourneyProcessor] Failed step ${id}:`, error);
-
-      // Mark as cancelled (not 'failed' - DB constraint uses 'cancelled')
-      await supabase
-        .from('scheduled_journey_steps')
-        .update({
-          status: 'cancelled',
-          payload: { ...payload, error: error.message },
-        })
-        .eq('id', id);
-      
+    if (error) {
+      console.error('[Processor] Error fetching due steps:', error);
       throw error;
     }
-  }
 
-  private async executeStep(
-    journeyState: any,
-    step: any,
-    payload?: any
-  ): Promise<void> {
-    const stepType = step.type || step.data?.type;
-
-    console.log(`[JourneyProcessor] Executing ${stepType} step`);
-
-    switch (stepType) {
-      case 'send_notification':
-        await this.executeSendNotification(journeyState, step);
-        break;
-
-      case 'delay':
-      case 'wait':
-        console.log('[JourneyProcessor] Delay/wait step completed');
-        break;
-
-      case 'wait_for_event':
-        await this.executeWaitForEvent(journeyState, step);
-        break;
-
-      case 'condition':
-        await this.executeCondition(journeyState, step);
-        break;
-
-      case 'split':
-        await this.executeSplit(journeyState, step);
-        break;
-
-      default:
-        console.warn(`[JourneyProcessor] Unknown step type: ${stepType}`);
+    if (!dueSteps || dueSteps.length === 0) {
+      console.log('✅ [Processor] No due steps found');
+      return { processed: 0, failed: 0, skipped: 0, total: 0 };
     }
+
+    console.log(`📋 [Processor] Found ${dueSteps.length} due steps to process`);
+
+    let processed = 0;
+    let failed = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    // Process each step
+    for (const step of dueSteps) {
+      try {
+        const stepPayload = step.payload as Record<string, any> | null;
+        console.log(`🔄 [Processor] Processing step ${step.id} (type: ${stepPayload?.step_type || 'unknown'})`);
+
+        // Mark as processing
+        await supabase
+          .from('scheduled_journey_steps')
+          .update({ 
+            status: 'processing',
+            started_at: new Date().toISOString(),
+          })
+          .eq('id', step.id);
+
+        // Verify journey state still exists and is valid
+        const { data: stateData, error: stateError } = await supabase
+          .from('user_journey_states')
+          .select('*')
+          .eq('id', step.user_journey_state_id)
+          .single();
+
+        if (stateError || !stateData) {
+          console.warn(`[Processor] Journey state ${step.user_journey_state_id} not found, cancelling step`);
+          await supabase
+            .from('scheduled_journey_steps')
+            .update({ 
+              status: 'cancelled',  // ✅ Changed from 'skipped'
+              error: 'Journey state not found',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', step.id);
+          skipped++;
+          continue;
+        }
+
+        const state = toJourneyState(stateData);
+
+        // ✅ NEW: Check journey status first
+        const { data: journey, error: journeyError } = await supabase
+          .from('journeys')
+          .select('status')
+          .eq('id', state.journey_id)
+          .single();
+
+        if (journeyError || !journey) {
+          console.warn(`[Processor] Journey not found for state ${state.id}, cancelling step`);
+          await supabase
+            .from('scheduled_journey_steps')
+            .update({ 
+              status: 'cancelled',
+              error: 'Journey not found',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', step.id);
+          skipped++;
+          continue;
+        }
+
+        // ✅ NEW: Check if journey is completed/archived
+        if (journey.status === 'completed' || journey.status === 'archived') {
+          console.log(`[Processor] Journey ${state.journey_id} status is ${journey.status}, cancelling step`);
+          await supabase
+            .from('scheduled_journey_steps')
+            .update({ 
+              status: 'cancelled',
+              error: `Journey status is ${journey.status}`,
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', step.id);
+          skipped++;
+          continue;
+        }
+
+        // Check if journey state is in valid status
+        if (state.status !== 'active' && state.status !== 'waiting') {
+          console.log(`[Processor] Journey state ${state.id} status is ${state.status}, cancelling step`);
+          await supabase
+            .from('scheduled_journey_steps')
+            .update({ 
+              status: 'cancelled',  // ✅ Changed from 'skipped'
+              error: `Journey state status is ${state.status}`,
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', step.id);
+          skipped++;
+          continue;
+        }
+
+        // Update state to active if it was waiting
+        if (state.status === 'waiting') {
+          await supabase
+            .from('user_journey_states')
+            .update({ 
+              status: 'active',
+              next_execution_at: null,
+            })
+            .eq('id', step.user_journey_state_id);
+        }
+
+        // Process the journey step
+        await processJourneyStep(step.user_journey_state_id);
+
+        // Mark step as completed
+        await supabase
+          .from('scheduled_journey_steps')
+          .update({ 
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', step.id);
+
+        processed++;
+        console.log(`✅ [Processor] Step ${step.id} completed successfully`);
+
+      } catch (stepError: any) {
+        console.error(`❌ [Processor] Step ${step.id} failed:`, stepError.message);
+        
+        // Mark step as failed
+        await supabase
+          .from('scheduled_journey_steps')
+          .update({ 
+            status: 'failed',
+            error: stepError.message,
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', step.id);
+
+        failed++;
+        errors.push(`Step ${step.id}: ${stepError.message}`);
+      }
+    }
+
+    const duration = Date.now() - startTime;
+    const total = processed + failed + skipped;
+    
+    console.log(`✅ [Processor] Completed in ${duration}ms - Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}, Total: ${total}`);
+    
+    return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
+
+  } catch (error: any) {
+    console.error('❌ [Processor] Fatal error in processDueSteps:', error.message);
+    throw error;
+  }
+}
+/**
+ * ✅ Enroll a subscriber in a journey
+ */
+export async function enrollSubscriber(
+  journeyId: string,
+  subscriberId: string,
+  initialContext: any = {}
+): Promise<any> {
+  console.log('📝 [Processor] Enrolling subscriber:', { journeyId, subscriberId });
+
+  try {
+    // Fetch journey
+    const { data: journey, error: journeyError } = await supabase
+      .from('journeys')
+      .select('*')
+      .eq('id', journeyId)
+      .single();
+
+    if (journeyError || !journey) {
+      throw new Error('Journey not found');
+    }
+
+    if (journey.status !== 'active') {
+      throw new Error(`Journey is not active (status: ${journey.status})`);
+    }
+
+    // Parse flow definition
+    const flowDefinition = parseFlowDefinition(journey.flow_definition);
+    
+    if (!flowDefinition.nodes || flowDefinition.nodes.length === 0) {
+      throw new Error('Journey has no steps defined');
+    }
+
+    // Find entry node or use first node
+    const entryNode = flowDefinition.nodes.find(n => n.type === 'entry');
+    const startNode = entryNode || flowDefinition.nodes[0];
+
+    console.log(`[Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
+
+    // Check re-entry rules
+    const canEnter = await checkReEntryRules(subscriberId, journey);
+    if (!canEnter) {
+      console.log('[Processor] Re-entry rules prevent enrollment');
+      throw new Error('Subscriber cannot re-enter this journey at this time');
+    }
+
+    // Create journey state
+    const { data: journeyState, error: stateError } = await supabase
+      .from('user_journey_states')
+      .insert({
+        journey_id: journeyId,
+        subscriber_id: subscriberId,
+        current_step_id: startNode.id,
+        status: 'active',
+        context: {
+          ...initialContext,
+          entry_timestamp: new Date().toISOString(),
+        },
+        node_history: [startNode.id],
+        entered_at: new Date().toISOString(),
+        last_processed_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (stateError) {
+      console.error('[Processor] Failed to create journey state:', stateError);
+      throw stateError;
+    }
+
+    // Log entry event
+    await logJourneyEvent(
+      journeyId,
+      subscriberId,
+      journeyState.id,
+      'journey_entered',
+      { context: initialContext }
+    );
+
+    // Update journey counters
+    await supabase.rpc('increment', {
+      table_name: 'journeys',
+      column_name: 'total_entered',
+      row_id: journeyId,
+    });
+
+    await supabase.rpc('increment', {
+      table_name: 'journeys',
+      column_name: 'total_active',
+      row_id: journeyId,
+    });
+
+    // If entry node, move to first real step
+    if (startNode.type === 'entry') {
+      const nextNodeId = getNextNodeId(flowDefinition, startNode.id);
+      if (nextNodeId) {
+        await supabase
+          .from('user_journey_states')
+          .update({ current_step_id: nextNodeId })
+          .eq('id', journeyState.id);
+      }
+    }
+
+    // Process the first step
+    await processJourneyStep(journeyState.id);
+
+    console.log('✅ [Processor] Subscriber enrolled successfully');
+    return journeyState;
+
+  } catch (error: any) {
+    console.error('❌ [Processor] Enrollment error:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * ✅ Process a single journey step
+ */
+export async function processJourneyStep(journeyStateId: string): Promise<void> {
+  console.log('🔄 [Processor] Processing journey step:', journeyStateId);
+
+  try {
+    // Fetch current state
+    const { data: stateData, error: stateError } = await supabase
+      .from('user_journey_states')
+      .select('*')
+      .eq('id', journeyStateId)
+      .single();
+
+    if (stateError || !stateData) {
+      throw new Error('Journey state not found');
+    }
+
+    const state = toJourneyState(stateData);
+
+    // Verify state is processable
+    if (state.status !== 'active' && state.status !== 'waiting') {
+      console.log(`[Processor] Journey state is ${state.status}, cannot process`);
+      return;
+    }
+
+    // Fetch journey
+    const { data: journey, error: journeyError } = await supabase
+      .from('journeys')
+      .select('*')
+      .eq('id', state.journey_id)
+      .single();
+
+    if (journeyError || !journey) {
+      throw new Error('Journey not found');
+    }
+
+    // Parse flow
+    const flowDefinition = parseFlowDefinition(journey.flow_definition);
+    
+    // Find current node
+    const currentNode = flowDefinition.nodes.find(n => n.id === state.current_step_id);
+
+    if (!currentNode) {
+      console.log('[Processor] Current step not found in flow, completing journey');
+      await completeJourney(journeyStateId);
+      return;
+    }
+
+    console.log(`📍 [Processor] Current node: ${currentNode.id} (type: ${currentNode.type})`);
+
+    // Update node history
+    const nodeHistory = Array.isArray(state.node_history) ? state.node_history : [];
+    if (!nodeHistory.includes(currentNode.id)) {
+      nodeHistory.push(currentNode.id);
+      await supabase
+        .from('user_journey_states')
+        .update({ 
+          node_history: nodeHistory,
+          last_processed_at: new Date().toISOString(),
+        })
+        .eq('id', journeyStateId);
+    }
+
+    // Process based on node type
+    switch (currentNode.type) {
+      case 'send_notification':
+        await processSendNotification(state, currentNode, flowDefinition);
+        break;
+      
+      case 'wait':
+        await processWaitNode(state, currentNode, flowDefinition);
+        break;
+      
+      case 'condition':
+        await processConditionNode(state, currentNode, flowDefinition);
+        break;
+      
+      case 'ab_split':
+        await processAbSplitNode(state, currentNode, flowDefinition);
+        break;
+      
+      case 'exit':
+        await exitJourney(journeyStateId, 'reached_exit_node');
+        break;
+      
+      case 'entry':
+        // Entry nodes are just markers, move to next
+        await moveToNextNode(state, flowDefinition, currentNode.id);
+        break;
+      
+      default:
+        console.warn(`[Processor] Unknown node type: ${currentNode.type}, moving to next`);
+        await moveToNextNode(state, flowDefinition, currentNode.id);
+    }
+
+  } catch (error: any) {
+    console.error('❌ [Processor] Step processing error:', error.message);
+    
+    // Log error event
+    const { data: stateData } = await supabase
+      .from('user_journey_states')
+      .select('*')
+      .eq('id', journeyStateId)
+      .single();
+
+    if (stateData) {
+      const state = toJourneyState(stateData);
+      await logJourneyEvent(
+        state.journey_id,
+        state.subscriber_id,
+        journeyStateId,
+        'step_error',
+        { error: error.message },
+        state.current_step_id || undefined
+      );
+    }
+    
+    throw error;
+  }
+}
+
+// ============================================================================
+// NODE PROCESSORS
+// ============================================================================
+
+async function processSendNotification(
+  state: JourneyState,
+  node: JourneyNode,
+  flowDefinition: FlowDefinition
+): Promise<void> {
+  console.log('📨 [Processor] Sending notification');
+
+  try {
+    // Fetch subscriber
+    const { data: subscriber, error: subError } = await supabase
+      .from('subscribers')
+      .select('*')
+      .eq('id', state.subscriber_id)
+      .single();
+
+    if (subError || !subscriber) {
+      throw new Error('Subscriber not found');
+    }
+
+    // Fetch website for branding
+    const { data: website } = await supabase
+      .from('websites')
+      .select('*')
+      .eq('id', subscriber.website_id)
+      .single();
+
+    if (!website) {
+      throw new Error('Website not found');
+    }
+
+    // Prepare push subscription
+    const subscription: WebPushSubscription = {
+      endpoint: subscriber.endpoint!,
+      keys: {
+        p256dh: subscriber.p256dh_key!,
+        auth: subscriber.auth_key!,
+      },
+    };
+
+    // Prepare notification payload
+    const notificationPayload: NotificationPayload = {
+      title: node.data.title || 'Notification',
+      body: node.data.body || '',
+      icon: node.data.icon_url || (website.notification_branding as any)?.logo_url,
+      url: node.data.url || node.data.click_url || '/',
+      branding: website.notification_branding as any,
+    };
+
+    // Send notification
+    const result = await sendWebPushNotification(subscription, notificationPayload);
+
+    // Log notification
+    await supabase.from('notification_logs').insert({
+      website_id: subscriber.website_id,
+      subscriber_id: subscriber.id,
+      journey_id: state.journey_id,
+      journey_step_id: node.id,
+      user_journey_state_id: state.id,
+      status: result.success ? 'sent' : 'failed',
+      platform: 'web',
+      sent_at: new Date().toISOString(),
+      error_message: result.error,
+    });
 
     // Log event
-    await supabase.from('journey_events').insert({
-      journey_id: journeyState.journey_id,
-      subscriber_id: journeyState.subscriber_id,
-      user_journey_state_id: journeyState.id,
-      step_id: step.id,
-      event_type: 'step_executed',
-      metadata: { step_type: stepType },
-    });
+    await logJourneyEvent(
+      state.journey_id,
+      state.subscriber_id,
+      state.id,
+      result.success ? 'notification_sent' : 'notification_failed',
+      { 
+        title: notificationPayload.title,
+        error: result.error 
+      },
+      node.id
+    );
+
+    // Move to next node regardless of send success (Brevo behavior)
+    await moveToNextNode(state, flowDefinition, node.id);
+
+  } catch (error: any) {
+    console.error('❌ [Processor] Notification error:', error.message);
+    
+    // Log error but continue
+    await logJourneyEvent(
+      state.journey_id,
+      state.subscriber_id,
+      state.id,
+      'notification_error',
+      { error: error.message },
+      node.id
+    );
+    
+    // Move to next node anyway
+    await moveToNextNode(state, flowDefinition, node.id);
+  }
+}
+
+async function processWaitNode(
+  state: JourneyState,
+  node: JourneyNode,
+  flowDefinition: FlowDefinition
+): Promise<void> {
+  console.log('⏰ [Processor] Processing wait node');
+
+  // Check if wait was already scheduled
+  if (state.status === 'waiting') {
+    console.log('✅ [Processor] Wait period completed, advancing');
+    await moveToNextNode(state, flowDefinition, node.id);
+    return;
   }
 
-  private async executeSendNotification(
-    journeyState: any,
-    step: any
-  ): Promise<void> {
-    try {
-      // Get merged config
-      const config = getStepConfig(step);
-      const title = config.title || 'Notification';
-      const body = config.body || '';
-      const clickUrl = config.click_url || config.url || '/';
-      const iconUrl = config.icon_url || config.icon;
+  // Schedule new wait
+  const waitMode = node.data.mode || 'duration';
 
-      console.log(`[JourneyProcessor] Sending notification: "${title}"`);
+  if (waitMode === 'duration') {
+    // Duration-based wait
+    const durationSeconds = node.data.duration || node.data.delay_value * getDelayMultiplier(node.data.delay_unit || 'hours');
+    const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-      // Get subscriber
-      const { data: subscriber, error: subError } = await supabase
-        .from('subscribers')
-        .select('*')
-        .eq('id', journeyState.subscriber_id)
-        .single();
+    console.log(`⏰ [Processor] Scheduling wait for ${durationSeconds} seconds (until ${executeAt.toISOString()})`);
 
-      if (subError || !subscriber) {
-        throw new Error(`Subscriber not found: ${subError?.message}`);
-      }
-
-      if (!subscriber.endpoint) {
-        console.log('[JourneyProcessor] Subscriber has no valid push subscription');
-        return;
-      }
-
-      // Get website VAPID keys
-      const { data: website, error: websiteError } = await supabase
-        .from('websites')
-        .select('vapid_public_key, vapid_private_key')
-        .eq('id', journeyState.journey.website_id)
-        .single();
-
-      if (websiteError || !website) {
-        throw new Error(`Website not found: ${websiteError?.message}`);
-      }
-
-      if (!website.vapid_public_key || !website.vapid_private_key) {
-        throw new Error('Website VAPID keys not configured');
-      }
-
-      // Set VAPID details
-      webpush.setVapidDetails(
-        'mailto:support@yourapp.com',
-        website.vapid_public_key,
-        website.vapid_private_key
-      );
-
-      // Build push subscription
-      const pushSubscription = {
-        endpoint: subscriber.endpoint,
-        keys: {
-          p256dh: subscriber.p256dh_key,
-          auth: subscriber.auth_key,
-        },
-      };
-
-      // Send notification
-      const notificationPayload = JSON.stringify({
-        title,
-        body,
-        icon: iconUrl,
-        data: {
-          url: clickUrl,
-          journey_id: journeyState.journey_id,
-        },
-      });
-
-      await webpush.sendNotification(pushSubscription, notificationPayload);
-      console.log('[JourneyProcessor] current_step_id Notification sent successfully');
-
-      // Log notification
-      await supabase.from('notification_logs').insert({
-        website_id: journeyState.journey.website_id,
-        subscriber_id: subscriber.id,
-        status: 'delivered',
-        platform: 'web',
-        sent_at: new Date().toISOString(),
-        delivered_at: new Date().toISOString(),
-      });
-
-    } catch (error: any) {
-      console.error('[JourneyProcessor] Failed to send notification:', error);
-
-      // Log failed notification
-      await supabase.from('notification_logs').insert({
-        website_id: journeyState.journey.website_id,
-        subscriber_id: journeyState.subscriber_id,
-        status: 'failed',
-        platform: 'web',
-        error_message: error.message,
-        sent_at: new Date().toISOString(),
-      });
-
-      throw error;
-    }
-  }
-
-  private async executeWaitForEvent(
-    journeyState: any,
-    step: any
-  ): Promise<void> {
-    const config = getStepConfig(step);
-    const eventName = config.event_name;
-    const timeoutValue = config.timeout_value || 24;
-    const timeoutUnit = config.timeout_unit || 'hours';
-
-    console.log(`[JourneyProcessor] Waiting for event: ${eventName}`);
-
-    // Calculate timeout
-    const timeoutMs = this.calculateDelay(timeoutValue, timeoutUnit);
-    const timeoutAt = new Date(Date.now() + timeoutMs);
-
-    // Update journey state to waiting
+    // Update state to waiting
     await supabase
       .from('user_journey_states')
       .update({
         status: 'waiting',
-        current_step_id: step.id,
+        next_execution_at: executeAt.toISOString(),
+      })
+      .eq('id', state.id);
+
+    // Schedule step
+    await supabase.from('scheduled_journey_steps').insert({
+      user_journey_state_id: state.id,
+      step_id: node.id,
+      execute_at: executeAt.toISOString(),
+      status: 'pending',
+      payload: { 
+        next_node_id: getNextNodeId(flowDefinition, node.id),
+        mode: 'duration'
+      },
+    });
+
+    await logJourneyEvent(
+      state.journey_id,
+      state.subscriber_id,
+      state.id,
+      'wait_started',
+      { duration_seconds: durationSeconds, until: executeAt.toISOString() },
+      node.id
+    );
+
+  } else if (waitMode === 'until_event') {
+    // Event-based wait
+    const eventName = node.data.event?.name || node.data.event_name;
+    const timeoutSeconds = node.data.event?.timeout_seconds || node.data.timeout_seconds || 604800; // 7 days default
+    const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
+
+    console.log(`⏰ [Processor] Waiting for event "${eventName}" (timeout: ${timeoutAt.toISOString()})`);
+
+    // Update state
+    await supabase
+      .from('user_journey_states')
+      .update({
+        status: 'waiting',
+        next_execution_at: timeoutAt.toISOString(),
         context: {
-          ...journeyState.context,
+          ...state.context,
           waiting_for_event: eventName,
-          timeout_at: timeoutAt.toISOString(),
         },
       })
-      .eq('id', journeyState.id);
+      .eq('id', state.id);
 
-    // Schedule timeout fallback
-    const connections = journeyState.flow_definition.edges || [];
-    const fallbackEdge = connections.find(
-      (e: any) => e.from === step.id && e.condition === 'timeout'
+    // Schedule timeout step
+    await supabase.from('scheduled_journey_steps').insert({
+      user_journey_state_id: state.id,
+      step_id: node.id,
+      execute_at: timeoutAt.toISOString(),
+      status: 'pending',
+      payload: { 
+        next_node_id: getNextNodeId(flowDefinition, node.id, 'timeout'),
+        mode: 'event_timeout',
+        event_name: eventName
+      },
+    });
+
+    await logJourneyEvent(
+      state.journey_id,
+      state.subscriber_id,
+      state.id,
+      'wait_for_event_started',
+      { event_name: eventName, timeout: timeoutAt.toISOString() },
+      node.id
+    );
+  }
+}
+
+async function processConditionNode(
+  state: JourneyState,
+  node: JourneyNode,
+  flowDefinition: FlowDefinition
+): Promise<void> {
+  console.log('🔀 [Processor] Processing condition');
+
+  const conditionType = node.data.check || node.data.condition_type;
+  const lookbackSeconds = node.data.lookback || node.data.lookback_seconds || 86400;
+  const lookbackDate = new Date(Date.now() - lookbackSeconds * 1000);
+
+  let conditionMet = false;
+
+  try {
+    switch (conditionType) {
+      case 'clicked_notification':
+      case 'clicked_link':
+        const { data: clicks } = await supabase
+          .from('notification_logs')
+          .select('id')
+          .eq('subscriber_id', state.subscriber_id)
+          .not('clicked_at', 'is', null)
+          .gte('clicked_at', lookbackDate.toISOString())
+          .limit(1);
+        conditionMet = (clicks && clicks.length > 0) || false;
+        break;
+
+      case 'visited_page':
+      case 'page_view':
+        const targetUrl = node.data.url || node.data.target_url;
+        let query = supabase
+          .from('subscriber_events')
+          .select('id')
+          .eq('subscriber_id', state.subscriber_id)
+          .eq('event_name', 'page_view')
+          .gte('created_at', lookbackDate.toISOString());
+        
+        if (targetUrl) {
+          query = query.contains('event_data', { url: targetUrl });
+        }
+        
+        const { data: events } = await query.limit(1);
+        conditionMet = (events && events.length > 0) || false;
+        break;
+
+      case 'completed_action':
+      case 'custom_event':
+        const actionName = node.data.action_name || node.data.event_name;
+        const { data: actionEvents } = await supabase
+          .from('subscriber_events')
+          .select('id')
+          .eq('subscriber_id', state.subscriber_id)
+          .eq('event_name', actionName)
+          .gte('created_at', lookbackDate.toISOString())
+          .limit(1);
+        conditionMet = (actionEvents && actionEvents.length > 0) || false;
+        break;
+
+      case 'has_tag':
+        const { data: subscriber } = await supabase
+          .from('subscribers')
+          .select('tags')
+          .eq('id', state.subscriber_id)
+          .single();
+        const tags = subscriber?.tags || [];
+        const requiredTag = node.data.tag || node.data.tag_name;
+        conditionMet = Array.isArray(tags) && tags.includes(requiredTag);
+        break;
+
+      case 'attribute_equals':
+      case 'has_attribute':
+        const { data: sub } = await supabase
+          .from('subscribers')
+          .select('custom_attributes')
+          .eq('id', state.subscriber_id)
+          .single();
+        const attributes = (sub?.custom_attributes || {}) as Record<string, any>;
+        const attrKey = node.data.attribute_key;
+        const attrValue = node.data.attribute_value;
+        
+        if (conditionType === 'has_attribute') {
+          conditionMet = attrKey && attributes[attrKey] !== undefined;
+        } else {
+          conditionMet = attrKey && attributes[attrKey] === attrValue;
+        }
+        break;
+
+      default:
+        console.warn(`[Processor] Unknown condition type: ${conditionType}`);
+        conditionMet = false;
+    }
+
+    // Log condition result
+    await logJourneyEvent(
+      state.journey_id,
+      state.subscriber_id,
+      state.id,
+      'condition_evaluated',
+      { condition_type: conditionType, result: conditionMet },
+      node.id
     );
 
-    if (fallbackEdge) {
-      await this.scheduleStep(
-        journeyState.id,
-        fallbackEdge.to,
-        timeoutAt,
-        { reason: 'timeout', step_type: 'timeout' }
-      );
-    }
-
-    console.log(`[JourneyProcessor] Wait scheduled until ${timeoutAt.toISOString()}`);
-  }
-
-  private async executeCondition(
-    journeyState: any,
-    step: any
-  ): Promise<void> {
-    const config = getStepConfig(step);
-    const condition = config.condition;
-
-    if (!condition) {
-      console.warn('[JourneyProcessor] Condition config missing');
-      return;
-    }
-
-    // Evaluate condition
-    const result = await this.evaluateCondition(journeyState, condition);
-    console.log(`[JourneyProcessor] Condition result: ${result}`);
-
-    // Find next step based on result
-    const connections = journeyState.flow_definition.edges || [];
-    const nextEdge = connections.find(
-      (e: any) => e.from === step.id && e.condition === (result ? 'yes' : 'no')
-    );
-
-    if (nextEdge) {
-      await supabase
-        .from('user_journey_states')
-        .update({ current_step_id: nextEdge.to })
-        .eq('id', journeyState.id);
-    }
-  }
-
-  private async executeSplit(journeyState: any, step: any): Promise<void> {
-    // Random 50/50 split
-    const takeMainBranch = Math.random() < 0.5;
-
-    console.log(`[JourneyProcessor] Split: taking branch ${takeMainBranch ? 'A' : 'B'}`);
-
-    const connections = journeyState.flow_definition.edges || [];
-    const nextEdge = connections.find(
-      (e: any) => e.from === step.id && e.condition === (takeMainBranch ? 'A' : 'B')
+    // Find appropriate branch
+    const branchType = conditionMet ? 'yes' : 'no';
+    const nextEdge = flowDefinition.edges.find(
+      e => e.from === node.id && (e.type === branchType || e.condition === branchType)
     );
 
     if (nextEdge) {
@@ -1544,158 +2112,406 @@ class JourneyProcessor {
         .from('user_journey_states')
         .update({
           current_step_id: nextEdge.to,
-          context: {
-            ...journeyState.context,
-            split_branch: takeMainBranch ? 'A' : 'B',
-          },
+          status: 'active',
         })
-        .eq('id', journeyState.id);
-    }
-  }
+        .eq('id', state.id);
 
-  private async advanceJourney(
-    journeyState: any,
-    currentStep: any
-  ): Promise<void> {
-    const flowDefinition = journeyState.flow_definition;
-
-    if (!flowDefinition) {
-      console.error('[JourneyProcessor] Flow definition not found');
-      return;
+      await processJourneyStep(state.id);
+    } else {
+      console.log(`[Processor] No ${branchType} branch found, completing journey`);
+      await completeJourney(state.id);
     }
 
-    // Find next step connection
-    const connections = flowDefinition.edges || [];
-    const nextEdge = connections.find(
-      (e: any) => e.from === currentStep.id && !e.condition
-    );
-
-    if (!nextEdge) {
-      // Journey complete
-      console.log('[JourneyProcessor] No next step - completing journey');
-      
-      await supabase
-        .from('user_journey_states')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-        })
-        .eq('id', journeyState.id);
-
-      // Log completion event
-      await supabase.from('journey_events').insert({
-        journey_id: journeyState.journey_id,
-        subscriber_id: journeyState.subscriber_id,
-        user_journey_state_id: journeyState.id,
-        step_id: currentStep.id,
-        event_type: 'journey_completed',
-        metadata: {},
-      });
-
-      console.log('[JourneyProcessor] current_step_id Journey completed');
-      return;
-    }
-
-    const nextStep = flowDefinition.nodes?.find(
-      (n: any) => n.id === nextEdge.to
-    );
-
-    if (!nextStep) {
-      console.warn(`[JourneyProcessor] Next step ${nextEdge.to} not found in flow`);
-      return;
-    }
-
-    // Update current step in journey state
-    await supabase
-      .from('user_journey_states')
-      .update({ current_step_id: nextStep.id })
-      .eq('id', journeyState.id);
-
-    const stepType = nextStep.type || nextStep.data?.type;
-    console.log(`[JourneyProcessor] Next step: ${nextStep.id} (${stepType})`);
-
-    // Calculate execution time
-    let executeAt = new Date(); // Default: immediate
-
-    if (stepType === 'delay' || stepType === 'wait') {
-      const config = getStepConfig(nextStep);
-      
-      let delayMs: number;
-      if (config.duration) {
-        // Frontend format: duration in seconds
-        delayMs = config.duration * 1000;
-      } else {
-        // Backend format: delay_value and delay_unit
-        const delayValue = config.delay_value || 1;
-        const delayUnit = config.delay_unit || 'hours';
-        delayMs = this.calculateDelay(delayValue, delayUnit);
-      }
-      
-      executeAt = new Date(Date.now() + delayMs);
-      console.log(`[JourneyProcessor] Scheduling ${stepType} for ${executeAt.toISOString()}`);
-    }
-
-    // Schedule the next step
-    await this.scheduleStep(journeyState.id, nextStep.id, executeAt, {
-      step_type: stepType,
-    });
-
-    console.log(`[JourneyProcessor] current_step_id Next step scheduled`);
-  }
-
-  private calculateDelay(
-    value: number,
-    unit: 'minutes' | 'hours' | 'days'
-  ): number {
-    const multipliers = {
-      minutes: 60 * 1000,
-      hours: 60 * 60 * 1000,
-      days: 24 * 60 * 60 * 1000,
-    };
-    return value * multipliers[unit];
-  }
-
-  private async evaluateCondition(
-    journeyState: any,
-    condition: any
-  ): Promise<boolean> {
-    const value = journeyState.context?.[condition.field];
-
-    switch (condition.operator) {
-      case 'equals':
-        return value === condition.value;
-      case 'contains':
-        return String(value).includes(condition.value);
-      case 'greater_than':
-        return Number(value) > Number(condition.value);
-      case 'less_than':
-        return Number(value) < Number(condition.value);
-      default:
-        return false;
-    }
-  }
-
-  private async scheduleStep(
-    journeyStateId: string,
-    stepId: string,
-    executeAt: Date,
-    payload: any
-  ): Promise<void> {
-    const { error } = await supabase
-      .from('scheduled_journey_steps')
-      .insert({
-        user_journey_state_id: journeyStateId,
-        step_id: stepId,
-        execute_at: executeAt.toISOString(),
-        status: 'pending',
-        payload,
-      });
-
-    if (error) {
-      console.error('[JourneyProcessor] Failed to schedule step:', error);
-      throw error;
+  } catch (error: any) {
+    console.error('❌ [Processor] Condition error:', error.message);
+    
+    // On error, take 'no' path
+    const noEdge = flowDefinition.edges.find(e => e.from === node.id && (e.type === 'no' || e.condition === 'no'));
+    if (noEdge) {
+      await supabase.from('user_journey_states').update({ current_step_id: noEdge.to }).eq('id', state.id);
+      await processJourneyStep(state.id);
+    } else {
+      await completeJourney(state.id);
     }
   }
 }
 
-export const journeyProcessor = new JourneyProcessor();
+async function processAbSplitNode(
+  state: JourneyState,
+  node: JourneyNode,
+  flowDefinition: FlowDefinition
+): Promise<void> {
+  console.log('🎲 [Processor] Processing A/B split');
+
+  const branches = node.data.branches || [];
+  
+  if (!branches || branches.length === 0) {
+    console.warn('[Processor] No branches defined, completing journey');
+    await completeJourney(state.id);
+    return;
+  }
+
+  // Select branch based on percentage
+  const random = Math.random() * 100;
+  let cumulative = 0;
+  let selectedBranch = branches[0];
+
+  for (const branch of branches) {
+    cumulative += branch.percentage || 0;
+    if (random <= cumulative) {
+      selectedBranch = branch;
+      break;
+    }
+  }
+
+  console.log(`[Processor] Selected branch: ${selectedBranch.id} (${selectedBranch.name})`);
+
+  // Find edge for selected branch
+  const nextEdge = flowDefinition.edges.find(
+    e => e.from === node.id && e.type === 'branch' && e.branchId === selectedBranch.id
+  );
+
+  if (nextEdge) {
+    await supabase
+      .from('user_journey_states')
+      .update({
+        current_step_id: nextEdge.to,
+        status: 'active',
+        context: { 
+          ...state.context, 
+          ab_variant: selectedBranch.id,
+          ab_variant_name: selectedBranch.name 
+        },
+      })
+      .eq('id', state.id);
+
+    await logJourneyEvent(
+      state.journey_id,
+      state.subscriber_id,
+      state.id,
+      'ab_split_selected',
+      { branch_id: selectedBranch.id, branch_name: selectedBranch.name },
+      node.id
+    );
+
+    await processJourneyStep(state.id);
+  } else {
+    console.warn('[Processor] No edge found for selected branch');
+    await completeJourney(state.id);
+  }
+}
+
+// ============================================================================
+// JOURNEY STATE MANAGEMENT
+// ============================================================================
+
+async function moveToNextNode(
+  state: JourneyState,
+  flowDefinition: FlowDefinition,
+  currentNodeId: string
+): Promise<void> {
+  const nextNodeId = getNextNodeId(flowDefinition, currentNodeId);
+
+  if (nextNodeId) {
+    console.log(`[Processor] Moving to next node: ${nextNodeId}`);
+    
+    await supabase
+      .from('user_journey_states')
+      .update({ 
+        current_step_id: nextNodeId, 
+        status: 'active',
+        last_processed_at: new Date().toISOString(),
+      })
+      .eq('id', state.id);
+
+    // Process next step
+    await processJourneyStep(state.id);
+  } else {
+    console.log('[Processor] No next node found, completing journey');
+    await completeJourney(state.id);
+  }
+}
+
+async function completeJourney(journeyStateId: string): Promise<void> {
+  console.log('🏁 [Processor] Completing journey:', journeyStateId);
+
+  try {
+    const { data: stateData } = await supabase
+      .from('user_journey_states')
+      .select('*')
+      .eq('id', journeyStateId)
+      .single();
+
+    if (!stateData) return;
+
+    const state = toJourneyState(stateData);
+
+    // Update state
+    await supabase
+      .from('user_journey_states')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        current_step_id: null,
+      })
+      .eq('id', journeyStateId);
+
+    // Log event
+    await logJourneyEvent(
+      state.journey_id,
+      state.subscriber_id,
+      journeyStateId,
+      'journey_completed'
+    );
+
+    // Update counters
+    await supabase.rpc('increment', {
+      table_name: 'journeys',
+      column_name: 'total_completed',
+      row_id: state.journey_id,
+    });
+
+    // Decrement active count
+    const { data: journey } = await supabase
+      .from('journeys')
+      .select('total_active')
+      .eq('id', state.journey_id)
+      .single();
+
+    if (journey && journey.total_active && journey.total_active > 0) {
+      await supabase
+        .from('journeys')
+        .update({ total_active: journey.total_active - 1 })
+        .eq('id', state.journey_id);
+    }
+
+    console.log('✅ [Processor] Journey completed successfully');
+
+  } catch (error: any) {
+    console.error('❌ [Processor] Error completing journey:', error.message);
+  }
+}
+
+async function exitJourney(journeyStateId: string, reason: string): Promise<void> {
+  console.log('🚪 [Processor] Exiting journey:', journeyStateId, 'Reason:', reason);
+
+  try {
+    const { data: stateData } = await supabase
+      .from('user_journey_states')
+      .select('*')
+      .eq('id', journeyStateId)
+      .single();
+
+    if (!stateData) return;
+
+    const state = toJourneyState(stateData);
+
+    // Update state
+    await supabase
+      .from('user_journey_states')
+      .update({
+        status: 'exited',
+        completed_at: new Date().toISOString(),
+        current_step_id: null,
+        context: {
+          ...state.context,
+          exit_reason: reason
+        }
+      })
+      .eq('id', journeyStateId);
+
+    // Log event
+    await logJourneyEvent(
+      state.journey_id,
+      state.subscriber_id,
+      journeyStateId,
+      'journey_exited',
+      { reason }
+    );
+
+    // Update counters
+    await supabase.rpc('increment', {
+      table_name: 'journeys',
+      column_name: 'total_exited',
+      row_id: state.journey_id,
+    });
+
+    // Decrement active count
+    const { data: journey } = await supabase
+      .from('journeys')
+      .select('total_active')
+      .eq('id', state.journey_id)
+      .single();
+
+    if (journey && journey.total_active && journey.total_active > 0) {
+      await supabase
+        .from('journeys')
+        .update({ total_active: journey.total_active - 1 })
+        .eq('id', state.journey_id);
+    }
+
+  } catch (error: any) {
+    console.error('❌ [Processor] Error exiting journey:', error.message);
+  }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+async function checkReEntryRules(subscriberId: string, journey: any): Promise<boolean> {
+  const reEntrySettings = journey.re_entry_settings || {};
+  const allowReEntry = reEntrySettings.allow_re_entry || false;
+
+  // Get previous states
+  const { data: states } = await supabase
+    .from('user_journey_states')
+    .select('*')
+    .eq('subscriber_id', subscriberId)
+    .eq('journey_id', journey.id)
+    .order('entered_at', { ascending: false });
+
+  if (!states || states.length === 0) {
+    return true; // First time
+  }
+
+  // Check if already active
+  const activeState = states.find(s => s.status === 'active' || s.status === 'waiting');
+  if (activeState) {
+    console.log('[Processor] Already active in journey');
+    return false;
+  }
+
+  // Check if re-entry allowed
+  if (!allowReEntry) {
+    console.log('[Processor] Re-entry not allowed');
+    return false;
+  }
+
+  // Check max entries
+  const maxEntries = reEntrySettings.max_entries || 0;
+  if (maxEntries > 0 && states.length >= maxEntries) {
+    console.log(`[Processor] Max entries (${maxEntries}) reached`);
+    return false;
+  }
+
+  // Check cooldown
+  const cooldownDays = reEntrySettings.cooldown_days || 0;
+  if (cooldownDays > 0 && states.length > 0 && states[0].entered_at) {
+    const lastEntry = new Date(states[0].entered_at);
+    const daysSince = (Date.now() - lastEntry.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (daysSince < cooldownDays) {
+      console.log(`[Processor] Cooldown period (${cooldownDays} days) not met`);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function getDelayMultiplier(unit: string): number {
+  switch (unit) {
+    case 'minutes': return 60;
+    case 'hours': return 3600;
+    case 'days': return 86400;
+    default: return 3600;
+  }
+}
+
+/**
+ * Handle subscriber events (for wait-until-event nodes)
+ */
+export async function handleSubscriberEvent(
+  subscriberId: string,
+  eventName: string,
+  eventData: any = {}
+): Promise<void> {
+  console.log('📥 [Processor] Handling subscriber event:', { subscriberId, eventName });
+
+  try {
+    // Find waiting states for this event
+    const { data: waitingStates } = await supabase
+      .from('user_journey_states')
+      .select('*')
+      .eq('subscriber_id', subscriberId)
+      .eq('status', 'waiting')
+      .contains('context', { waiting_for_event: eventName });
+
+    if (!waitingStates || waitingStates.length === 0) {
+      console.log('[Processor] No waiting states for this event');
+      return;
+    }
+
+    console.log(`[Processor] Found ${waitingStates.length} waiting state(s)`);
+
+    for (const stateData of waitingStates) {
+      const state = toJourneyState(stateData);
+      
+      // Cancel scheduled timeout
+      await supabase
+        .from('scheduled_journey_steps')
+        .update({ status: 'cancelled' })
+        .eq('user_journey_state_id', state.id)
+        .eq('status', 'pending');
+
+      // Update context
+      await supabase
+        .from('user_journey_states')
+        .update({
+          status: 'active',
+          next_execution_at: null,
+          context: {
+            ...state.context,
+            waiting_for_event: null,
+            received_event: eventName,
+            received_event_data: eventData
+          }
+        })
+        .eq('id', state.id);
+
+      // Log event
+      await logJourneyEvent(
+        state.journey_id,
+        state.subscriber_id,
+        state.id,
+        'event_received',
+        { event_name: eventName, event_data: eventData },
+        state.current_step_id || undefined
+      );
+
+      // Fetch journey to get flow
+      const { data: journey } = await supabase
+        .from('journeys')
+        .select('flow_definition')
+        .eq('id', state.journey_id)
+        .single();
+
+      if (journey) {
+        const flowDefinition = parseFlowDefinition(journey.flow_definition);
+        const currentNode = flowDefinition.nodes.find(n => n.id === state.current_step_id);
+        
+        if (currentNode) {
+          // Move to success path
+          await moveToNextNode(state, flowDefinition, currentNode.id);
+        }
+      }
+    }
+
+  } catch (error: any) {
+    console.error('❌ [Processor] Error handling event:', error.message);
+  }
+}
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export const journeyProcessor = {
+  enrollSubscriber,
+  processJourneyStep,
+  processDueSteps,
+  handleSubscriberEvent,
+};
+
+export default journeyProcessor;
