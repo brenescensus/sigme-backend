@@ -163,8 +163,8 @@ const supabase = createClient<Database>(
  * POST /api/journeys/[id]/test
  * Test a journey with a subscriber
  * 
- * ✅ FIXED: Check website ownership instead of journey.user_id
- * ✅ FIXED: Specify foreign key to avoid TypeScript ambiguity
+ *  FIXED: Check website ownership instead of journey.user_id
+ *  FIXED: Specify foreign key to avoid TypeScript ambiguity
  */
 export async function POST(
   req: NextRequest,
@@ -201,7 +201,7 @@ export async function POST(
 
     console.log('[Test] User:', user.email, 'Subscriber:', subscriber_id);
 
-    // ✅ FIX: Get journey and verify ownership via website
+    //  FIX: Get journey and verify ownership via website
     // Use explicit foreign key name to avoid TypeScript ambiguity
     const { data: journey, error: journeyError } = await supabase
       .from('journeys')
@@ -221,13 +221,13 @@ export async function POST(
       return NextResponse.json({ error: 'Journey not found' }, { status: 404 });
     }
 
-    // ✅ FIX: Verify user owns the website
+    //  FIX: Verify user owns the website
     if (journey.website.user_id !== user.id) {
       console.error('[Test] Unauthorized - user does not own website');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    console.log('[Test] ✅ Journey found:', journey.name, '- Website:', journey.website.name);
+    console.log('[Test]  Journey found:', journey.name, '- Website:', journey.website.name);
 
     // Verify subscriber exists and belongs to website
     const { data: subscriber, error: subscriberError } = await supabase
@@ -244,7 +244,7 @@ export async function POST(
       }, { status: 404 });
     }
 
-    console.log('[Test] ✅ Subscriber found:', subscriber.id);
+    console.log('[Test]  Subscriber found:', subscriber.id);
 
     // Clear any existing test states
     console.log('[Test] Cleaning up previous test states...');
@@ -267,7 +267,7 @@ export async function POST(
           })
           .eq('id', state.id);
       }
-      console.log('[Test] ✅ Cleared', existingStates.length, 'existing states');
+      console.log('[Test]  Cleared', existingStates.length, 'existing states');
     }
 
     // Enroll subscriber using stored procedure
@@ -289,7 +289,7 @@ export async function POST(
       }, { status: 500 });
     }
 
-    console.log('[Test] ✅ Subscriber enrolled successfully!');
+    console.log('[Test]  Subscriber enrolled successfully!');
     console.log('[Test] Journey state:', enrollResult);
 
     // Get the created journey state for details

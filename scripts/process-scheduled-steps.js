@@ -567,8 +567,8 @@ const API_KEY = process.env.INTERNAL_API_KEY;
 
 console.log('🔄 [Processor] Starting journey step processing...');
 console.log('📋 [Processor] Environment check:');
-console.log(`   - NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL ? '✅ Set' : ' NOT SET'}`);
-console.log(`   - INTERNAL_API_KEY: ${API_KEY ? '✅ Set' : '⚠️  Optional (not set)'}`);
+console.log(`   - NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL ? ' Set' : ' NOT SET'}`);
+console.log(`   - INTERNAL_API_KEY: ${API_KEY ? ' Set' : '⚠️  Optional (not set)'}`);
 
 // Validate required environment variables
 if (!BACKEND_URL) {
@@ -633,7 +633,7 @@ const req = client.request(options, (res) => {
       const result = JSON.parse(data);
       
       if (res.statusCode === 200) {
-        console.log('✅ [Processor] Success!');
+        console.log(' [Processor] Success!');
         
         if (result.result) {
           const { processed, failed, skipped, total, duration_ms } = result.result;

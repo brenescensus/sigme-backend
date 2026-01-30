@@ -201,7 +201,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ✅ Await params (this is the missing piece)
+    //  Await params (this is the missing piece)
     const { id: journeyId } = await params;
 
     const authHeader = req.headers.get('authorization');

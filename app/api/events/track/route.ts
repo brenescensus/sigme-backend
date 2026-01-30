@@ -540,7 +540,7 @@ export async function POST(request: NextRequest) {
       console.error('[Event Track] Journey trigger error:', journeyError);
     }
 
-    // ✅ RETURN WITH CORS HEADERS
+    //  RETURN WITH CORS HEADERS
     return NextResponse.json(
       {
         success: true,
@@ -575,7 +575,7 @@ export async function POST(request: NextRequest) {
 /**
  * OPTIONS /api/events/track
  * Handle CORS preflight requests
- * ✅ CRITICAL FIX: Include Authorization in allowed headers
+ *  CRITICAL FIX: Include Authorization in allowed headers
  */
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
