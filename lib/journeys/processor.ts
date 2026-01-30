@@ -1,7 +1,7 @@
-// lib/journeys/processor.ts
+
+// lib/journeys/processor.ts 
 /**
- * Journey Execution Engine - Brevo-Style Implementation
- * Handles multi-step journey flows with advanced triggers and conditions
+ * Journey Execution Engine - Fixed Implementation
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -126,7 +126,6 @@ async function logExecution(
       metadata,
     });
   } catch (error) {
-    // Silent fail - don't break journey execution if logging fails
     console.error('[Logging] Failed to log execution:', error);
   }
 }
@@ -158,12 +157,7 @@ async function logJourneyEvent(
 // ============================================================================
 
 /**
- *  MAIN FUNCTION: Process all due steps
- * Called by cron job every 1-5 minutes
- */
-/**
- * 🔧 FIXED VERSION: Process all due steps
- * This version properly handles completed/cancelled steps to prevent infinite loops
+ *  FIXED: Process all due steps with proper cleanup
  */
 export async function processDueSteps(): Promise<ProcessingResult> {
   console.log('⏰ [Processor] Starting scheduled step processing...');
@@ -198,7 +192,6 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     let skipped = 0;
     const errors: string[] = [];
 
-    // Process each step
     for (const step of dueSteps) {
       try {
         const stepPayload = step.payload as Record<string, any> | null;
@@ -213,7 +206,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           })
           .eq('id', step.id);
 
-        // Verify journey state still exists and is valid
+        //  FIX: Verify journey state still exists and is valid
         const { data: stateData, error: stateError } = await supabase
           .from('user_journey_states')
           .select('*')
@@ -221,11 +214,11 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           .single();
 
         if (stateError || !stateData) {
-          console.warn(`[Processor] Journey state ${step.user_journey_state_id} not found, cancelling step`);
+          console.warn(`⚠️ [Processor] Journey state ${step.user_journey_state_id} not found, cancelling step`);
           await supabase
             .from('scheduled_journey_steps')
             .update({ 
-              status: 'cancelled',  //  Changed from 'skipped'
+              status: 'cancelled',
               error: 'Journey state not found',
               completed_at: new Date().toISOString(),
             })
@@ -236,7 +229,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
 
         const state = toJourneyState(stateData);
 
-        //  NEW: Check journey status first
+        //  FIX: Check journey status
         const { data: journey, error: journeyError } = await supabase
           .from('journeys')
           .select('status')
@@ -244,7 +237,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           .single();
 
         if (journeyError || !journey) {
-          console.warn(`[Processor] Journey not found for state ${state.id}, cancelling step`);
+          console.warn(`⚠️ [Processor] Journey not found for state ${state.id}, cancelling step`);
           await supabase
             .from('scheduled_journey_steps')
             .update({ 
@@ -257,9 +250,9 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           continue;
         }
 
-        //  NEW: Check if journey is completed/archived
-        if (journey.status === 'completed' || journey.status === 'archived') {
-          console.log(`[Processor] Journey ${state.journey_id} status is ${journey.status}, cancelling step`);
+        //  FIX: Check if journey is active
+        if (journey.status !== 'active') {
+          console.log(`⏸️ [Processor] Journey ${state.journey_id} status is ${journey.status}, cancelling step`);
           await supabase
             .from('scheduled_journey_steps')
             .update({ 
@@ -272,13 +265,13 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           continue;
         }
 
-        // Check if journey state is in valid status
+        //  FIX: Check if journey state is valid
         if (state.status !== 'active' && state.status !== 'waiting') {
-          console.log(`[Processor] Journey state ${state.id} status is ${state.status}, cancelling step`);
+          console.log(`⏸️ [Processor] Journey state ${state.id} status is ${state.status}, cancelling step`);
           await supabase
             .from('scheduled_journey_steps')
             .update({ 
-              status: 'cancelled',  //  Changed from 'skipped'
+              status: 'cancelled',
               error: `Journey state status is ${state.status}`,
               completed_at: new Date().toISOString(),
             })
@@ -287,7 +280,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           continue;
         }
 
-        // Update state to active if it was waiting
+        //  FIX: Update state to active if it was waiting
         if (state.status === 'waiting') {
           await supabase
             .from('user_journey_states')
@@ -301,7 +294,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
         // Process the journey step
         await processJourneyStep(step.user_journey_state_id);
 
-        // Mark step as completed
+        //  FIX: Mark step as completed
         await supabase
           .from('scheduled_journey_steps')
           .update({ 
@@ -343,8 +336,9 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     throw error;
   }
 }
+
 /**
- *  Enroll a subscriber in a journey
+ *  FIXED: Enroll a subscriber in a journey
  */
 export async function enrollSubscriber(
   journeyId: string,
@@ -380,12 +374,12 @@ export async function enrollSubscriber(
     const entryNode = flowDefinition.nodes.find(n => n.type === 'entry');
     const startNode = entryNode || flowDefinition.nodes[0];
 
-    console.log(`[Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
+    console.log(`🚀 [Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
 
     // Check re-entry rules
     const canEnter = await checkReEntryRules(subscriberId, journey);
     if (!canEnter) {
-      console.log('[Processor] Re-entry rules prevent enrollment');
+      console.log('⛔ [Processor] Re-entry rules prevent enrollment');
       throw new Error('Subscriber cannot re-enter this journey at this time');
     }
 
@@ -459,7 +453,7 @@ export async function enrollSubscriber(
 }
 
 /**
- *  Process a single journey step
+ *  FIXED: Process a single journey step
  */
 export async function processJourneyStep(journeyStateId: string): Promise<void> {
   console.log('🔄 [Processor] Processing journey step:', journeyStateId);
@@ -480,7 +474,7 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
 
     // Verify state is processable
     if (state.status !== 'active' && state.status !== 'waiting') {
-      console.log(`[Processor] Journey state is ${state.status}, cannot process`);
+      console.log(`⏸️ [Processor] Journey state is ${state.status}, cannot process`);
       return;
     }
 
@@ -502,7 +496,7 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
     const currentNode = flowDefinition.nodes.find(n => n.id === state.current_step_id);
 
     if (!currentNode) {
-      console.log('[Processor] Current step not found in flow, completing journey');
+      console.log('🏁 [Processor] Current step not found in flow, completing journey');
       await completeJourney(journeyStateId);
       return;
     }
@@ -550,7 +544,7 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
         break;
       
       default:
-        console.warn(`[Processor] Unknown node type: ${currentNode.type}, moving to next`);
+        console.warn(`⚠️ [Processor] Unknown node type: ${currentNode.type}, moving to next`);
         await moveToNextNode(state, flowDefinition, currentNode.id);
     }
 
@@ -590,13 +584,15 @@ async function processSendNotification(
   flowDefinition: FlowDefinition
 ): Promise<void> {
   console.log('📨 [Processor] Sending notification');
- await logExecution(
+  
+  await logExecution(
     state.journey_id,
     state.id,
     'notification_sending',
     `Sending notification: ${node.data.title}`,
     { title: node.data.title, body: node.data.body, url: node.data.url }
   );
+
   try {
     // Fetch subscriber
     const { data: subscriber, error: subError } = await supabase
@@ -666,17 +662,17 @@ async function processSendNotification(
       },
       node.id
     );
-  await logExecution(
-    state.journey_id,
-    state.id,
-    'notification_sent',
-    `Notification sent successfully`,
-    { title: node.data.title, success: result.success }
-  );
 
-  await moveToNextNode(state, flowDefinition, node.id);
+    await logExecution(
+      state.journey_id,
+      state.id,
+      'notification_sent',
+      `Notification sent successfully`,
+      { title: node.data.title, success: result.success }
+    );
 
-    // Move to next node regardless of send success (Brevo behavior)
+    //  FIX: Always move to next node
+    await moveToNextNode(state, flowDefinition, node.id);
 
   } catch (error: any) {
     console.error(' [Processor] Notification error:', error.message);
@@ -691,10 +687,18 @@ async function processSendNotification(
       node.id
     );
     
-    // Move to next node anyway
+    //  FIX: Move to next node anyway (Brevo behavior)
     await moveToNextNode(state, flowDefinition, node.id);
   }
 }
+
+
+// lib/journeys/processor.ts - Line ~580
+// ⚠️ CRITICAL FIX: Wait node was calling itself recursively
+
+// lib/journeys/processor.ts - Replace processWaitNode function
+
+// lib/journeys/processor.ts - Update processWaitNode
 
 async function processWaitNode(
   state: JourneyState,
@@ -703,70 +707,48 @@ async function processWaitNode(
 ): Promise<void> {
   console.log('⏰ [Processor] Processing wait node');
 
-  await logExecution(
-    state.journey_id,
-    state.id,
-    'wait_node_entered',
-    `Processing wait node: ${node.id}`,
-    { node_id: node.id, current_status: state.status, node_type: node.data.mode }
-  );
-
-    const { data: freshState } = await supabase
+  // ✅ Check if wait period has completed
+  const { data: freshState } = await supabase
     .from('user_journey_states')
-    .select('status')
+    .select('status, next_execution_at')
     .eq('id', state.id)
     .single();
 
-  if (freshState?.status === 'waiting') {
-    console.log(' [Processor] Already in waiting status (fresh check), advancing to next node');
+  if (freshState?.next_execution_at) {
+    const waitUntil = new Date(freshState.next_execution_at);
+    const now = new Date();
     
-    await logExecution(
-      state.journey_id,
-      state.id,
-      'wait_already_waiting',
-      'State already waiting, advancing to next node'
-    );
-    
-    await moveToNextNode(state, flowDefinition, node.id);
-    return;
+    if (now >= waitUntil) {
+      console.log('✅ [Processor] Wait period completed, advancing to next node');
+      await moveToNextNode(state, flowDefinition, node.id);
+      return;
+    }
   }
-  //  FIX: Check if already waiting
-  if (state.status === 'waiting') {
-    console.log(' [Processor] Wait period completed, advancing');
-    
-    await logExecution(
-      state.journey_id,
-      state.id,
-      'wait_completed',
-      'Wait period completed, moving to next node'
-    );
-    
-    await moveToNextNode(state, flowDefinition, node.id);
+
+  // ✅ Check if already scheduled
+  const { data: existingSchedule } = await supabase
+    .from('scheduled_journey_steps')
+    .select('id')
+    .eq('user_journey_state_id', state.id)
+    .eq('step_id', node.id)
+    .eq('status', 'pending')
+    .single();
+
+  if (existingSchedule) {
+    console.log('✅ [Processor] Wait already scheduled, skipping');
     return;
   }
 
   const waitMode = node.data.mode || 'duration';
 
   if (waitMode === 'duration') {
-    const durationSeconds = node.data.duration || node.data.delay_value * getDelayMultiplier(node.data.delay_unit || 'hours');
+    const durationSeconds = node.data.duration || 86400;
     const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-    console.log(`⏰ [Processor] Scheduling wait for ${durationSeconds} seconds (until ${executeAt.toISOString()})`);
-
-    await logExecution(
-      state.journey_id,
-      state.id,
-      'wait_scheduled',
-      `Wait scheduled for ${durationSeconds} seconds`,
-      { 
-        duration_seconds: durationSeconds, 
-        execute_at: executeAt.toISOString(),
-        mode: 'duration' 
-      }
-    );
+    console.log(`⏰ [Processor] Scheduling wait for ${durationSeconds}s until ${executeAt.toISOString()}`);
 
     // Update state to waiting
-    await supabase
+    const { error: stateUpdateError } = await supabase
       .from('user_journey_states')
       .update({
         status: 'waiting',
@@ -774,53 +756,58 @@ async function processWaitNode(
       })
       .eq('id', state.id);
 
-    // Schedule step
-    await supabase.from('scheduled_journey_steps').insert({
-      user_journey_state_id: state.id,
-      step_id: node.id,
-      execute_at: executeAt.toISOString(),
-      status: 'pending',
-      payload: { 
-        next_node_id: getNextNodeId(flowDefinition, node.id),
-        mode: 'duration'
-      },
-    });
+    if (stateUpdateError) {
+      console.error('❌ [Processor] Failed to update state:', stateUpdateError);
+      throw stateUpdateError;
+    }
+
+    // ⭐ Schedule step with better error handling
+    const { data: scheduledStep, error: scheduleError } = await supabase
+      .from('scheduled_journey_steps')
+      .insert({
+        user_journey_state_id: state.id,
+        step_id: node.id,
+        execute_at: executeAt.toISOString(),
+        status: 'pending',
+        payload: { 
+          mode: 'duration',
+          step_type: 'wait_duration'
+        },
+      })
+      .select()
+      .single();
+
+    if (scheduleError) {
+      console.error('❌ [Processor] Failed to schedule step:', scheduleError);
+      throw scheduleError;
+    }
+
+    console.log(`✅ [Processor] Step scheduled successfully: ${scheduledStep.id}`);
 
     await logJourneyEvent(
       state.journey_id,
       state.subscriber_id,
       state.id,
       'wait_started',
-      { duration_seconds: durationSeconds, until: executeAt.toISOString() },
+      { 
+        duration_seconds: durationSeconds, 
+        until: executeAt.toISOString(),
+        scheduled_step_id: scheduledStep.id 
+      },
       node.id
     );
 
-    //  CRITICAL FIX: RETURN HERE - Stop processing!
-    // Without this, execution continues and creates infinite loop
     return;
 
   } else if (waitMode === 'until_event') {
     const eventName = node.data.event?.name || node.data.event_name;
-    const timeoutSeconds = node.data.event?.timeout_seconds || node.data.timeout_seconds || 604800;
+    const timeoutSeconds = node.data.timeout_seconds || 604800;
     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
 
     console.log(`⏰ [Processor] Waiting for event "${eventName}" (timeout: ${timeoutAt.toISOString()})`);
 
-    await logExecution(
-      state.journey_id,
-      state.id,
-      'wait_for_event_scheduled',
-      `Waiting for event: ${eventName}`,
-      { 
-        event_name: eventName, 
-        timeout_at: timeoutAt.toISOString(),
-        timeout_seconds: timeoutSeconds,
-        mode: 'until_event' 
-      }
-    );
-
     // Update state
-    await supabase
+    const { error: stateUpdateError } = await supabase
       .from('user_journey_states')
       .update({
         status: 'waiting',
@@ -832,29 +819,48 @@ async function processWaitNode(
       })
       .eq('id', state.id);
 
-    // Schedule timeout step
-    await supabase.from('scheduled_journey_steps').insert({
-      user_journey_state_id: state.id,
-      step_id: node.id,
-      execute_at: timeoutAt.toISOString(),
-      status: 'pending',
-      payload: { 
-        next_node_id: getNextNodeId(flowDefinition, node.id, 'timeout'),
-        mode: 'event_timeout',
-        event_name: eventName
-      },
-    });
+    if (stateUpdateError) {
+      console.error('❌ [Processor] Failed to update state:', stateUpdateError);
+      throw stateUpdateError;
+    }
+
+    // Schedule timeout
+    const { data: scheduledStep, error: scheduleError } = await supabase
+      .from('scheduled_journey_steps')
+      .insert({
+        user_journey_state_id: state.id,
+        step_id: node.id,
+        execute_at: timeoutAt.toISOString(),
+        status: 'pending',
+        payload: { 
+          mode: 'event_timeout',
+          event_name: eventName,
+          step_type: 'wait_event_timeout'
+        },
+      })
+      .select()
+      .single();
+
+    if (scheduleError) {
+      console.error('❌ [Processor] Failed to schedule timeout:', scheduleError);
+      throw scheduleError;
+    }
+
+    console.log(`✅ [Processor] Timeout scheduled: ${scheduledStep.id}`);
 
     await logJourneyEvent(
       state.journey_id,
       state.subscriber_id,
       state.id,
       'wait_for_event_started',
-      { event_name: eventName, timeout: timeoutAt.toISOString() },
+      { 
+        event_name: eventName, 
+        timeout: timeoutAt.toISOString(),
+        scheduled_step_id: scheduledStep.id 
+      },
       node.id
     );
 
-    //  CRITICAL FIX: RETURN HERE TOO
     return;
   }
 }
@@ -897,7 +903,7 @@ async function processConditionNode(
           .gte('created_at', lookbackDate.toISOString());
         
         if (targetUrl) {
-          query = query.contains('event_data', { url: targetUrl });
+          query = query.contains('properties', { url: targetUrl });
         }
         
         const { data: events } = await query.limit(1);
@@ -947,7 +953,7 @@ async function processConditionNode(
         break;
 
       default:
-        console.warn(`[Processor] Unknown condition type: ${conditionType}`);
+        console.warn(`⚠️ [Processor] Unknown condition type: ${conditionType}`);
         conditionMet = false;
     }
 
@@ -978,7 +984,7 @@ async function processConditionNode(
 
       await processJourneyStep(state.id);
     } else {
-      console.log(`[Processor] No ${branchType} branch found, completing journey`);
+      console.log(`🏁 [Processor] No ${branchType} branch found, completing journey`);
       await completeJourney(state.id);
     }
 
@@ -1006,7 +1012,7 @@ async function processAbSplitNode(
   const branches = node.data.branches || [];
   
   if (!branches || branches.length === 0) {
-    console.warn('[Processor] No branches defined, completing journey');
+    console.warn('⚠️ [Processor] No branches defined, completing journey');
     await completeJourney(state.id);
     return;
   }
@@ -1024,7 +1030,7 @@ async function processAbSplitNode(
     }
   }
 
-  console.log(`[Processor] Selected branch: ${selectedBranch.id} (${selectedBranch.name})`);
+  console.log(` [Processor] Selected branch: ${selectedBranch.id} (${selectedBranch.name})`);
 
   // Find edge for selected branch
   const nextEdge = flowDefinition.edges.find(
@@ -1056,7 +1062,7 @@ async function processAbSplitNode(
 
     await processJourneyStep(state.id);
   } else {
-    console.warn('[Processor] No edge found for selected branch');
+    console.warn('⚠️ [Processor] No edge found for selected branch');
     await completeJourney(state.id);
   }
 }
@@ -1072,7 +1078,7 @@ async function moveToNextNode(
 ): Promise<void> {
   const nextNodeId = getNextNodeId(flowDefinition, currentNodeId);
 
-   await logExecution(
+  await logExecution(
     state.journey_id,
     state.id,
     'node_transition',
@@ -1080,9 +1086,8 @@ async function moveToNextNode(
     { from: currentNodeId, to: nextNodeId }
   );
 
- 
   if (nextNodeId) {
-    console.log(`[Processor] Moving to next node: ${nextNodeId}`);
+    console.log(`➡️ [Processor] Moving to next node: ${nextNodeId}`);
     
     await supabase
       .from('user_journey_states')
@@ -1096,7 +1101,7 @@ async function moveToNextNode(
     // Process next step
     await processJourneyStep(state.id);
   } else {
-    console.log('[Processor] No next node found, completing journey');
+    console.log('🏁 [Processor] No next node found, completing journey');
     await completeJourney(state.id);
   }
 }
@@ -1114,12 +1119,14 @@ async function completeJourney(journeyStateId: string): Promise<void> {
     if (!stateData) return;
 
     const state = toJourneyState(stateData);
-await logExecution(
+
+    await logExecution(
       state.journey_id,
       state.id,
       'journey_completed',
       'Journey completed successfully'
     );
+
     // Update state
     await supabase
       .from('user_journey_states')
@@ -1163,7 +1170,6 @@ await logExecution(
 
   } catch (error: any) {
     console.error(' [Processor] Error completing journey:', error.message);
-    
   }
 }
 
@@ -1253,20 +1259,20 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
   // Check if already active
   const activeState = states.find(s => s.status === 'active' || s.status === 'waiting');
   if (activeState) {
-    console.log('[Processor] Already active in journey');
+    console.log('⛔ [Processor] Already active in journey');
     return false;
   }
 
   // Check if re-entry allowed
   if (!allowReEntry) {
-    console.log('[Processor] Re-entry not allowed');
+    console.log('⛔ [Processor] Re-entry not allowed');
     return false;
   }
 
   // Check max entries
   const maxEntries = reEntrySettings.max_entries || 0;
   if (maxEntries > 0 && states.length >= maxEntries) {
-    console.log(`[Processor] Max entries (${maxEntries}) reached`);
+    console.log(`⛔ [Processor] Max entries (${maxEntries}) reached`);
     return false;
   }
 
@@ -1277,7 +1283,7 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
     const daysSince = (Date.now() - lastEntry.getTime()) / (1000 * 60 * 60 * 24);
     
     if (daysSince < cooldownDays) {
-      console.log(`[Processor] Cooldown period (${cooldownDays} days) not met`);
+      console.log(`⛔ [Processor] Cooldown period (${cooldownDays} days) not met`);
       return false;
     }
   }
@@ -1314,11 +1320,11 @@ export async function handleSubscriberEvent(
       .contains('context', { waiting_for_event: eventName });
 
     if (!waitingStates || waitingStates.length === 0) {
-      console.log('[Processor] No waiting states for this event');
+      console.log(' [Processor] No waiting states for this event');
       return;
     }
 
-    console.log(`[Processor] Found ${waitingStates.length} waiting state(s)`);
+    console.log(` [Processor] Found ${waitingStates.length} waiting state(s)`);
 
     for (const stateData of waitingStates) {
       const state = toJourneyState(stateData);

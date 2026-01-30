@@ -310,7 +310,7 @@
 // }
 
 
-// lib/auth-middleware.ts - UNIVERSAL CORS for Public API + Journey Processing
+// lib/auth-middleware.ts 
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';

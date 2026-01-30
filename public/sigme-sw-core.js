@@ -1,5 +1,5 @@
 // ============================================
-// FILE: BACKEND/public/sigme-sw-core.js
+//  BACKEND/public/sigme-sw-core.js
 // Core Service Worker Logic (imported by client proxies)
 // ============================================
 
@@ -362,6 +362,50 @@ self.addEventListener('notificationclick', (event) => {
 // ============================================
 // Centralized event tracking function
 // ============================================
+// async function trackEvent(eventName, subscriberId, properties = {}) {
+//   try {
+//     const apiUrl = getApiUrl();
+//     const trackingUrl = `${apiUrl}/api/events/track`;
+    
+//     console.log(`[Sigme SW Core] 📊 Tracking: ${eventName}`);
+//     console.log(`[Sigme SW Core] 🌐 API URL: ${trackingUrl}`);
+//     console.log(`[Sigme SW Core] 👤 Subscriber: ${subscriberId}`);
+//     console.log(`[Sigme SW Core] 📦 Properties:`, properties);
+
+//     const payload = {
+//       subscriber_id: subscriberId,
+//       event_name: eventName,
+//       properties: properties
+//     };
+
+//     console.log(`[Sigme SW Core] 📤 Sending payload:`, JSON.stringify(payload, null, 2));
+
+//     const response = await fetch(trackingUrl, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(payload)
+//     });
+
+//     console.log(`[Sigme SW Core] 📥 Response status: ${response.status}`);
+
+//     if (response.ok) {
+//       const result = await response.json();
+//       console.log(`[Sigme SW Core] current_step_id Event tracked successfully:`, result);
+//       return result;
+//     } else {
+//       const errorText = await response.text();
+//       console.error(`[Sigme SW Core]  Tracking failed (${response.status}):`, errorText);
+//     }
+//   } catch (err) {
+//     console.error(`[Sigme SW Core]  Tracking error:`, err);
+//   }
+// }
+
+
+// backend/public/sigme-sw-core.js - Update trackEvent function (line ~380)
+
 async function trackEvent(eventName, subscriberId, properties = {}) {
   try {
     const apiUrl = getApiUrl();
@@ -372,10 +416,13 @@ async function trackEvent(eventName, subscriberId, properties = {}) {
     console.log(`[Sigme SW Core] 👤 Subscriber: ${subscriberId}`);
     console.log(`[Sigme SW Core] 📦 Properties:`, properties);
 
+    // ⭐ CRITICAL: Include website_id from config
+    const config = await getConfig();
     const payload = {
       subscriber_id: subscriberId,
       event_name: eventName,
-      properties: properties
+      properties: properties,
+      website_id: config?.websiteId || null, // ⭐ ADD THIS
     };
 
     console.log(`[Sigme SW Core] 📤 Sending payload:`, JSON.stringify(payload, null, 2));
@@ -392,14 +439,14 @@ async function trackEvent(eventName, subscriberId, properties = {}) {
 
     if (response.ok) {
       const result = await response.json();
-      console.log(`[Sigme SW Core] current_step_id Event tracked successfully:`, result);
+      console.log(`[Sigme SW Core] ✅ Event tracked successfully:`, result);
       return result;
     } else {
       const errorText = await response.text();
-      console.error(`[Sigme SW Core]  Tracking failed (${response.status}):`, errorText);
+      console.error(`[Sigme SW Core] ❌ Tracking failed (${response.status}):`, errorText);
     }
   } catch (err) {
-    console.error(`[Sigme SW Core]  Tracking error:`, err);
+    console.error(`[Sigme SW Core] ❌ Tracking error:`, err);
   }
 }
 

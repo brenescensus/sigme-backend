@@ -1,9 +1,10 @@
-name: Process Journey Steps
+# .github/workflows/journey-processor.yml
+name: Journey Processor
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
-  workflow_dispatch:
+    - cron: '*/5 * * * *'  # Every 5 minutes
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   process:
@@ -11,14 +12,46 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Process steps
+      - name: Process Journey Steps (with retry)
         env:
           BACKEND_URL: ${{ secrets.BACKEND_URL }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-        run: node scripts/process-scheduled-steps.js
+        run: |
+          max_attempts=3
+          attempt=0
+          
+          while [ $attempt -lt $max_attempts ]; do
+            echo "Attempt $((attempt + 1)) of $max_attempts"
+            
+            if node scripts/process-scheduled-steps.js; then
+              echo " Success!"
+              exit 0
+            fi
+            
+            attempt=$((attempt + 1))
+            
+            if [ $attempt -lt $max_attempts ]; then
+              echo "⚠️ Failed, retrying in 10s..."
+              sleep 10
+            fi
+          done
+          
+          echo " All attempts failed"
+          exit 1
+
+      - name: Cleanup old logs (daily)
+        if: github.event.schedule == '0 0 * * *'
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+        run: |
+          curl -X POST "$BACKEND_URL/api/internal/cleanup-old-logs" \
+            -H "x-api-key: $INTERNAL_API_KEY"
