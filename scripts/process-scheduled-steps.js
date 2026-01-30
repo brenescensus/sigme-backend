@@ -451,7 +451,7 @@
 const https = require('https');
 const http = require('http');
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 const API_KEY = process.env.INTERNAL_API_KEY;
 
 console.log('🔄 [Processor] Starting journey step processing...');
