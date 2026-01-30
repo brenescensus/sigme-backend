@@ -15,7 +15,7 @@ jobs:
           node-version: '20'
       - name: Process event
         env:
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
         run: |
           node scripts/handle-subscriber-event.js \
             "${{ github.event.client_payload.subscriber_id }}" \

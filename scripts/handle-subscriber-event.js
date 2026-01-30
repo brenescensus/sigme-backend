@@ -11,7 +11,7 @@ const http = require('http');
 // Get arguments from command line
 const [subscriberId, eventName, eventDataJson] = process.argv.slice(2);
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
 console.log('📨 [Event Handler] Processing subscriber event...');
 console.log(`👤 [Event Handler] Subscriber: ${subscriberId}`);
