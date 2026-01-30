@@ -151,7 +151,7 @@
 // // // //         successCount++;
 
 // // // //       } catch (error) {
-// // // //         console.error(`❌ Error processing scheduled step ${step.id}:`, error);
+// // // //         console.error(` Error processing scheduled step ${step.id}:`, error);
         
 // // // //         await supabase
 // // // //           .from('scheduled_journey_steps')
@@ -168,7 +168,7 @@
 
 // // // //     console.log(`\n📊 Processing Summary:`);
 // // // //     console.log(`   Successful: ${successCount}`);
-// // // //     console.log(`  ❌ Failed: ${errorCount}`);
+// // // //     console.log(`   Failed: ${errorCount}`);
 // // // //     console.log(`  📋 Total: ${scheduledSteps.length}`);
 
 // // // //     // Write summary to GitHub Actions output
@@ -189,7 +189,7 @@
 // // // //     }
 
 // // // //   } catch (error) {
-// // // //     console.error('❌ Fatal error in scheduled steps processor:', error);
+// // // //     console.error(' Fatal error in scheduled steps processor:', error);
 // // // //     process.exit(1);
 // // // //   }
 // // // // }
@@ -201,7 +201,7 @@
 // // // //     process.exit(0);
 // // // //   })
 // // // //   .catch((error) => {
-// // // //     console.error('❌ Scheduled steps processor failed:', error);
+// // // //     console.error(' Scheduled steps processor failed:', error);
 // // // //     process.exit(1);
 // // // //   });
 
@@ -240,7 +240,7 @@
 // // //       .limit(100);
 
 // // //     if (fetchError) {
-// // //       console.error('❌ Error fetching scheduled steps:', fetchError);
+// // //       console.error(' Error fetching scheduled steps:', fetchError);
 // // //       return;
 // // //     }
 
@@ -299,7 +299,7 @@
 // // //         console.log(` Step ${step.id} processed successfully`);
 
 // // //       } catch (error) {
-// // //         console.error(`❌ Error processing step ${step.id}:`, error.message);
+// // //         console.error(` Error processing step ${step.id}:`, error.message);
 
 // // //         // Increment retry count
 // // //         const newRetryCount = (step.retry_count || 0) + 1;
@@ -341,11 +341,11 @@
 
 // // //     console.log('\n📊 Summary:');
 // // //     console.log(`   Processed: ${processed}`);
-// // //     console.log(`  ❌ Failed: ${failed}`);
+// // //     console.log(`   Failed: ${failed}`);
 // // //     console.log(`  🔄 Pending retry: ${dueSteps.length - processed - failed}`);
 
 // // //   } catch (error) {
-// // //     console.error('❌ Fatal error in scheduled steps processor:', error);
+// // //     console.error(' Fatal error in scheduled steps processor:', error);
 // // //     process.exit(1);
 // // //   }
 // // // }
@@ -378,7 +378,7 @@
 // //   console.log(`📍 API URL: ${APP_URL}`);
   
 // //   if (!API_KEY) {
-// //     console.error('❌ INTERNAL_API_KEY not set in environment');
+// //     console.error(' INTERNAL_API_KEY not set in environment');
 // //     process.exit(1);
 // //   }
 
@@ -400,7 +400,7 @@
     
 // //     console.log('\n Processing complete:');
 // //     console.log(`  📊 Processed: ${result.processed || 0}`);
-// //     console.log(`  ❌ Failed: ${result.failed || 0}`);
+// //     console.log(`   Failed: ${result.failed || 0}`);
 // //     console.log(`  ⏭️  Skipped: ${result.skipped || 0}`);
 // //     console.log(`  📈 Total: ${result.total || 0}`);
 // //     console.log(`  ⏱️  Duration: ${result.duration_ms || 0}ms`);
@@ -416,7 +416,7 @@
 // //     return result;
     
 // //   } catch (error) {
-// //     console.error('❌ Error:', error.message);
+// //     console.error(' Error:', error.message);
 // //     throw error;
 // //   }
 // // }
@@ -497,7 +497,7 @@
 //         console.log(`   - Total: ${total || 0}`);
         
 //         if (failed > 0 && result.result.errors) {
-//           console.log(`\n❌ Errors:`);
+//           console.log(`\n Errors:`);
 //           result.result.errors.forEach((err, idx) => {
 //             console.log(`   ${idx + 1}. ${err}`);
 //           });
@@ -505,23 +505,23 @@
         
 //         process.exit(0);
 //       } else {
-//         console.error(`❌ [Processor] HTTP ${res.statusCode}:`, result);
+//         console.error(` [Processor] HTTP ${res.statusCode}:`, result);
 //         process.exit(1);
 //       }
 //     } catch (error) {
-//       console.error('❌ [Processor] Failed to parse response:', data);
+//       console.error(' [Processor] Failed to parse response:', data);
 //       process.exit(1);
 //     }
 //   });
 // });
 
 // req.on('error', (error) => {
-//   console.error('❌ [Processor] Request failed:', error.message);
+//   console.error(' [Processor] Request failed:', error.message);
 //   process.exit(1);
 // });
 
 // req.on('timeout', () => {
-//   console.error('❌ [Processor] Request timeout');
+//   console.error(' [Processor] Request timeout');
 //   req.destroy();
 //   process.exit(1);
 // });
@@ -567,12 +567,12 @@ const API_KEY = process.env.INTERNAL_API_KEY;
 
 console.log('🔄 [Processor] Starting journey step processing...');
 console.log('📋 [Processor] Environment check:');
-console.log(`   - NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL ? '✅ Set' : '❌ NOT SET'}`);
+console.log(`   - NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL ? '✅ Set' : ' NOT SET'}`);
 console.log(`   - INTERNAL_API_KEY: ${API_KEY ? '✅ Set' : '⚠️  Optional (not set)'}`);
 
 // Validate required environment variables
 if (!BACKEND_URL) {
-  console.error('\n❌ [Processor] FATAL ERROR: NEXT_PUBLIC_BACKEND_URL is not set!');
+  console.error('\n [Processor] FATAL ERROR: NEXT_PUBLIC_BACKEND_URL is not set!');
   console.error('Please set this in your GitHub repository secrets:');
   console.error('  Settings > Secrets and variables > Actions > New repository secret');
   console.error('  Name: NEXT_PUBLIC_BACKEND_URL');
@@ -586,7 +586,7 @@ try {
   url = new URL(`${BACKEND_URL}/api/internal/process-journeys`);
   console.log(`📍 [Processor] Target URL: ${url.href}`);
 } catch (error) {
-  console.error(`\n❌ [Processor] Invalid BACKEND_URL: ${BACKEND_URL}`);
+  console.error(`\n [Processor] Invalid BACKEND_URL: ${BACKEND_URL}`);
   console.error(`Error: ${error.message}`);
   process.exit(1);
 }
@@ -645,7 +645,7 @@ const req = client.request(options, (res) => {
           console.log(`   - Duration: ${duration_ms || 0}ms`);
           
           if (failed > 0 && result.result.errors) {
-            console.log(`\n❌ Errors:`);
+            console.log(`\n Errors:`);
             result.result.errors.forEach((err, idx) => {
               console.log(`   ${idx + 1}. ${err}`);
             });
@@ -656,23 +656,23 @@ const req = client.request(options, (res) => {
         
         process.exit(0);
       } else if (res.statusCode === 401) {
-        console.error('\n❌ [Processor] Unauthorized (401)');
+        console.error('\n [Processor] Unauthorized (401)');
         console.error('The INTERNAL_API_KEY may be incorrect or not set.');
         console.error('Response:', JSON.stringify(result, null, 2));
         process.exit(1);
       } else if (res.statusCode === 404) {
-        console.error('\n❌ [Processor] Not Found (404)');
+        console.error('\n [Processor] Not Found (404)');
         console.error('The API endpoint does not exist at this URL.');
         console.error('Expected: /api/internal/process-journeys');
         console.error('Response:', JSON.stringify(result, null, 2));
         process.exit(1);
       } else {
-        console.error(`\n❌ [Processor] HTTP ${res.statusCode}`);
+        console.error(`\n [Processor] HTTP ${res.statusCode}`);
         console.error('Response:', JSON.stringify(result, null, 2));
         process.exit(1);
       }
     } catch (error) {
-      console.error('\n❌ [Processor] Failed to parse JSON response');
+      console.error('\n [Processor] Failed to parse JSON response');
       console.error('Raw response:', data.substring(0, 500));
       console.error('Parse error:', error.message);
       process.exit(1);
@@ -681,7 +681,7 @@ const req = client.request(options, (res) => {
 });
 
 req.on('error', (error) => {
-  console.error('\n❌ [Processor] Request failed');
+  console.error('\n [Processor] Request failed');
   console.error(`Error: ${error.message}`);
   console.error(`Code: ${error.code}`);
   
@@ -699,7 +699,7 @@ req.on('error', (error) => {
 });
 
 req.on('timeout', () => {
-  console.error('\n❌ [Processor] Request timeout (60s)');
+  console.error('\n [Processor] Request timeout (60s)');
   console.error('The server did not respond within 60 seconds.');
   req.destroy();
   process.exit(1);

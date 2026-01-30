@@ -163,7 +163,7 @@
 // //     });
 
 // //   } catch (error: any) {
-// //     console.error('❌ [Internal] Metrics error:', error);
+// //     console.error(' [Internal] Metrics error:', error);
 // //     return res.status(500).json({ 
 // //       error: error.message || 'Failed to fetch metrics',
 // //     });

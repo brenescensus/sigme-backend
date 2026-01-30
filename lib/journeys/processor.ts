@@ -252,7 +252,7 @@
 //         console.log(` [Processor] Step ${step.id} completed successfully`);
 
 //       } catch (stepError: any) {
-//         console.error(`❌ [Processor] Step ${step.id} failed:`, stepError.message);
+//         console.error(` [Processor] Step ${step.id} failed:`, stepError.message);
         
 //         // Mark step as failed
 //         await supabase
@@ -277,7 +277,7 @@
 //     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
 
 //   } catch (error: any) {
-//     console.error('❌ [Processor] Fatal error in processDueSteps:', error.message);
+//     console.error(' [Processor] Fatal error in processDueSteps:', error.message);
 //     throw error;
 //   }
 // }
@@ -392,7 +392,7 @@
 //     return journeyState;
 
 //   } catch (error: any) {
-//     console.error('❌ [Processor] Enrollment error:', error.message);
+//     console.error(' [Processor] Enrollment error:', error.message);
 //     throw error;
 //   }
 // }
@@ -494,7 +494,7 @@
 //     }
 
 //   } catch (error: any) {
-//     console.error('❌ [Processor] Step processing error:', error.message);
+//     console.error(' [Processor] Step processing error:', error.message);
     
 //     // Log error event
 //     const { data: stateData } = await supabase
@@ -604,7 +604,7 @@
 //     await moveToNextNode(state, flowDefinition, node.id);
 
 //   } catch (error: any) {
-//     console.error('❌ [Processor] Notification error:', error.message);
+//     console.error(' [Processor] Notification error:', error.message);
     
 //     // Log error but continue
 //     await logJourneyEvent(
@@ -844,7 +844,7 @@
 //     }
 
 //   } catch (error: any) {
-//     console.error('❌ [Processor] Condition error:', error.message);
+//     console.error(' [Processor] Condition error:', error.message);
     
 //     // On error, take 'no' path
 //     const noEdge = flowDefinition.edges.find(e => e.from === node.id && (e.type === 'no' || e.condition === 'no'));
@@ -1009,7 +1009,7 @@
 //     console.log(' [Processor] Journey completed successfully');
 
 //   } catch (error: any) {
-//     console.error('❌ [Processor] Error completing journey:', error.message);
+//     console.error(' [Processor] Error completing journey:', error.message);
 //   }
 // }
 
@@ -1072,7 +1072,7 @@
 //     }
 
 //   } catch (error: any) {
-//     console.error('❌ [Processor] Error exiting journey:', error.message);
+//     console.error(' [Processor] Error exiting journey:', error.message);
 //   }
 // }
 
@@ -1220,7 +1220,7 @@
 //     }
 
 //   } catch (error: any) {
-//     console.error('❌ [Processor] Error handling event:', error.message);
+//     console.error(' [Processor] Error handling event:', error.message);
 //   }
 // }
 
@@ -1532,7 +1532,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
         console.log(` [Processor] Step ${step.id} completed successfully`);
 
       } catch (stepError: any) {
-        console.error(`❌ [Processor] Step ${step.id} failed:`, stepError.message);
+        console.error(` [Processor] Step ${step.id} failed:`, stepError.message);
         
         // Mark step as failed
         await supabase
@@ -1557,7 +1557,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
 
   } catch (error: any) {
-    console.error('❌ [Processor] Fatal error in processDueSteps:', error.message);
+    console.error(' [Processor] Fatal error in processDueSteps:', error.message);
     throw error;
   }
 }
@@ -1671,7 +1671,7 @@ export async function enrollSubscriber(
     return journeyState;
 
   } catch (error: any) {
-    console.error('❌ [Processor] Enrollment error:', error.message);
+    console.error(' [Processor] Enrollment error:', error.message);
     throw error;
   }
 }
@@ -1773,7 +1773,7 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
     }
 
   } catch (error: any) {
-    console.error('❌ [Processor] Step processing error:', error.message);
+    console.error(' [Processor] Step processing error:', error.message);
     
     // Log error event
     const { data: stateData } = await supabase
@@ -1883,7 +1883,7 @@ async function processSendNotification(
     await moveToNextNode(state, flowDefinition, node.id);
 
   } catch (error: any) {
-    console.error('❌ [Processor] Notification error:', error.message);
+    console.error(' [Processor] Notification error:', error.message);
     
     // Log error but continue
     await logJourneyEvent(
@@ -2123,7 +2123,7 @@ async function processConditionNode(
     }
 
   } catch (error: any) {
-    console.error('❌ [Processor] Condition error:', error.message);
+    console.error(' [Processor] Condition error:', error.message);
     
     // On error, take 'no' path
     const noEdge = flowDefinition.edges.find(e => e.from === node.id && (e.type === 'no' || e.condition === 'no'));
@@ -2288,7 +2288,7 @@ async function completeJourney(journeyStateId: string): Promise<void> {
     console.log(' [Processor] Journey completed successfully');
 
   } catch (error: any) {
-    console.error('❌ [Processor] Error completing journey:', error.message);
+    console.error(' [Processor] Error completing journey:', error.message);
   }
 }
 
@@ -2351,7 +2351,7 @@ async function exitJourney(journeyStateId: string, reason: string): Promise<void
     }
 
   } catch (error: any) {
-    console.error('❌ [Processor] Error exiting journey:', error.message);
+    console.error(' [Processor] Error exiting journey:', error.message);
   }
 }
 
@@ -2499,7 +2499,7 @@ export async function handleSubscriberEvent(
     }
 
   } catch (error: any) {
-    console.error('❌ [Processor] Error handling event:', error.message);
+    console.error(' [Processor] Error handling event:', error.message);
   }
 }
 

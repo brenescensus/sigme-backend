@@ -103,18 +103,18 @@
 //         fixedCount++;
 
 //       } catch (error) {
-//         console.error(`  ❌ Error processing journey state ${journey.id}:`, error);
+//         console.error(`   Error processing journey state ${journey.id}:`, error);
 //         errorCount++;
 //       }
 //     }
 
 //     console.log(`\n📊 Cleanup Summary:`);
 //     console.log(`   Fixed: ${fixedCount}`);
-//     console.log(`  ❌ Errors: ${errorCount}`);
+//     console.log(`   Errors: ${errorCount}`);
 //     console.log(`  📋 Total checked: ${stuckJourneys.length}`);
 
 //   } catch (error) {
-//     console.error('❌ Fatal error in cleanup process:', error);
+//     console.error(' Fatal error in cleanup process:', error);
 //     process.exit(1);
 //   }
 // }
@@ -126,7 +126,7 @@
 //     process.exit(0);
 //   })
 //   .catch((error) => {
-//     console.error('❌ Cleanup failed:', error);
+//     console.error(' Cleanup failed:', error);
 //     process.exit(1);
 //   });
 
@@ -176,7 +176,7 @@ async function cleanupStuckJourneys() {
       .order('last_processed_at', { ascending: true });
 
     if (activeError) {
-      console.error('❌ Error fetching stuck active states:', activeError);
+      console.error(' Error fetching stuck active states:', activeError);
     }
 
     // Find stuck waiting states (past their timeout)
@@ -189,7 +189,7 @@ async function cleanupStuckJourneys() {
       .order('last_processed_at', { ascending: true });
 
     if (waitingError) {
-      console.error('❌ Error fetching stuck waiting states:', waitingError);
+      console.error(' Error fetching stuck waiting states:', waitingError);
     }
 
     const stuckStates = [...(stuckActive || []), ...(stuckWaiting || [])];
@@ -214,7 +214,7 @@ async function cleanupStuckJourneys() {
         });
 
         if (exitError) {
-          console.error(`❌ Error exiting journey ${state.id}:`, exitError);
+          console.error(` Error exiting journey ${state.id}:`, exitError);
           continue;
         }
 
@@ -222,13 +222,13 @@ async function cleanupStuckJourneys() {
         console.log(` State ${state.id} cleaned up`);
 
       } catch (error) {
-        console.error(`❌ Error processing state ${state.id}:`, error.message);
+        console.error(` Error processing state ${state.id}:`, error.message);
       }
     }
 
     console.log(`\n📊 Cleanup Summary:`);
     console.log(`  🧹 Cleaned: ${cleaned}`);
-    console.log(`  ❌ Failed: ${stuckStates.length - cleaned}`);
+    console.log(`   Failed: ${stuckStates.length - cleaned}`);
 
     // Cleanup old scheduled steps
     console.log('\n🗑️  Cleaning up old scheduled steps...');
@@ -237,13 +237,13 @@ async function cleanupStuckJourneys() {
       .rpc('cleanup_old_scheduled_steps');
 
     if (cleanupError) {
-      console.error('❌ Error cleaning scheduled steps:', cleanupError);
+      console.error(' Error cleaning scheduled steps:', cleanupError);
     } else {
       console.log(` Deleted ${cleanupResult || 0} old scheduled steps`);
     }
 
   } catch (error) {
-    console.error('❌ Fatal error in cleanup:', error);
+    console.error(' Fatal error in cleanup:', error);
     process.exit(1);
   }
 }

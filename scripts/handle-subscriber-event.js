@@ -19,7 +19,7 @@ console.log(`🎯 [Event Handler] Event: ${eventName}`);
 
 // Validate inputs
 if (!subscriberId || !eventName) {
-  console.error('❌ [Event Handler] Missing required arguments: subscriber_id and event_name');
+  console.error(' [Event Handler] Missing required arguments: subscriber_id and event_name');
   console.error('Usage: node handle-subscriber-event.js <subscriber_id> <event_name> [event_data_json]');
   process.exit(1);
 }
@@ -32,7 +32,7 @@ try {
     console.log(`📋 [Event Handler] Event data:`, eventData);
   }
 } catch (error) {
-  console.error('❌ [Event Handler] Failed to parse event_data JSON:', error.message);
+  console.error(' [Event Handler] Failed to parse event_data JSON:', error.message);
   process.exit(1);
 }
 
@@ -90,11 +90,11 @@ const req = client.request(options, (res) => {
         
         process.exit(0);
       } else {
-        console.error(`❌ [Event Handler] HTTP ${res.statusCode}:`, result);
+        console.error(` [Event Handler] HTTP ${res.statusCode}:`, result);
         process.exit(1);
       }
     } catch (error) {
-      console.error('❌ [Event Handler] Failed to parse response:', data);
+      console.error(' [Event Handler] Failed to parse response:', data);
       console.error('Raw response:', data);
       process.exit(1);
     }
@@ -102,12 +102,12 @@ const req = client.request(options, (res) => {
 });
 
 req.on('error', (error) => {
-  console.error('❌ [Event Handler] Request failed:', error.message);
+  console.error(' [Event Handler] Request failed:', error.message);
   process.exit(1);
 });
 
 req.on('timeout', () => {
-  console.error('❌ [Event Handler] Request timeout');
+  console.error(' [Event Handler] Request timeout');
   req.destroy();
   process.exit(1);
 });

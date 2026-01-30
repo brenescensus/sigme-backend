@@ -170,7 +170,7 @@
 // //       .order('created_at', { ascending: false });
 
 // //     if (journeysError) {
-// //       console.error('❌ [Journeys] Error fetching journeys:', journeysError);
+// //       console.error(' [Journeys] Error fetching journeys:', journeysError);
 // //       throw journeysError;
 // //     }
 
@@ -195,7 +195,7 @@
 // //             .eq('journey_id', journey.id);
 
 // //           if (statesError) {
-// //             console.error(`❌ [Journeys] Error fetching states for journey ${journey.id}:`, statesError);
+// //             console.error(` [Journeys] Error fetching states for journey ${journey.id}:`, statesError);
 // //             // Return journey with default stats if query fails
 // //             return {
 // //               ...journey,
@@ -228,7 +228,7 @@
 // //             total_exited,
 // //           };
 // //         } catch (error) {
-// //           console.error(`❌ [Journeys] Error calculating stats for journey ${journey.id}:`, error);
+// //           console.error(` [Journeys] Error calculating stats for journey ${journey.id}:`, error);
 // //           // Return journey with default stats on error
 // //           return {
 // //             ...journey,
@@ -248,7 +248,7 @@
 // //       journeys: journeysWithStats,
 // //     });
 // //   } catch (error: any) {
-// //     console.error('❌ [Journeys] Fatal error:', error);
+// //     console.error(' [Journeys] Fatal error:', error);
 // //     return NextResponse.json(
 // //       {
 // //         success: false,
@@ -312,7 +312,7 @@
 // //       .single();
 
 // //     if (error) {
-// //       console.error('❌ [Journeys] Error creating journey:', error);
+// //       console.error(' [Journeys] Error creating journey:', error);
 // //       throw error;
 // //     }
 
@@ -323,7 +323,7 @@
 // //       journey,
 // //     });
 // //   } catch (error: any) {
-// //     console.error('❌ [Journeys] Error:', error);
+// //     console.error(' [Journeys] Error:', error);
 // //     return NextResponse.json(
 // //       {
 // //         success: false,
