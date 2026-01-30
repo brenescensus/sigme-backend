@@ -1,42 +1,21 @@
-# .github/workflows/cleanup-journeys.yml
 name: Cleanup Stuck Journeys
 
 on:
   schedule:
-    # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
-  workflow_dispatch: # Allow manual triggering
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run cleanup
+          node-version: '20'
+      - name: Cleanup
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/cleanup-stuck-journeys.js
-
-      - name: Report status
-        if: always()
-        run: |
-          if [ $? -eq 0 ]; then
-            echo "✅ Cleanup completed successfully"
-          else
-            echo "❌ Cleanup failed"
-            exit 1
-          fi
