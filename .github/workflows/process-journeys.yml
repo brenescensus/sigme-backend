@@ -19,6 +19,6 @@ jobs:
 
       - name: Process steps
         env:
-          NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
           INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
         run: node scripts/process-scheduled-steps.js

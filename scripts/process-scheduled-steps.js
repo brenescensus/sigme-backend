@@ -562,7 +562,7 @@
 const https = require('https');
 const http = require('http');
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+const BACKEND_URL = process.env.BACKEND_URL;
 const API_KEY = process.env.INTERNAL_API_KEY;
 
 console.log('🔄 [Processor] Starting journey step processing...');
