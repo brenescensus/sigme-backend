@@ -11,7 +11,7 @@ const http = require('http');
 // Get arguments from command line
 const [subscriberId, eventName, eventDataJson] = process.argv.slice(2);
 
-const APP_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
 console.log('📨 [Event Handler] Processing subscriber event...');
 console.log(`👤 [Event Handler] Subscriber: ${subscriberId}`);
@@ -44,7 +44,7 @@ const requestBody = JSON.stringify({
 });
 
 // Parse URL
-const url = new URL(`${APP_URL}/api/events/subscriber`);
+const url = new URL(`${BACKEND_URL}/api/events/subscriber`);
 const isHttps = url.protocol === 'https:';
 const client = isHttps ? https : http;
 
