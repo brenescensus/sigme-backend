@@ -455,7 +455,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:300
 const API_KEY = process.env.INTERNAL_API_KEY;
 
 console.log('🔄 [Processor] Starting journey step processing...');
-console.log(`📍 [Processor] Target URL: ${APP_URL}/api/internal/process-journeys`);
+console.log(`📍 [Processor] Target URL: ${BACKEND_URL}/api/internal/process-journeys`); 
 
 // Parse URL
 const url = new URL(`${BACKEND_URL}/api/internal/process-journeys`);
