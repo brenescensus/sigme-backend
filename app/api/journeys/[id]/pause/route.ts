@@ -227,7 +227,7 @@
 
 // export async function POST(
 //   req: NextRequest,
-//   { params }: { params: { id: string } }  // ✅ FIXED: Changed from journeyId to id
+//   { params }: { params: { id: string } }  //  FIXED: Changed from journeyId to id
 // ) {
 //   try {
 //     const authHeader = req.headers.get('authorization');
@@ -242,7 +242,7 @@
 //       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 //     }
 
-//     const journeyId = params.id;  // ✅ Get id from params
+//     const journeyId = params.id;  //  Get id from params
 
 //     // Verify ownership
 //     const { data: journey, error: checkError } = await supabase
@@ -328,7 +328,7 @@ const supabase = createClient<Database>(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }  // ✅ Next.js 15: params is a Promise
+  { params }: { params: Promise<{ id: string }> }  //  Next.js 15: params is a Promise
 ) {
   try {
     const authHeader = req.headers.get('authorization');
@@ -343,7 +343,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: journeyId } = await params;  // ✅ Await params
+    const { id: journeyId } = await params;  //  Await params
 
     // Verify ownership
     const { data: journey, error: checkError } = await supabase

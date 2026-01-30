@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
       min_purchase_amount: coupon.min_purchase_amount || 0,
     }));
 
-    console.log('✅ Found', publicCoupons.length, 'public coupons');
+    console.log(' Found', publicCoupons.length, 'public coupons');
 
     return NextResponse.json({
       success: true,

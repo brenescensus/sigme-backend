@@ -338,7 +338,7 @@
 // //       throw new Error('Failed to create payment record');
 // //     }
 
-// //     console.log('✅ Payment initialized:', {
+// //     console.log(' Payment initialized:', {
 // //       user: user.email,
 // //       plan: plan.name,
 // //       amount: finalAmount,
@@ -569,7 +569,7 @@
 //       finalPrice = Math.max(0, plan.price - discountAmount);
 //       couponData = coupon;
 
-//       console.log('✅ Coupon validated:', {
+//       console.log(' Coupon validated:', {
 //         code: coupon.code,
 //         discount: discountAmount,
 //         final_price: finalPrice,
@@ -667,7 +667,7 @@
 //       throw new Error('Failed to create payment record');
 //     }
 
-//     console.log('✅ Payment initialized:', {
+//     console.log(' Payment initialized:', {
 //       user: user.email,
 //       plan: plan.name,
 //       amount: finalPrice,
@@ -728,7 +728,7 @@ import type { Database } from '@/types/database';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY!;
 
-// ✅ Create service role client (bypasses RLS)
+//  Create service role client (bypasses RLS)
 const getServiceRoleClient = () => {
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -761,7 +761,7 @@ export const POST = withAuth(async (req, user) => {
       );
     }
 
-    // ✅ Use service role client
+    //  Use service role client
     const supabase = getServiceRoleClient();
 
     // Get the plan details
@@ -780,7 +780,7 @@ export const POST = withAuth(async (req, user) => {
       );
     }
 
-    console.log('✅ Plan found:', {
+    console.log(' Plan found:', {
       plan_id: plan.plan_id,
       name: plan.name,
       price: plan.price
@@ -1008,7 +1008,7 @@ export const POST = withAuth(async (req, user) => {
       finalPrice = Math.max(0, plan.price - discountAmount);
       couponData = coupon;
 
-      console.log('✅ Coupon validated successfully:', {
+      console.log(' Coupon validated successfully:', {
         code: coupon.code,
         type: coupon.type,
         value: coupon.value,
@@ -1095,7 +1095,7 @@ export const POST = withAuth(async (req, user) => {
 
     const paymentData = await paystackResponse.json();
 
-    console.log('✅ Paystack response:', {
+    console.log(' Paystack response:', {
       reference: paymentData.data.reference,
       access_code: paymentData.data.access_code,
       has_auth_url: !!paymentData.data.authorization_url
@@ -1106,7 +1106,7 @@ export const POST = withAuth(async (req, user) => {
       .from('payment_intents')
       .insert({
         user_id: user.id,
-        plan_id: plan.id, // ✅ Use UUID plan.id, not plan_id string
+        plan_id: plan.id, //  Use UUID plan.id, not plan_id string
         amount: finalPrice,
         currency: currency,
         discount_amount: discountAmount || null,
@@ -1131,7 +1131,7 @@ export const POST = withAuth(async (req, user) => {
       throw new Error('Failed to create payment record');
     }
 
-    console.log('✅ Payment initialized successfully:', {
+    console.log(' Payment initialized successfully:', {
       user: user.email,
       plan: plan.name,
       amount: finalPrice,

@@ -114,7 +114,7 @@ import { withSuperAdmin, logAdminActivity, getAdminClient } from '@/lib/admin-mi
 // PUT /api/admin/users/[id] - Update user
 export const PUT = withSuperAdmin(
   async (req: NextRequest, user: any, context: { params: Promise<{ id: string }> }) => {
-    const { id: userId } = await context.params;  // ✅ CORRECT
+    const { id: userId } = await context.params;  //  CORRECT
     const body = await req.json();
     const { first_name, last_name, email, role } = body;
 
@@ -165,7 +165,7 @@ export const PUT = withSuperAdmin(
       // Log activity
       await logAdminActivity(user.id, 'UPDATE_USER', 'user', userId, body);
 
-      console.log('✅ User updated:', userId);
+      console.log(' User updated:', userId);
 
       return NextResponse.json({ success: true });
     } catch (error: any) {
@@ -181,7 +181,7 @@ export const PUT = withSuperAdmin(
 // DELETE /api/admin/users/[id] - Delete user
 export const DELETE = withSuperAdmin(
   async (req: NextRequest, user: any, context: { params: Promise<{ id: string }> }) => {
-    // ✅ FIXED: Use same params pattern as PUT
+    //  FIXED: Use same params pattern as PUT
     const { id: userId } = await context.params;
     const supabase = getAdminClient();
 
@@ -222,7 +222,7 @@ export const DELETE = withSuperAdmin(
         role: targetUser.user_metadata?.role
       });
 
-      console.log('✅ User deleted:', targetUser.email);
+      console.log(' User deleted:', targetUser.email);
 
       return NextResponse.json({ 
         success: true,

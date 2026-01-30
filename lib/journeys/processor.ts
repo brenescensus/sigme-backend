@@ -137,7 +137,7 @@
 // // ============================================================================
 
 // /**
-//  * ✅ MAIN FUNCTION: Process all due steps
+//  *  MAIN FUNCTION: Process all due steps
 //  * Called by cron job every 1-5 minutes
 //  */
 // export async function processDueSteps(): Promise<ProcessingResult> {
@@ -162,7 +162,7 @@
 //     }
 
 //     if (!dueSteps || dueSteps.length === 0) {
-//       console.log('✅ [Processor] No due steps found');
+//       console.log(' [Processor] No due steps found');
 //       return { processed: 0, failed: 0, skipped: 0, total: 0 };
 //     }
 
@@ -249,7 +249,7 @@
 //           .eq('id', step.id);
 
 //         processed++;
-//         console.log(`✅ [Processor] Step ${step.id} completed successfully`);
+//         console.log(` [Processor] Step ${step.id} completed successfully`);
 
 //       } catch (stepError: any) {
 //         console.error(`❌ [Processor] Step ${step.id} failed:`, stepError.message);
@@ -272,7 +272,7 @@
 //     const duration = Date.now() - startTime;
 //     const total = processed + failed + skipped;
     
-//     console.log(`✅ [Processor] Completed in ${duration}ms - Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}, Total: ${total}`);
+//     console.log(` [Processor] Completed in ${duration}ms - Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}, Total: ${total}`);
     
 //     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
 
@@ -283,7 +283,7 @@
 // }
 
 // /**
-//  * ✅ Enroll a subscriber in a journey
+//  *  Enroll a subscriber in a journey
 //  */
 // export async function enrollSubscriber(
 //   journeyId: string,
@@ -388,7 +388,7 @@
 //     // Process the first step
 //     await processJourneyStep(journeyState.id);
 
-//     console.log('✅ [Processor] Subscriber enrolled successfully');
+//     console.log(' [Processor] Subscriber enrolled successfully');
 //     return journeyState;
 
 //   } catch (error: any) {
@@ -398,7 +398,7 @@
 // }
 
 // /**
-//  * ✅ Process a single journey step
+//  *  Process a single journey step
 //  */
 // export async function processJourneyStep(journeyStateId: string): Promise<void> {
 //   console.log('🔄 [Processor] Processing journey step:', journeyStateId);
@@ -630,7 +630,7 @@
 
 //   // Check if wait was already scheduled
 //   if (state.status === 'waiting') {
-//     console.log('✅ [Processor] Wait period completed, advancing');
+//     console.log(' [Processor] Wait period completed, advancing');
 //     await moveToNextNode(state, flowDefinition, node.id);
 //     return;
 //   }
@@ -1006,7 +1006,7 @@
 //         .eq('id', state.journey_id);
 //     }
 
-//     console.log('✅ [Processor] Journey completed successfully');
+//     console.log(' [Processor] Journey completed successfully');
 
 //   } catch (error: any) {
 //     console.error('❌ [Processor] Error completing journey:', error.message);
@@ -1376,7 +1376,7 @@ async function logJourneyEvent(
 // ============================================================================
 
 /**
- * ✅ MAIN FUNCTION: Process all due steps
+ *  MAIN FUNCTION: Process all due steps
  * Called by cron job every 1-5 minutes
  */
 /**
@@ -1405,7 +1405,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     }
 
     if (!dueSteps || dueSteps.length === 0) {
-      console.log('✅ [Processor] No due steps found');
+      console.log(' [Processor] No due steps found');
       return { processed: 0, failed: 0, skipped: 0, total: 0 };
     }
 
@@ -1443,7 +1443,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           await supabase
             .from('scheduled_journey_steps')
             .update({ 
-              status: 'cancelled',  // ✅ Changed from 'skipped'
+              status: 'cancelled',  //  Changed from 'skipped'
               error: 'Journey state not found',
               completed_at: new Date().toISOString(),
             })
@@ -1454,7 +1454,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
 
         const state = toJourneyState(stateData);
 
-        // ✅ NEW: Check journey status first
+        //  NEW: Check journey status first
         const { data: journey, error: journeyError } = await supabase
           .from('journeys')
           .select('status')
@@ -1475,7 +1475,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           continue;
         }
 
-        // ✅ NEW: Check if journey is completed/archived
+        //  NEW: Check if journey is completed/archived
         if (journey.status === 'completed' || journey.status === 'archived') {
           console.log(`[Processor] Journey ${state.journey_id} status is ${journey.status}, cancelling step`);
           await supabase
@@ -1496,7 +1496,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           await supabase
             .from('scheduled_journey_steps')
             .update({ 
-              status: 'cancelled',  // ✅ Changed from 'skipped'
+              status: 'cancelled',  //  Changed from 'skipped'
               error: `Journey state status is ${state.status}`,
               completed_at: new Date().toISOString(),
             })
@@ -1529,7 +1529,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           .eq('id', step.id);
 
         processed++;
-        console.log(`✅ [Processor] Step ${step.id} completed successfully`);
+        console.log(` [Processor] Step ${step.id} completed successfully`);
 
       } catch (stepError: any) {
         console.error(`❌ [Processor] Step ${step.id} failed:`, stepError.message);
@@ -1552,7 +1552,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     const duration = Date.now() - startTime;
     const total = processed + failed + skipped;
     
-    console.log(`✅ [Processor] Completed in ${duration}ms - Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}, Total: ${total}`);
+    console.log(` [Processor] Completed in ${duration}ms - Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}, Total: ${total}`);
     
     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
 
@@ -1562,7 +1562,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
   }
 }
 /**
- * ✅ Enroll a subscriber in a journey
+ *  Enroll a subscriber in a journey
  */
 export async function enrollSubscriber(
   journeyId: string,
@@ -1667,7 +1667,7 @@ export async function enrollSubscriber(
     // Process the first step
     await processJourneyStep(journeyState.id);
 
-    console.log('✅ [Processor] Subscriber enrolled successfully');
+    console.log(' [Processor] Subscriber enrolled successfully');
     return journeyState;
 
   } catch (error: any) {
@@ -1677,7 +1677,7 @@ export async function enrollSubscriber(
 }
 
 /**
- * ✅ Process a single journey step
+ *  Process a single journey step
  */
 export async function processJourneyStep(journeyStateId: string): Promise<void> {
   console.log('🔄 [Processor] Processing journey step:', journeyStateId);
@@ -1909,7 +1909,7 @@ async function processWaitNode(
 
   // Check if wait was already scheduled
   if (state.status === 'waiting') {
-    console.log('✅ [Processor] Wait period completed, advancing');
+    console.log(' [Processor] Wait period completed, advancing');
     await moveToNextNode(state, flowDefinition, node.id);
     return;
   }
@@ -2285,7 +2285,7 @@ async function completeJourney(journeyStateId: string): Promise<void> {
         .eq('id', state.journey_id);
     }
 
-    console.log('✅ [Processor] Journey completed successfully');
+    console.log(' [Processor] Journey completed successfully');
 
   } catch (error: any) {
     console.error('❌ [Processor] Error completing journey:', error.message);

@@ -13,7 +13,7 @@
 // //  */
 // // export async function GET(
 // //   req: NextRequest,
-// //   { params }: { params: Promise<{ id: string }> }  // ✅ Next.js 15: params is a Promise
+// //   { params }: { params: Promise<{ id: string }> }  //  Next.js 15: params is a Promise
 // // ) {
 // //   try {
 // //     const authHeader = req.headers.get('authorization');
@@ -28,7 +28,7 @@
 // //       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 // //     }
 
-// //     const { id: journeyId } = await params;  // ✅ Await params
+// //     const { id: journeyId } = await params;  //  Await params
 
 // //     const { data: journey, error } = await supabase
 // //       .from('journeys')
@@ -60,7 +60,7 @@
 // //  */
 // // export async function PUT(
 // //   req: NextRequest,
-// //   { params }: { params: Promise<{ id: string }> }  // ✅ Next.js 15: params is a Promise
+// //   { params }: { params: Promise<{ id: string }> }  //  Next.js 15: params is a Promise
 // // ) {
 // //   try {
 // //     const authHeader = req.headers.get('authorization');
@@ -75,7 +75,7 @@
 // //       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 // //     }
 
-// //     const { id: journeyId } = await params;  // ✅ Await params
+// //     const { id: journeyId } = await params;  //  Await params
 // //     const body = await req.json();
 
 // //     // Verify ownership
@@ -150,7 +150,7 @@
 // //  */
 // // export async function DELETE(
 // //   req: NextRequest,
-// //   { params }: { params: Promise<{ id: string }> }  // ✅ Next.js 15: params is a Promise
+// //   { params }: { params: Promise<{ id: string }> }  //  Next.js 15: params is a Promise
 // // ) {
 // //   try {
 // //     const authHeader = req.headers.get('authorization');
@@ -165,7 +165,7 @@
 // //       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 // //     }
 
-// //     const { id: journeyId } = await params;  // ✅ Await params
+// //     const { id: journeyId } = await params;  //  Await params
 
 // //     console.log('[DELETE] Attempting to delete journey:', journeyId, 'for user:', user.id);
 
@@ -182,7 +182,7 @@
 // //       return NextResponse.json({ error: 'Journey not found or access denied' }, { status: 404 });
 // //     }
 
-// //     console.log('✅ [DELETE] Ownership verified');
+// //     console.log(' [DELETE] Ownership verified');
 
 // //     // Prevent deletion if active with users in it
 // //     if (journey.status === 'active' && journey.total_active && journey.total_active > 0) {
@@ -204,7 +204,7 @@
 // //       return NextResponse.json({ error: 'Failed to delete journey' }, { status: 500 });
 // //     }
 
-// //     console.log('✅ [DELETE] Journey deleted successfully');
+// //     console.log(' [DELETE] Journey deleted successfully');
 
 // //     return NextResponse.json({
 // //       success: true,
@@ -446,7 +446,7 @@
 //       return NextResponse.json({ error: 'Journey not found or access denied' }, { status: 404 });
 //     }
 
-//     console.log('✅ [DELETE] Ownership verified');
+//     console.log(' [DELETE] Ownership verified');
 
 //     // Prevent deletion if active with users in it
 //     if (journey.status === 'active' && journey.total_active && journey.total_active > 0) {
@@ -468,7 +468,7 @@
 //       return NextResponse.json({ error: 'Failed to delete journey' }, { status: 500 });
 //     }
 
-//     console.log('✅ [DELETE] Journey deleted successfully');
+//     console.log(' [DELETE] Journey deleted successfully');
 
 //     return NextResponse.json({
 //       success: true,
@@ -542,7 +542,7 @@ export async function GET(
       return NextResponse.json({ error: 'Journey not found' }, { status: 404 });
     }
 
-    // ✅ FIX: Cast settings to proper type
+    //  FIX: Cast settings to proper type
     const settings = (journey.settings || {}) as Record<string, any>;
 
     // Ensure all fields have safe defaults
@@ -559,7 +559,7 @@ export async function GET(
         max_entries: 1,
       },
       settings,
-      // ✅ Now TypeScript knows settings is an object
+      //  Now TypeScript knows settings is an object
       goal: settings.goal || null,
     };
 
@@ -635,7 +635,7 @@ export async function PUT(
       }
     }
 
-    // ✅ FIX: Handle goal with proper type casting
+    //  FIX: Handle goal with proper type casting
     if (body.goal !== undefined) {
       const currentSettings = (existing.settings || {}) as Record<string, any>;
       const bodySettings = (body.settings || {}) as Record<string, any>;
@@ -662,7 +662,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Failed to update journey' }, { status: 500 });
     }
 
-    // ✅ FIX: Cast settings when reading response
+    //  FIX: Cast settings when reading response
     const journeySettings = (journey.settings || {}) as Record<string, any>;
 
     // Return with goal at top level for consistency
@@ -724,7 +724,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Journey not found or access denied' }, { status: 404 });
     }
 
-    console.log('✅ [DELETE] Ownership verified');
+    console.log(' [DELETE] Ownership verified');
 
     // Prevent deletion if active with users in it
     if (journey.status === 'active' && journey.total_active && journey.total_active > 0) {
@@ -746,7 +746,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Failed to delete journey' }, { status: 500 });
     }
 
-    console.log('✅ [DELETE] Journey deleted successfully');
+    console.log(' [DELETE] Journey deleted successfully');
 
     return NextResponse.json({
       success: true,

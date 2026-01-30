@@ -119,7 +119,7 @@ export const POST = withAdmin(async (req: NextRequest, user: AdminAuthUser) => {
 
   if (error) throw error;
 
-  console.log('✅ Created coupon:', coupon.code, 'by', user.email);
+  console.log(' Created coupon:', coupon.code, 'by', user.email);
 
   // Log admin activity
   await logAdminActivity(

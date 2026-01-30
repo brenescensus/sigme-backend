@@ -74,7 +74,7 @@ const req = client.request(options, (res) => {
       const result = JSON.parse(data);
       
       if (res.statusCode === 200) {
-        console.log('✅ [Event Handler] Event processed successfully');
+        console.log(' [Event Handler] Event processed successfully');
         console.log(`📊 [Event Handler] Result:`, JSON.stringify(result, null, 2));
         
         if (result.triggered_journeys) {

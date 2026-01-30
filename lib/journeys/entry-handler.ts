@@ -672,7 +672,7 @@ class JourneyEntryHandler {
           entry_event: triggerEvent.event_name,
           entry_data: triggerEvent.event_data,
         },
-          node_history: [], // ✅ Add this
+          node_history: [], //  Add this
         last_processed_at: new Date().toISOString(),
       })
       .select()

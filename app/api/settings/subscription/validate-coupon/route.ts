@@ -429,7 +429,7 @@ export async function POST(req: NextRequest) {
 
     const final_price = Math.max(0, plan_price - discount);
 
-    console.log('✅ Coupon validated:', {
+    console.log(' Coupon validated:', {
       code: coupon.code,
       user: user.email,
       discount: discount,

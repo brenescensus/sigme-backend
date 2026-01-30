@@ -233,7 +233,7 @@ const supabase = createClient<Database>(
 
 export async function POST(
   req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }  // ✅ Next.js 15: params is a Promise
+    { params }: { params: Promise<{ id: string }> }  //  Next.js 15: params is a Promise
 
 
 ) {

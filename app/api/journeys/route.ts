@@ -241,7 +241,7 @@
 // //       })
 // //     );
 
-// //     console.log(`✅ [Journeys] Successfully calculated stats for ${journeysWithStats.length} journeys`);
+// //     console.log(` [Journeys] Successfully calculated stats for ${journeysWithStats.length} journeys`);
 
 // //     return NextResponse.json({
 // //       success: true,
@@ -316,7 +316,7 @@
 // //       throw error;
 // //     }
 
-// //     console.log('✅ [Journeys] Journey created:', journey.id);
+// //     console.log(' [Journeys] Journey created:', journey.id);
 
 // //     return NextResponse.json({
 // //       success: true,

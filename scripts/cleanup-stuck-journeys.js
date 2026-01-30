@@ -32,7 +32,7 @@
 //     }
 
 //     if (!stuckJourneys || stuckJourneys.length === 0) {
-//       console.log('✅ No stuck journeys found');
+//       console.log(' No stuck journeys found');
 //       return;
 //     }
 
@@ -99,7 +99,7 @@
 //             .eq('id', journey.journey_id);
 //         }
 
-//         console.log(`  ✅ Marked as exited due to stuck timeout`);
+//         console.log(`   Marked as exited due to stuck timeout`);
 //         fixedCount++;
 
 //       } catch (error) {
@@ -109,7 +109,7 @@
 //     }
 
 //     console.log(`\n📊 Cleanup Summary:`);
-//     console.log(`  ✅ Fixed: ${fixedCount}`);
+//     console.log(`   Fixed: ${fixedCount}`);
 //     console.log(`  ❌ Errors: ${errorCount}`);
 //     console.log(`  📋 Total checked: ${stuckJourneys.length}`);
 
@@ -122,7 +122,7 @@
 // // Run the cleanup
 // cleanupStuckJourneys()
 //   .then(() => {
-//     console.log('✅ Cleanup completed');
+//     console.log(' Cleanup completed');
 //     process.exit(0);
 //   })
 //   .catch((error) => {
@@ -196,7 +196,7 @@ async function cleanupStuckJourneys() {
     const stuckStates = [...(stuckActive || []), ...(stuckWaiting || [])];
 
     if (stuckStates.length === 0) {
-      console.log('✅ No stuck journeys found');
+      console.log(' No stuck journeys found');
       return;
     }
 
@@ -220,7 +220,7 @@ async function cleanupStuckJourneys() {
         }
 
         cleaned++;
-        console.log(`✅ State ${state.id} cleaned up`);
+        console.log(` State ${state.id} cleaned up`);
 
       } catch (error) {
         console.error(`❌ Error processing state ${state.id}:`, error.message);
@@ -240,7 +240,7 @@ async function cleanupStuckJourneys() {
     if (cleanupError) {
       console.error('❌ Error cleaning scheduled steps:', cleanupError);
     } else {
-      console.log(`✅ Deleted ${cleanupResult || 0} old scheduled steps`);
+      console.log(` Deleted ${cleanupResult || 0} old scheduled steps`);
     }
 
   } catch (error) {

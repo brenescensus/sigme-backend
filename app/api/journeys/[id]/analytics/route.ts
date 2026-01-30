@@ -937,7 +937,7 @@
 //  */
 // export async function GET(
 //   req: NextRequest,
-//   { params }: { params: Promise<{ id: string }> }  // ✅ Next.js 15: params is a Promise
+//   { params }: { params: Promise<{ id: string }> }  //  Next.js 15: params is a Promise
 // ) {
 //   try {
 //     const authHeader = req.headers.get('authorization');
@@ -952,7 +952,7 @@
 //       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 //     }
 
-//     const { id: journeyId } = await params;  // ✅ Await params
+//     const { id: journeyId } = await params;  //  Await params
 //     const { searchParams } = new URL(req.url);
 //     const timeRange = searchParams.get('range') || '7d';
 
@@ -1174,7 +1174,7 @@ const supabase = createClient<Database>(
  * GET /api/journeys/[id]/analytics
  * Get journey analytics
  * 
- * ✅ FIXED: Proper null handling for TypeScript
+ *  FIXED: Proper null handling for TypeScript
  */
 export async function GET(
   req: NextRequest,
@@ -1209,7 +1209,7 @@ export async function GET(
       return NextResponse.json({ error: 'Journey not found' }, { status: 404 });
     }
 
-    // ✅ FIX: Extract values with null coalescing
+    //  FIX: Extract values with null coalescing
     const totalEntered = journey.total_entered ?? 0;
     const totalActive = journey.total_active ?? 0;
     const totalCompleted = journey.total_completed ?? 0;

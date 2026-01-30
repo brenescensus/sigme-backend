@@ -32,7 +32,7 @@
 // // //     }
 
 // // //     if (!scheduledSteps || scheduledSteps.length === 0) {
-// // //       console.log('✅ No scheduled steps due for execution');
+// // //       console.log(' No scheduled steps due for execution');
 // // //       return;
 // // //     }
 
@@ -147,7 +147,7 @@
 // // //           })
 // // //           .eq('id', step.id);
 
-// // //         console.log(`✅ Scheduled step ${step.id} processed successfully`);
+// // //         console.log(` Scheduled step ${step.id} processed successfully`);
 // // //         successCount++;
 
 // // //       } catch (error) {
@@ -167,7 +167,7 @@
 // // //     }
 
 // // //     console.log(`\n📊 Processing Summary:`);
-// // //     console.log(`  ✅ Successful: ${successCount}`);
+// // //     console.log(`   Successful: ${successCount}`);
 // // //     console.log(`  ❌ Failed: ${errorCount}`);
 // // //     console.log(`  📋 Total: ${scheduledSteps.length}`);
 
@@ -197,7 +197,7 @@
 // // // // Run the processor
 // // // processScheduledSteps()
 // // //   .then(() => {
-// // //     console.log('✅ Scheduled steps processor completed');
+// // //     console.log(' Scheduled steps processor completed');
 // // //     process.exit(0);
 // // //   })
 // // //   .catch((error) => {
@@ -245,7 +245,7 @@
 // //     }
 
 // //     if (!dueSteps || dueSteps.length === 0) {
-// //       console.log('✅ No pending steps to process');
+// //       console.log(' No pending steps to process');
 // //       return;
 // //     }
 
@@ -296,7 +296,7 @@
 // //           .eq('id', step.id);
 
 // //         processed++;
-// //         console.log(`✅ Step ${step.id} processed successfully`);
+// //         console.log(` Step ${step.id} processed successfully`);
 
 // //       } catch (error) {
 // //         console.error(`❌ Error processing step ${step.id}:`, error.message);
@@ -340,7 +340,7 @@
 // //     }
 
 // //     console.log('\n📊 Summary:');
-// //     console.log(`  ✅ Processed: ${processed}`);
+// //     console.log(`   Processed: ${processed}`);
 // //     console.log(`  ❌ Failed: ${failed}`);
 // //     console.log(`  🔄 Pending retry: ${dueSteps.length - processed - failed}`);
 
@@ -398,7 +398,7 @@
 
 //     const result = await response.json();
     
-//     console.log('\n✅ Processing complete:');
+//     console.log('\n Processing complete:');
 //     console.log(`  📊 Processed: ${result.processed || 0}`);
 //     console.log(`  ❌ Failed: ${result.failed || 0}`);
 //     console.log(`  ⏭️  Skipped: ${result.skipped || 0}`);
@@ -486,7 +486,7 @@ const req = client.request(options, (res) => {
       const result = JSON.parse(data);
       
       if (res.statusCode === 200) {
-        console.log('✅ [Processor] Success!');
+        console.log(' [Processor] Success!');
         console.log(`📊 [Processor] Results:`, JSON.stringify(result.result, null, 2));
         
         const { processed, failed, skipped, total } = result.result || {};

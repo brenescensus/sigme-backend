@@ -403,7 +403,7 @@ export const GET = withAuth(async (req, user) => {
             })
             .eq('id', coupon.id);
 
-          console.log('✅ Coupon redeemed:', {
+          console.log(' Coupon redeemed:', {
             code: coupon.code,
             user: user.email,
             discount: paymentIntent.discount_amount,
@@ -428,7 +428,7 @@ export const GET = withAuth(async (req, user) => {
         invoice_url: paymentData.receipt_url || null,
       });
 
-    console.log('✅ Payment verified and subscription activated:', {
+    console.log(' Payment verified and subscription activated:', {
       user: user.email,
       plan: plan.name,
       reference: reference,

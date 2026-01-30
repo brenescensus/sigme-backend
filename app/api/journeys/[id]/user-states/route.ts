@@ -196,7 +196,7 @@
 //  */
 // export async function GET(
 //   req: NextRequest,
-//   { params }: { params: Promise<{ id: string }> }  // ✅ Next.js 15: params is a Promise
+//   { params }: { params: Promise<{ id: string }> }  //  Next.js 15: params is a Promise
 // ) {
 //   try {
 //     const authHeader = req.headers.get('authorization');
@@ -211,7 +211,7 @@
 //       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 //     }
 
-//     const { id: journeyId } = await params;  // ✅ Await params
+//     const { id: journeyId } = await params;  //  Await params
 //     const { searchParams } = new URL(req.url);
 //     const status = searchParams.get('status') || 'active';
 //     const page = parseInt(searchParams.get('page') || '1');
@@ -318,7 +318,7 @@ const supabase = createClient<Database>(
  * GET /api/journeys/[id]/user-states
  * Get all user states for a journey
  * 
- * ✅ FIXED: Specify exact foreign key relationship to avoid ambiguity
+ *  FIXED: Specify exact foreign key relationship to avoid ambiguity
  */
 export async function GET(
   req: NextRequest,
@@ -356,7 +356,7 @@ export async function GET(
       return NextResponse.json({ error: 'Journey not found' }, { status: 404 });
     }
 
-    // ✅ FIX: Specify the exact foreign key relationship
+    //  FIX: Specify the exact foreign key relationship
     // Use !user_journey_states_subscriber_id_fkey to disambiguate
     let query = supabase
       .from('user_journey_states')
