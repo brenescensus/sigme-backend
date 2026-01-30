@@ -157,8 +157,185 @@ async function logJourneyEvent(
 // ============================================================================
 
 /**
- *  FIXED: Process all due steps with proper cleanup
+ *   Process all due steps with proper cleanup
  */
+// export async function processDueSteps(): Promise<ProcessingResult> {
+//   console.log('⏰ [Processor] Starting scheduled step processing...');
+//   const startTime = Date.now();
+
+//   try {
+//     const now = new Date().toISOString();
+
+//     // Fetch all pending steps that are due
+//     const { data: dueSteps, error } = await supabase
+//       .from('scheduled_journey_steps')
+//       .select('*')
+//       .eq('status', 'pending')
+//       .lte('execute_at', now)
+//       .order('execute_at', { ascending: true })
+//       .limit(100);
+
+//     if (error) {
+//       console.error('[Processor] Error fetching due steps:', error);
+//       throw error;
+//     }
+
+//     if (!dueSteps || dueSteps.length === 0) {
+//       console.log(' [Processor] No due steps found');
+//       return { processed: 0, failed: 0, skipped: 0, total: 0 };
+//     }
+
+//     console.log(`📋 [Processor] Found ${dueSteps.length} due steps to process`);
+
+//     let processed = 0;
+//     let failed = 0;
+//     let skipped = 0;
+//     const errors: string[] = [];
+
+//     for (const step of dueSteps) {
+//       try {
+//         const stepPayload = step.payload as Record<string, any> | null;
+//         console.log(`🔄 [Processor] Processing step ${step.id} (type: ${stepPayload?.step_type || 'unknown'})`);
+
+//         // Mark as processing
+//         await supabase
+//           .from('scheduled_journey_steps')
+//           .update({ 
+//             status: 'processing',
+//             started_at: new Date().toISOString(),
+//           })
+//           .eq('id', step.id);
+
+//         //  FIX: Verify journey state still exists and is valid
+//         const { data: stateData, error: stateError } = await supabase
+//           .from('user_journey_states')
+//           .select('*')
+//           .eq('id', step.user_journey_state_id)
+//           .single();
+
+//         if (stateError || !stateData) {
+//           console.warn(`⚠️ [Processor] Journey state ${step.user_journey_state_id} not found, cancelling step`);
+//           await supabase
+//             .from('scheduled_journey_steps')
+//             .update({ 
+//               status: 'cancelled',
+//               error: 'Journey state not found',
+//               completed_at: new Date().toISOString(),
+//             })
+//             .eq('id', step.id);
+//           skipped++;
+//           continue;
+//         }
+
+//         const state = toJourneyState(stateData);
+
+//         //  FIX: Check journey status
+//         const { data: journey, error: journeyError } = await supabase
+//           .from('journeys')
+//           .select('status')
+//           .eq('id', state.journey_id)
+//           .single();
+
+//         if (journeyError || !journey) {
+//           console.warn(`⚠️ [Processor] Journey not found for state ${state.id}, cancelling step`);
+//           await supabase
+//             .from('scheduled_journey_steps')
+//             .update({ 
+//               status: 'cancelled',
+//               error: 'Journey not found',
+//               completed_at: new Date().toISOString(),
+//             })
+//             .eq('id', step.id);
+//           skipped++;
+//           continue;
+//         }
+
+//         //  FIX: Check if journey is active
+//         if (journey.status !== 'active') {
+//           console.log(`⏸️ [Processor] Journey ${state.journey_id} status is ${journey.status}, cancelling step`);
+//           await supabase
+//             .from('scheduled_journey_steps')
+//             .update({ 
+//               status: 'cancelled',
+//               error: `Journey status is ${journey.status}`,
+//               completed_at: new Date().toISOString(),
+//             })
+//             .eq('id', step.id);
+//           skipped++;
+//           continue;
+//         }
+
+//         //  FIX: Check if journey state is valid
+//         if (state.status !== 'active' && state.status !== 'waiting') {
+//           console.log(`⏸️ [Processor] Journey state ${state.id} status is ${state.status}, cancelling step`);
+//           await supabase
+//             .from('scheduled_journey_steps')
+//             .update({ 
+//               status: 'cancelled',
+//               error: `Journey state status is ${state.status}`,
+//               completed_at: new Date().toISOString(),
+//             })
+//             .eq('id', step.id);
+//           skipped++;
+//           continue;
+//         }
+
+//         //  FIX: Update state to active if it was waiting
+//         if (state.status === 'waiting') {
+//           await supabase
+//             .from('user_journey_states')
+//             .update({ 
+//               status: 'active',
+//               next_execution_at: null,
+//             })
+//             .eq('id', step.user_journey_state_id);
+//         }
+
+//         // Process the journey step
+//         await processJourneyStep(step.user_journey_state_id);
+
+//         //  FIX: Mark step as completed
+//         await supabase
+//           .from('scheduled_journey_steps')
+//           .update({ 
+//             status: 'completed',
+//             completed_at: new Date().toISOString(),
+//           })
+//           .eq('id', step.id);
+
+//         processed++;
+//         console.log(` [Processor] Step ${step.id} completed successfully`);
+
+//       } catch (stepError: any) {
+//         console.error(` [Processor] Step ${step.id} failed:`, stepError.message);
+        
+//         // Mark step as failed
+//         await supabase
+//           .from('scheduled_journey_steps')
+//           .update({ 
+//             status: 'failed',
+//             error: stepError.message,
+//             completed_at: new Date().toISOString(),
+//           })
+//           .eq('id', step.id);
+
+//         failed++;
+//         errors.push(`Step ${step.id}: ${stepError.message}`);
+//       }
+//     }
+
+//     const duration = Date.now() - startTime;
+//     const total = processed + failed + skipped;
+    
+//     console.log(` [Processor] Completed in ${duration}ms - Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}, Total: ${total}`);
+    
+//     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
+
+//   } catch (error: any) {
+//     console.error(' [Processor] Fatal error in processDueSteps:', error.message);
+//     throw error;
+//   }
+// }
 export async function processDueSteps(): Promise<ProcessingResult> {
   console.log('⏰ [Processor] Starting scheduled step processing...');
   const startTime = Date.now();
@@ -166,7 +343,6 @@ export async function processDueSteps(): Promise<ProcessingResult> {
   try {
     const now = new Date().toISOString();
 
-    // Fetch all pending steps that are due
     const { data: dueSteps, error } = await supabase
       .from('scheduled_journey_steps')
       .select('*')
@@ -181,7 +357,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     }
 
     if (!dueSteps || dueSteps.length === 0) {
-      console.log(' [Processor] No due steps found');
+      console.log('✅ [Processor] No due steps found');
       return { processed: 0, failed: 0, skipped: 0, total: 0 };
     }
 
@@ -206,7 +382,6 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           })
           .eq('id', step.id);
 
-        //  FIX: Verify journey state still exists and is valid
         const { data: stateData, error: stateError } = await supabase
           .from('user_journey_states')
           .select('*')
@@ -229,72 +404,57 @@ export async function processDueSteps(): Promise<ProcessingResult> {
 
         const state = toJourneyState(stateData);
 
-        //  FIX: Check journey status
-        const { data: journey, error: journeyError } = await supabase
-          .from('journeys')
-          .select('status')
-          .eq('id', state.journey_id)
-          .single();
+        // 🔥 KEY FIX: For wait nodes, move to next step BEFORE processing
+        if (stepPayload?.step_type?.includes('wait')) {
+          console.log('⏰ [Processor] Wait completed, advancing to next node');
+          
+          // Get flow definition
+          const { data: journey } = await supabase
+            .from('journeys')
+            .select('flow_definition')
+            .eq('id', state.journey_id)
+            .single();
 
-        if (journeyError || !journey) {
-          console.warn(`⚠️ [Processor] Journey not found for state ${state.id}, cancelling step`);
-          await supabase
-            .from('scheduled_journey_steps')
-            .update({ 
-              status: 'cancelled',
-              error: 'Journey not found',
-              completed_at: new Date().toISOString(),
-            })
-            .eq('id', step.id);
-          skipped++;
-          continue;
+          if (journey) {
+            const flowDefinition = parseFlowDefinition(journey.flow_definition);
+            const currentNode = flowDefinition.nodes.find(n => n.id === state.current_step_id);
+            
+            if (currentNode) {
+              // Move to next node
+              const nextNodeId = getNextNodeId(flowDefinition, currentNode.id);
+              
+              if (nextNodeId) {
+                await supabase
+                  .from('user_journey_states')
+                  .update({
+                    current_step_id: nextNodeId,
+                    status: 'active',
+                    next_execution_at: null,
+                    last_processed_at: new Date().toISOString(),
+                  })
+                  .eq('id', state.id);
+
+                // Mark step as completed
+                await supabase
+                  .from('scheduled_journey_steps')
+                  .update({ 
+                    status: 'completed',
+                    completed_at: new Date().toISOString(),
+                  })
+                  .eq('id', step.id);
+
+                // Now process the next step
+                await processJourneyStep(state.id);
+                processed++;
+                continue;
+              }
+            }
+          }
         }
 
-        //  FIX: Check if journey is active
-        if (journey.status !== 'active') {
-          console.log(`⏸️ [Processor] Journey ${state.journey_id} status is ${journey.status}, cancelling step`);
-          await supabase
-            .from('scheduled_journey_steps')
-            .update({ 
-              status: 'cancelled',
-              error: `Journey status is ${journey.status}`,
-              completed_at: new Date().toISOString(),
-            })
-            .eq('id', step.id);
-          skipped++;
-          continue;
-        }
-
-        //  FIX: Check if journey state is valid
-        if (state.status !== 'active' && state.status !== 'waiting') {
-          console.log(`⏸️ [Processor] Journey state ${state.id} status is ${state.status}, cancelling step`);
-          await supabase
-            .from('scheduled_journey_steps')
-            .update({ 
-              status: 'cancelled',
-              error: `Journey state status is ${state.status}`,
-              completed_at: new Date().toISOString(),
-            })
-            .eq('id', step.id);
-          skipped++;
-          continue;
-        }
-
-        //  FIX: Update state to active if it was waiting
-        if (state.status === 'waiting') {
-          await supabase
-            .from('user_journey_states')
-            .update({ 
-              status: 'active',
-              next_execution_at: null,
-            })
-            .eq('id', step.user_journey_state_id);
-        }
-
-        // Process the journey step
+        // For other step types, process normally
         await processJourneyStep(step.user_journey_state_id);
 
-        //  FIX: Mark step as completed
         await supabase
           .from('scheduled_journey_steps')
           .update({ 
@@ -304,12 +464,11 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           .eq('id', step.id);
 
         processed++;
-        console.log(` [Processor] Step ${step.id} completed successfully`);
+        console.log(`✅ [Processor] Step ${step.id} completed successfully`);
 
       } catch (stepError: any) {
-        console.error(` [Processor] Step ${step.id} failed:`, stepError.message);
+        console.error(`❌ [Processor] Step ${step.id} failed:`, stepError.message);
         
-        // Mark step as failed
         await supabase
           .from('scheduled_journey_steps')
           .update({ 
@@ -327,12 +486,12 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     const duration = Date.now() - startTime;
     const total = processed + failed + skipped;
     
-    console.log(` [Processor] Completed in ${duration}ms - Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}, Total: ${total}`);
+    console.log(`✅ [Processor] Completed in ${duration}ms - Processed: ${processed}, Failed: ${failed}, Skipped: ${skipped}, Total: ${total}`);
     
     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
 
   } catch (error: any) {
-    console.error(' [Processor] Fatal error in processDueSteps:', error.message);
+    console.error('❌ [Processor] Fatal error in processDueSteps:', error.message);
     throw error;
   }
 }
