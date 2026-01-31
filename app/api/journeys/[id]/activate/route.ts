@@ -25,8 +25,8 @@
 // // //       );
 // // //     }
 
-// // //     console.log('🚀 [Activate] Journey ID:', journeyId);
-// // //     console.log('🚀 [Activate] User ID:', user.id);
+// // //     console.log('[Activate] Journey ID:', journeyId);
+// // //     console.log('[Activate] User ID:', user.id);
 
 // // //     // Update status to active
 // // //     const { data: journey, error } = await supabase

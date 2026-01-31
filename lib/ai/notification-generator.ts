@@ -94,7 +94,7 @@
 // //       ],
 // //       announcement: [
 // //         { title: '📣 Big News!', body: 'Something exciting is happening.', emoji: '📣' },
-// //         { title: '🚀 We are Growing', body: 'Thanks to you! See what’s next.', emoji: '🚀' },
+// //         { title: 'We are Growing', body: 'Thanks to you! See what’s next.', emoji: '🚀' },
 // //         { title: '💡 Important Update', body: 'Changes ahead. Learn more.', emoji: '💡' },
 // //       ],
 // //     };

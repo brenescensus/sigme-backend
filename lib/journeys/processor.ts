@@ -695,7 +695,7 @@
 //     const entryNode = flowDefinition.nodes.find(n => n.type === 'entry');
 //     const startNode = entryNode || flowDefinition.nodes[0];
 
-//     console.log(`🚀 [Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
+//     console.log(`[Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
 
 //     // Check re-entry rules
 //     const canEnter = await checkReEntryRules(subscriberId, journey);
@@ -2061,7 +2061,7 @@ export async function enrollSubscriber(
     const entryNode = flowDefinition.nodes.find(n => n.type === 'entry');
     const startNode = entryNode || flowDefinition.nodes[0];
 
-    console.log(`🚀 [Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
+    console.log(`[Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
 
     const canEnter = await checkReEntryRules(subscriberId, journey);
     if (!canEnter) {

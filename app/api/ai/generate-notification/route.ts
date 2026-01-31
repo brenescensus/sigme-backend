@@ -371,7 +371,7 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
     }
 
     // Generate notifications using HuggingFace AI
-    console.log('🚀 [AI Generate] Calling HuggingFace API...');
+    console.log('[AI Generate] Calling HuggingFace API...');
     
     const generator = getAIGenerator();
     const result = await generator.generateNotification(

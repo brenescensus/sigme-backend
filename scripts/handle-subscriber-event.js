@@ -78,7 +78,7 @@ const req = client.request(options, (res) => {
         console.log(` [Event Handler] Result:`, JSON.stringify(result, null, 2));
         
         if (result.triggered_journeys) {
-          console.log(`\n🚀 Triggered ${result.triggered_journeys.length} journey(s):`);
+          console.log(`\nTriggered ${result.triggered_journeys.length} journey(s):`);
           result.triggered_journeys.forEach((journey, idx) => {
             console.log(`   ${idx + 1}. ${journey.journey_name || journey.journey_id}`);
           });

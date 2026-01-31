@@ -663,7 +663,7 @@
 // //  * Get geolocation with multi-provider fallback
 // //  */
 // // // export async function getGeolocation(ip: string): Promise<GeoLocation> {
-// // //   console.log(`\n[Geo] 🌍 Getting location for IP: ${ip}`);
+// // //   console.log(`\n[Geo]  Getting location for IP: ${ip}`);
   
 // // //   // 1. Check cache first
 // // //   const cached = geoCache.get(ip);
@@ -702,7 +702,7 @@
 
 // // //   for (const provider of providers) {
 // // //     try {
-// // //       console.log(`[Geo] 🔄 Trying ${provider.name}...`);
+// // //       console.log(`[Geo] Trying ${provider.name}...`);
 // // //       const geoData = await provider.fn(ip);
       
 // // //       // Validate we got useful data
@@ -750,7 +750,7 @@
 // // // lib/geolocation-service.ts - Replace entire getGeolocation function
 
 // // export async function getGeolocation(ip: string): Promise<GeoLocation> {
-// //   console.log(`\n[Geo] 🌍 Getting location for IP: ${ip}`);
+// //   console.log(`\n[Geo]  Getting location for IP: ${ip}`);
   
 // //   // 1. Check cache first
 // //   const cached = geoCache.get(ip);
@@ -794,7 +794,7 @@
 
 // //   for (const provider of providers) {
 // //     try {
-// //       console.log(`[Geo] 🔄 Trying ${provider.name}...`);
+// //       console.log(`[Geo] Trying ${provider.name}...`);
 // //       const geoData = await provider.fn(ip);
       
 // //       // Validate we got useful data
@@ -1314,7 +1314,7 @@
 // // ============================================================================
 
 // export async function getGeolocation(ip: string): Promise<GeoLocation> {
-//   console.log(`\n[Geo] 🌍 Getting location for IP: ${ip}`);
+//   console.log(`\n[Geo]  Getting location for IP: ${ip}`);
   
 //   // Normalize IP (handle IPv6-mapped IPv4)
 //   const normalizedIP = normalizeIP(ip);
@@ -1352,7 +1352,7 @@
 
 //   for (const provider of providers) {
 //     try {
-//       console.log(`[Geo] 🔄 Trying ${provider.name}...`);
+//       console.log(`[Geo] Trying ${provider.name}...`);
 //       const geoData = await provider.fn(normalizedIP);
       
 //       if (geoData.country || geoData.city) {
@@ -1938,7 +1938,7 @@ async function fetchFromIPGeolocation(ip: string): Promise<GeoLocation> {
  * 4. Only uses mock data in development as absolute last resort
  */
 export async function getGeolocation(ip: string): Promise<GeoLocation> {
-  console.log(`\n[Geo] 🌍 Getting location for IP: ${ip}`);
+  console.log(`\n[Geo]  Getting location for IP: ${ip}`);
   console.log(`[Geo] Environment: ${process.env.NODE_ENV || 'production'}`);
   
   // Step 1: Normalize IP (handle IPv6-mapped IPv4)
@@ -1997,7 +1997,7 @@ export async function getGeolocation(ip: string): Promise<GeoLocation> {
   // Try each provider
   for (const provider of providers) {
     try {
-      console.log(`[Geo] 🔄 Trying ${provider.name}...`);
+      console.log(`[Geo] Trying ${provider.name}...`);
       const geoData = await provider.fn(normalizedIP);
       
       // Validate we got useful data

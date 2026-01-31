@@ -12,7 +12,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 if (isServer && (isDevelopment || isProduction)) {
-  console.log('🚀 [Init] Initializing background services...');
+  console.log('[Init] Initializing background services...');
   
   // Start journey processor
   startScheduler();

@@ -59,7 +59,7 @@ const options = {
   timeout: 60000, // 60 second timeout
 };
 
-console.log('\n🚀 [Processor] Making request...');
+console.log('\n[Processor] Making request...');
 console.log(`   - Protocol: ${isHttps ? 'HTTPS' : 'HTTP'}`);
 console.log(`   - Host: ${options.hostname}`);
 console.log(`   - Port: ${options.port}`);
@@ -132,13 +132,13 @@ req.on('error', (error) => {
   console.error(`Code: ${error.code}`);
   
   if (error.code === 'ENOTFOUND') {
-    console.error('\nℹ️  DNS lookup failed. The hostname could not be resolved.');
+    console.error('\nDNS lookup failed. The hostname could not be resolved.');
     console.error(`   Hostname: ${options.hostname}`);
   } else if (error.code === 'ECONNREFUSED') {
-    console.error('\nℹ️  Connection refused. The server is not responding.');
+    console.error('\nConnection refused. The server is not responding.');
     console.error(`   URL: ${url.href}`);
   } else if (error.code === 'ETIMEDOUT') {
-    console.error('\nℹ️  Connection timeout. The server took too long to respond.');
+    console.error('\nConnection timeout. The server took too long to respond.');
   }
   
   process.exit(1);

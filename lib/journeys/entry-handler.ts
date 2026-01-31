@@ -405,7 +405,7 @@
 //   });
 
 //   //  CRITICAL FIX: Process first step IMMEDIATELY
-//   console.log('[JourneyEntry] 🚀 Processing first step immediately...');
+//   console.log('[JourneyEntry] Processing first step immediately...');
   
 //   try {
 //     // If entry node, move to next step
@@ -982,7 +982,7 @@ class JourneyEntryHandler {
       },
     });
 
-    console.log('[JourneyEntry] 🚀 Processing first step immediately...');
+    console.log('[JourneyEntry] Processing first step immediately...');
     
     try {
       if (startNode.type === 'entry') {

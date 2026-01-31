@@ -69,8 +69,8 @@ export function startScheduler() {
     return;
   }
 
-  console.log('🚀 [Scheduler] Starting journey processor (30s interval)...');
-  console.log('🌍 [Scheduler] Environment:', process.env.NODE_ENV);
+  console.log('[Scheduler] Starting journey processor (30s interval)...');
+  console.log(' [Scheduler] Environment:', process.env.NODE_ENV);
   console.log('🔧 [Scheduler] Platform:', process.platform);
 
   // Run immediately on start

@@ -496,7 +496,7 @@
           
 //           //  START PAGE TRACKING AFTER SUBSCRIPTION
 //           setTimeout(() => {
-//             console.log('[Sigme] 🚀 Starting page tracking after subscription...');
+//             console.log('[Sigme] Starting page tracking after subscription...');
 //             initPageTracking();
 //           }, 1000);
 //         }
@@ -608,7 +608,7 @@
   // ============================================
   
   const currentDomain = window.location.hostname;
-  console.log('[Sigme] 🌍 Current domain:', currentDomain);
+  console.log('[Sigme]  Current domain:', currentDomain);
 
   if (!('serviceWorker' in navigator)) {
     console.warn('[Sigme]  Service workers not supported');
@@ -634,7 +634,7 @@
   
   async function detectWebsite() {
     try {
-      console.log('[Sigme] 🔍 Detecting website configuration...');
+      console.log('[Sigme] Detecting website configuration...');
       
       const response = await fetch(
         `${SIGME_API}/api/websites/detect?domain=${encodeURIComponent(currentDomain)}`
@@ -993,7 +993,7 @@
 
     // Handle deny button
     denyBtn.onclick = () => {
-      console.log('[Sigme] ℹ️ User dismissed prompt');
+      console.log('[Sigme User dismissed prompt');
       localStorage.setItem('sigme_prompt_dismissed', Date.now());
       div.remove();
     };
@@ -1031,7 +1031,7 @@
           
           //  START PAGE TRACKING AFTER SUBSCRIPTION
           setTimeout(() => {
-            console.log('[Sigme] 🚀 Starting page tracking after subscription...');
+            console.log('[Sigme] Starting page tracking after subscription...');
             initPageTracking();
           }, 1000);
         }
@@ -1110,7 +1110,7 @@
     }
   } else {
     // Prompt was dismissed, but still track pages if user is subscribed
-    console.log('[Sigme] ℹ️ Prompt dismissed recently, skipping initialization');
+    console.log('[Sigme Prompt dismissed recently, skipping initialization');
     
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initPageTracking);
@@ -1190,17 +1190,17 @@
 
 //  FORCE CHECK FOR SUBSCRIBER ID AND START TRACKING
 setTimeout(() => {
-  console.log('[Sigme] 🔄 Force-checking if page tracking should start...');
+  console.log('[Sigme] Force-checking if page tracking should start...');
   const subscriberId = localStorage.getItem('sigme_subscriber_id');
   
   if (subscriberId) {
     console.log('[Sigme]  Subscriber ID found:', subscriberId);
     
     if (!pageTrackingInitialized) {
-      console.log('[Sigme] 🚀 Force-starting page tracking...');
+      console.log('[Sigme] Force-starting page tracking...');
       initPageTracking();
     } else {
-      console.log('[Sigme] ℹ️ Page tracking already initialized');
+      console.log('[Sigme Page tracking already initialized');
     }
   } else {
     console.log('[Sigme]  No subscriber ID found in localStorage');

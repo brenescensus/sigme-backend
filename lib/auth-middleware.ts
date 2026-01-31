@@ -445,7 +445,7 @@ export async function verifyToken(req: NextRequest): Promise<AuthUser | null> {
 }
 
 /**
- * 🚀 JOURNEY PROCESSING - Trigger opportunistically
+ * JOURNEY PROCESSING - Trigger opportunistically
  * This runs in the background on every authenticated request
  */
 async function triggerJourneyProcessing(): Promise<void> {
@@ -499,7 +499,7 @@ export function withAuth(
     
     console.log('current_step_id [Auth] Authenticated:', user.email);
     
-    // 🚀 Trigger journey processing (non-blocking)
+    // Trigger journey processing (non-blocking)
     triggerJourneyProcessing();
     
     try {
@@ -541,7 +541,7 @@ export function withPublicCors(
       return addPublicCorsHeaders(response, origin);
     }
     
-    // 🚀 Trigger journey processing for public endpoints too
+    // Trigger journey processing for public endpoints too
     // (e.g., when subscribers register, notifications are clicked)
     triggerJourneyProcessing();
     

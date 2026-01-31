@@ -56,7 +56,7 @@
 //           .limit(1);
 
 //         if (pendingSteps && pendingSteps.length > 0) {
-//           console.log(`  ℹ️  Has pending scheduled steps, skipping`);
+//           console.log(`  Has pending scheduled steps, skipping`);
 //           continue;
 //         }
 

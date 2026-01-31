@@ -507,7 +507,7 @@ async function handleGetAnalytics(
   user: AuthUser,
   context: { params: Promise<{ id: string }> }
 ) {
-  console.log('🚀 [Analytics] Handler started');
+  console.log('[Analytics] Handler started');
   console.log(' [Analytics] User:', user.email);
   
   try {
