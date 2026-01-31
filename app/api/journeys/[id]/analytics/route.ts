@@ -617,7 +617,7 @@
 // //       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 // //     }
 
-// //     console.log('🔄 [API] Manual journey processor trigger');
+// //     console.log(' [API] Manual journey processor trigger');
 
 // //     const result = await processDueSteps();
 

@@ -983,7 +983,7 @@
           console.log('[Sigme]  Permission granted');
           subscribeUser(registration);
         } else {
-          console.log('[Sigme] 🚫 Permission denied');
+          console.log('[Sigme] Permission denied');
         }
       } catch (error) {
         console.error('[Sigme]  Permission request failed:', error);
@@ -1027,7 +1027,7 @@
         //  SAVE SUBSCRIBER ID
         if (event.data.data?.subscriber_id) {
           localStorage.setItem('sigme_subscriber_id', event.data.data.subscriber_id);
-          console.log('[Sigme]  Subscriber ID saved:', event.data.data.subscriber_id);
+          // console.log('[Sigme]  Subscriber ID saved:', event.data.data.subscriber_id);
           
           //  START PAGE TRACKING AFTER SUBSCRIPTION
           setTimeout(() => {
@@ -1194,7 +1194,7 @@ setTimeout(() => {
   const subscriberId = localStorage.getItem('sigme_subscriber_id');
   
   if (subscriberId) {
-    console.log('[Sigme]  Subscriber ID found:', subscriberId);
+    // console.log('[Sigme]  Subscriber ID found:', subscriberId);
     
     if (!pageTrackingInitialized) {
       console.log('[Sigme] Force-starting page tracking...');
@@ -1203,11 +1203,16 @@ setTimeout(() => {
       console.log('[Sigme Page tracking already initialized');
     }
   } else {
-    console.log('[Sigme]  No subscriber ID found in localStorage');
-    console.log('[Sigme] 💡 Try subscribing first: Sigme.subscribe()');
+    // console.log('[Sigme]  No subscriber ID found in localStorage');
+    console.log('[Sigme]  Try subscribing firstto continue');
   }
 }, 3000); // Wait 3 seconds after page load
 
 console.log('[Sigme]  Script ready');
+
+
+
+
+
 
 })();

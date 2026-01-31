@@ -89,7 +89,7 @@ async function handleSubscribe(event) {
     else if (userAgent.includes('Android')) os = 'Android';
     else if (userAgent.includes('iOS')) os = 'iOS';
 
-    // 🔥 FIX: Get API URL from config with proper fallback
+    //  FIX: Get API URL from config with proper fallback
     const apiUrl = websiteConfig.apiUrl || 'https://sigme-backend-fkde.vercel.app';
     
     console.log('[Sigme Universal SW] Registering with API:', apiUrl);

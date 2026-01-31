@@ -90,7 +90,7 @@
 //       const params = await context.params;
 //       const websiteId = params.id;
 
-//       console.log(`📋 [Campaigns] Fetching for website: ${websiteId}`);
+//       console.log(` [Campaigns] Fetching for website: ${websiteId}`);
 
 //       // Verify website ownership
 //       const { data: website, error: websiteError } = await supabase
@@ -168,7 +168,7 @@ async function handleGetCampaigns(
     // current_step_id FIX: Await params
     const { id: websiteId } = await context.params;
 
-    console.log(`📋 [Campaigns] Fetching for website: ${websiteId}`);
+    console.log(` [Campaigns] Fetching for website: ${websiteId}`);
 
     // Verify website ownership
     const { data: website, error: websiteError } = await supabase

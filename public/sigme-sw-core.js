@@ -526,7 +526,7 @@ self.addEventListener('message', async (event) => {
     try {
       const db = await openConfigDB();
       await saveConfig(db, config);
-      // console.log('[Sigme SW Core]  Config saved to IndexedDB');
+      console.log('[Sigme SW Core]  Config saved to IndexedDB');
     } catch (err) {
       console.warn('[Sigme SW Core]  Could not save config to IndexedDB:', err);
     }
@@ -829,10 +829,10 @@ self.addEventListener('notificationclick', (event) => {
   const notificationData = event.notification.data || {};
   const urlToOpen = notificationData.url || '/';
 
-  console.log('[Sigme SW Core]  URL to open:', urlToOpen);
-  console.log('[Sigme SW Core]  Subscriber ID:', notificationData.subscriber_id);
-  console.log('[Sigme SW Core]  Campaign ID:', notificationData.campaign_id);
-  console.log('[Sigme SW Core] Journey ID:', notificationData.journey_id);
+  // console.log('[Sigme SW Core]  URL to open:', urlToOpen);
+  // console.log('[Sigme SW Core]  Subscriber ID:', notificationData.subscriber_id);
+  // console.log('[Sigme SW Core]  Campaign ID:', notificationData.campaign_id);
+  // console.log('[Sigme SW Core] Journey ID:', notificationData.journey_id);
 
   //  TRACK NOTIFICATION CLICK
   if (notificationData.subscriber_id) {

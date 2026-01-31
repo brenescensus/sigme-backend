@@ -23,7 +23,7 @@
 //   process.env.NEXT_PUBLIC_FRONTEND_URL,
 // ].filter(Boolean) as string[];
 
-// console.log('🔧 [CORS] Dashboard origins:', DASHBOARD_ORIGINS);
+// console.log(' [CORS] Dashboard origins:', DASHBOARD_ORIGINS);
 
 // /**
 //  * Add CORS headers - UNIVERSAL for public endpoints
@@ -142,7 +142,7 @@
 //   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
 //     const origin = req.headers.get('origin');
     
-//     console.log(`🔍 [Auth] ${req.method} ${req.url} from ${origin}`);
+//     console.log(` [Auth] ${req.method} ${req.url} from ${origin}`);
     
 //     // Handle OPTIONS preflight
 //     if (req.method === 'OPTIONS') {
@@ -194,7 +194,7 @@
 //   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
 //     const origin = req.headers.get('origin');
     
-//     console.log(`🌐 [Public] ${req.method} ${req.url} from ${origin}`);
+//     console.log(` [Public] ${req.method} ${req.url} from ${origin}`);
     
 //     // Handle OPTIONS preflight
 //     if (req.method === 'OPTIONS') {
@@ -335,7 +335,7 @@ const DASHBOARD_ORIGINS = [
   process.env.NEXT_PUBLIC_FRONTEND_URL,
 ].filter(Boolean) as string[];
 
-console.log('🔧 [CORS] Dashboard origins:', DASHBOARD_ORIGINS);
+console.log(' [CORS] Dashboard origins:', DASHBOARD_ORIGINS);
 
 /**
  * Add CORS headers - UNIVERSAL for public endpoints
@@ -476,7 +476,7 @@ export function withAuth(
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     const origin = req.headers.get('origin');
     
-    console.log(`🔍 [Auth] ${req.method} ${req.url} from ${origin}`);
+    console.log(` [Auth] ${req.method} ${req.url} from ${origin}`);
     
     // Handle OPTIONS preflight
     if (req.method === 'OPTIONS') {
@@ -532,7 +532,7 @@ export function withPublicCors(
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     const origin = req.headers.get('origin');
     
-    console.log(`🌐 [Public] ${req.method} ${req.url} from ${origin}`);
+    console.log(` [Public] ${req.method} ${req.url} from ${origin}`);
     
     // Handle OPTIONS preflight
     if (req.method === 'OPTIONS') {

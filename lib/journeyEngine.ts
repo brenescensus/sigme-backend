@@ -2266,17 +2266,17 @@ class JourneyEngine {
     );
   }
 
-  // 🔥 UPDATED: Handle message step with click tracking
+  //  UPDATED: Handle message step with click tracking
   async handleMessage(userStateId: string, journey: any, step: JourneyNode, userState: any) {
     console.log(`[JourneyEngine] Sending message: ${step.data.title}`);
 
     try {
-      // 🔥 UPDATED: Include journey and node tracking IDs
+      //  UPDATED: Include journey and node tracking IDs
       const result = await sendNotification({
         subscriberId: userState.subscriber_id,
         websiteId: journey.website_id,
-        journeyId: journey.id,     // 🔥 ADD THIS for journey tracking
-        nodeId: step.id,           // 🔥 ADD THIS for step tracking
+        journeyId: journey.id,     //  ADD THIS for journey tracking
+        nodeId: step.id,           //  ADD THIS for step tracking
         notification: {
           title: step.data.title,
           body: step.data.body,

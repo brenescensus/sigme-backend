@@ -31,7 +31,7 @@
 //       normalizedDomain = normalizedDomain.replace(/:\d+$/, '');
 //     }
 
-//     console.log('🔍 [Detect Website] Normalized domain:', normalizedDomain);
+//     console.log(' [Detect Website] Normalized domain:', normalizedDomain);
 
 //     // Find ALL matching websites, ordered by most recent first
 //     const { data: websites, error } = await supabase
@@ -72,7 +72,7 @@
 
 //     // Log for debugging
 //     console.log(' [Detect Website] VAPID Public Key available:', !!vapidPublicKey);
-//     console.log('🌐 [Detect Website] API URL:', apiUrl);
+//     console.log(' [Detect Website] API URL:', apiUrl);
 
 //     if (!vapidPublicKey) {
 //       console.error(' [Detect Website] VAPID public key not configured!');
@@ -143,7 +143,7 @@ async function handler(req: NextRequest) {
       normalizedDomain = normalizedDomain.replace(/:\d+$/, '');
     }
 
-    console.log('🔍 [Detect Website] Looking for domain:', normalizedDomain);
+    console.log(' [Detect Website] Looking for domain:', normalizedDomain);
 
     // Find ALL matching websites, ordered by most recent first
     const { data: websites, error } = await supabase

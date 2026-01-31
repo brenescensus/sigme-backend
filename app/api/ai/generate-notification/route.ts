@@ -306,14 +306,14 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
       );
     }
 
-    console.log('📝 [AI Generate] Prompt:', prompt.substring(0, 50) + '...');
-    console.log('🎯 [AI Generate] Goal:', goal, '| Tone:', tone);
+    console.log(' [AI Generate] Prompt:', prompt.substring(0, 50) + '...');
+    console.log(' [AI Generate] Goal:', goal, '| Tone:', tone);
 
     // Build context from historical data
     let context: NotificationContext | undefined;
 
     if (websiteId) {
-      console.log('🔍 [AI Generate] Building context for website:', websiteId);
+      console.log(' [AI Generate] Building context for website:', websiteId);
       
       const supabase = await getAuthenticatedClient(req);
       
@@ -399,8 +399,8 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
       ? normalizeSegment(await generator.suggestTargetSegment(context))
       : normalizeSegment(result.targetSegment);
 
-    console.log('⏰ [AI Generate] Optimal time:', optimalTime);
-    console.log('🎯 [AI Generate] Target segment:', targetSegment);
+    console.log('[AI Generate] Optimal time:', optimalTime);
+    console.log(' [AI Generate] Target segment:', targetSegment);
 
     // Return successful response
     return NextResponse.json({

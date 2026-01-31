@@ -75,7 +75,7 @@ export const PATCH = withAdmin(
 
     if (error) throw error;
 
-    console.log('🔄 Toggled coupon:', coupon.code, '→', newStatus ? 'active' : 'inactive', 'by', user.email);
+    console.log(' Toggled coupon:', coupon.code, '→', newStatus ? 'active' : 'inactive', 'by', user.email);
 
     // Log admin activity
     await logAdminActivity(

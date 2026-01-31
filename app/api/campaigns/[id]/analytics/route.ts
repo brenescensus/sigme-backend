@@ -52,7 +52,7 @@ export const GET = withAuth(
         console.error('[Campaign Analytics] Logs error:', logsError);
       }
 
-      // 🔥 NEW: Get click events from subscriber_events table
+      //  NEW: Get click events from subscriber_events table
       const { data: clickEvents, error: clickError } = await supabase
         .from('subscriber_events')
         .select(`
@@ -90,12 +90,12 @@ export const GET = withAuth(
         campaign_name: campaign.name,
         sent: sentCount,
         delivered: deliveredCount,
-        clicked: actualClickCount, // 🔥 Use actual count from events
+        clicked: actualClickCount, //  Use actual count from events
         failed: campaign.failed_count || 0,
         delivery_rate: parseFloat(deliveryRate.toFixed(2)),
         click_through_rate: parseFloat(clickThroughRate.toFixed(2)),
         unique_clickers: uniqueClickers,
-        // 🔥 NEW: Include detailed click data
+        //  NEW: Include detailed click data
         click_events: clickEvents || [],
       };
 

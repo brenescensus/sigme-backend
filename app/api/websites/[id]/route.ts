@@ -56,7 +56,7 @@ export const PATCH = withAuth(
       const params = await context.params;
       const websiteId = params.id;
       
-      console.log('📝 [WEBSITE PATCH] User:', user.email, 'Website:', websiteId);
+      console.log(' [WEBSITE PATCH] User:', user.email, 'Website:', websiteId);
       
       const body = await req.json();
       

@@ -854,7 +854,7 @@ export const POST = withAuth(async (req, user) => {
       //   .eq('code', normalizedCouponCode)
       //   .single();
 
-      // console.log('🔍 Coupon lookup result:', {
+      // console.log(' Coupon lookup result:', {
       //   found: !!coupon,
       //   error: couponError?.message,
       //   code_searched: normalizedCouponCode
@@ -890,7 +890,7 @@ export const POST = withAuth(async (req, user) => {
         .eq('code', normalizedCouponCode)
         .single();
 
-      console.log('🔍 Coupon lookup result:', {
+      console.log(' Coupon lookup result:', {
         found: !!coupon,
         error: couponError?.message,
         code_searched: normalizedCouponCode
@@ -1042,7 +1042,7 @@ export const POST = withAuth(async (req, user) => {
     // Generate unique reference
     const reference = `sigma_${user.id}_${Date.now()}`;
 
-    console.log('🔄 Initializing Paystack payment:', {
+    console.log(' Initializing Paystack payment:', {
       reference,
       amount: paystackAmount,
       currency,

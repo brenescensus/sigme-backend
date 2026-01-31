@@ -231,7 +231,7 @@
 // //       .eq('website_id', websiteId)
 // //       .gte('created_at', startDate.toISOString());
 
-// //     // 🔥 NEW: Get click events from subscriber_events
+// //     //  NEW: Get click events from subscriber_events
 // //     const { data: clickEvents } = await supabase
 // //       .from('subscriber_events')
 // //       .select('*')
@@ -240,11 +240,11 @@
 // //       .gte('created_at', startDate.toISOString());
 
 // //     const totalNotificationsSent = logs?.length || 0;
-// //     const totalClicked = clickEvents?.length || 0; // 🔥 Use actual click events
+// //     const totalClicked = clickEvents?.length || 0; //  Use actual click events
 // //     const clickedNotifications = logs?.filter(log => log.clicked_at).length || 0;
     
 // //     const avgClickRate = totalNotificationsSent > 0 
-// //       ? (totalClicked / totalNotificationsSent) * 100  // 🔥 Use actual clicks
+// //       ? (totalClicked / totalNotificationsSent) * 100  //  Use actual clicks
 // //       : 0;
 
 // //     // ... rest of existing code, but update to use totalClicked ...
@@ -257,7 +257,7 @@
 // //         new_subscribers: newSubscribers?.length || 0,
 // //         total_sent: totalNotificationsSent,
 // //         total_delivered: logs?.filter(l => l.delivered_at || l.status === 'delivered').length || 0,
-// //         total_clicked: totalClicked, // 🔥 Use actual click events
+// //         total_clicked: totalClicked, //  Use actual click events
 // //         total_failed: logs?.filter(l => l.status === 'failed').length || 0,
 // //         delivery_rate: totalNotificationsSent > 0 
 // //           ? ((logs?.filter(l => l.delivered_at || l.status === 'delivered').length || 0) / totalNotificationsSent * 100)
@@ -367,7 +367,7 @@
 //       .eq('website_id', websiteId)
 //       .gte('created_at', startDate.toISOString());
 
-//     // 🔥 Get click events from subscriber_events table
+//     //  Get click events from subscriber_events table
 //     const { data: clickEvents } = await supabase
 //       .from('subscriber_events')
 //       .select('*')
@@ -381,14 +381,14 @@
 //     const totalNotificationsSent = logs?.length || 0;
 //     const totalDelivered = logs?.filter(l => l.delivered_at || l.status === 'delivered').length || 0;
 //     const totalFailed = logs?.filter(l => l.status === 'failed').length || 0;
-//     const totalClicked = clickEvents?.length || 0; // 🔥 Use actual click events
+//     const totalClicked = clickEvents?.length || 0; //  Use actual click events
 
 //     const deliveryRate = totalNotificationsSent > 0 
 //       ? (totalDelivered / totalNotificationsSent) * 100 
 //       : 0;
 
 //     const clickThroughRate = totalNotificationsSent > 0 
-//       ? (totalClicked / totalNotificationsSent) * 100  // 🔥 Use actual clicks
+//       ? (totalClicked / totalNotificationsSent) * 100  //  Use actual clicks
 //       : 0;
 
 //     // Calculate previous period for comparison
@@ -467,10 +467,10 @@
 //         new_subscribers: newSubscribers?.length || 0,
 //         total_sent: totalNotificationsSent,
 //         total_delivered: totalDelivered,
-//         total_clicked: totalClicked, // 🔥 From subscriber_events
+//         total_clicked: totalClicked, //  From subscriber_events
 //         total_failed: totalFailed,
 //         delivery_rate: parseFloat(deliveryRate.toFixed(2)),
-//         click_through_rate: parseFloat(clickThroughRate.toFixed(2)), // 🔥 Based on actual clicks
+//         click_through_rate: parseFloat(clickThroughRate.toFixed(2)), //  Based on actual clicks
 //         subscribers_change_percent: 0,
 //         notifications_change_percent: parseFloat(notificationsChangePercent.toFixed(2)),
 //         click_rate_change_percent: 0,
@@ -513,7 +513,7 @@ async function handleGetAnalytics(
   try {
     // Await params in Next.js 15
     const { id: websiteId } = await context.params;
-    console.log('🌐 [Analytics] Website ID:', websiteId);
+    console.log(' [Analytics] Website ID:', websiteId);
     
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || '7d';
@@ -546,7 +546,7 @@ async function handleGetAnalytics(
     });
 
     // Verify website ownership
-    console.log('🔍 [Analytics] Verifying website ownership...');
+    console.log(' [Analytics] Verifying website ownership...');
     const { data: website, error: websiteError } = await supabase
       .from('websites')
       .select('*')
@@ -597,7 +597,7 @@ async function handleGetAnalytics(
     console.log('👥 [Analytics] Subscribers - Total:', totalSubscribers, 'Active:', activeSubscribers);
 
     // Get notification logs
-    console.log('📝 [Analytics] Fetching notification logs...');
+    console.log(' [Analytics] Fetching notification logs...');
     const { data: logs, error: logsError } = await supabase
       .from('notification_logs')
       .select('*')
@@ -607,7 +607,7 @@ async function handleGetAnalytics(
     if (logsError) {
       console.error(' [Analytics] Logs error:', logsError);
     } else {
-      console.log('📝 [Analytics] Found', logs?.length || 0, 'notification logs');
+      console.log(' [Analytics] Found', logs?.length || 0, 'notification logs');
     }
 
     // Get click events

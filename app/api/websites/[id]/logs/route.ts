@@ -165,7 +165,7 @@ export const GET = withAuth(
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      // 🔥 Get click events to merge with logs
+      //  Get click events to merge with logs
       const { data: clickEvents } = await supabase
         .from('subscriber_events')
         .select('*')

@@ -158,7 +158,7 @@
 // //       );
 // //     }
 
-// //     console.log('📋 [Journeys] Fetching journeys for website:', websiteId);
+// //     console.log(' [Journeys] Fetching journeys for website:', websiteId);
 // //     console.log(' [Journeys] User:', user.id);
 
 // //     // Fetch journeys
@@ -288,7 +288,7 @@
 // //       );
 // //     }
 
-// //     console.log('📝 [Journeys] Creating journey:', name);
+// //     console.log(' [Journeys] Creating journey:', name);
 
 // //     // Create journey
 // //     const { data: journey, error } = await supabase

@@ -83,7 +83,7 @@
 // //         { title: '🆕 Just Released', body: 'Be among the first to see this.', emoji: '🆕' },
 // //       ],
 // //       reminder: [
-// //         { title: '⏰ Don’t Forget!', body: 'You have [item/task] waiting. Complete it now.', emoji: '⏰' },
+// //         { title: 'Don’t Forget!', body: 'You have [item/task] waiting. Complete it now.', emoji: '⏰' },
 // //         { title: '👋 We Miss You', body: 'It has been a while! Come back and see.', emoji: '👋' },
 // //         { title: '🔔 Reminder', body: 'Your [item] is still in cart. Check out!', emoji: '🔔' },
 // //       ],
@@ -94,8 +94,8 @@
 // //       ],
 // //       announcement: [
 // //         { title: '📣 Big News!', body: 'Something exciting is happening.', emoji: '📣' },
-// //         { title: 'We are Growing', body: 'Thanks to you! See what’s next.', emoji: '🚀' },
-// //         { title: '💡 Important Update', body: 'Changes ahead. Learn more.', emoji: '💡' },
+// //         { title: 'We are Growing', body: 'Thanks to you! See what’s next.', emoji: '' },
+// //         { title: ' Important Update', body: 'Changes ahead. Learn more.', emoji: '' },
 // //       ],
 // //     };
 
@@ -466,9 +466,9 @@
 //         reason: 'Fallback suggestion - AI parsing encountered an issue',
 //       },
 //       {
-//         title: 'You\'re Invited! 🚀',
+//         title: 'You\'re Invited! ',
 //         body: 'Join us for an exclusive experience. Don\'t wait!',
-//         emoji: '🚀',
+//         emoji: '',
 //         reason: 'Fallback suggestion - AI parsing encountered an issue',
 //       },
 //     ];
@@ -782,7 +782,7 @@ Generate exactly 3 notification suggestions in this JSON format:
   {
     "title": "Third notification title",
     "body": "Third notification body",
-    "emoji": "🚀",
+    "emoji": "",
     "reason": "Why this works"
   }
 ]`;
@@ -903,9 +903,9 @@ Return ONLY valid JSON array format as specified above. No additional text.`;
         reason: 'Fallback suggestion - Personalized and inviting',
       },
       {
-        title: `You're Invited! 🚀`,
+        title: `You're Invited! `,
         body: `Exclusive ${keyword} just for you. Don't wait!`,
-        emoji: '🚀',
+        emoji: '',
         reason: 'Fallback suggestion - Exclusive and action-oriented',
       },
     ];

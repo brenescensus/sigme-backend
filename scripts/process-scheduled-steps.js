@@ -11,8 +11,8 @@ const http = require('http');
 const BACKEND_URL = process.env.BACKEND_URL;
 const API_KEY = process.env.INTERNAL_API_KEY;
 
-console.log('🔄 [Processor] Starting journey step processing...');
-console.log('📋 [Processor] Environment check:');
+console.log(' [Processor] Starting journey step processing...');
+console.log(' [Processor] Environment check:');
 console.log(`   - NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL ? ' Set' : ' NOT SET'}`);
 console.log(`   - INTERNAL_API_KEY: ${API_KEY ? ' Set' : '  Optional (not set)'}`);
 
@@ -30,7 +30,7 @@ if (!BACKEND_URL) {
 let url;
 try {
   url = new URL(`${BACKEND_URL}/api/internal/process-journeys`);
-  console.log(`📍 [Processor] Target URL: ${url.href}`);
+  console.log(` [Processor] Target URL: ${url.href}`);
 } catch (error) {
   console.error(`\n [Processor] Invalid BACKEND_URL: ${BACKEND_URL}`);
   console.error(`Error: ${error.message}`);

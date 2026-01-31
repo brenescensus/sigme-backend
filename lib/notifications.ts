@@ -8,9 +8,9 @@
 // interface SendNotificationParams {
 //   subscriberId: string;
 //   websiteId: string;
-//   campaignId?: string;  // 🔥 ADD THIS
-//   journeyId?: string;   // 🔥 ADD THIS
-//   nodeId?: string;      // 🔥 ADD THIS (for journey steps)
+//   campaignId?: string;  //  ADD THIS
+//   journeyId?: string;   //  ADD THIS
+//   nodeId?: string;      //  ADD THIS (for journey steps)
 //   notification: {
 //     title: string;
 //     body: string;
@@ -23,7 +23,7 @@
 // interface NotificationResult {
 //   success: boolean;
 //   error?: string;
-//   logId?: string;  // 🔥 ADD THIS to track the log entry
+//   logId?: string;  //  ADD THIS to track the log entry
 // }
 
 // /**
@@ -63,7 +63,7 @@
 //       throw new Error('VAPID keys not configured for website');
 //     }
 
-//     // 🔥 CREATE LOG ENTRY FIRST (before sending)
+//     //  CREATE LOG ENTRY FIRST (before sending)
 //     const { data: logEntry, error: logError } = await supabase
 //       .from('notification_logs')
 //       .insert({
@@ -97,7 +97,7 @@
 //       },
 //     };
 
-//     // 🔥 ENHANCED: Include tracking data in notification payload
+//     //  ENHANCED: Include tracking data in notification payload
 //     const payload = JSON.stringify({
 //       title: notification.title,
 //       body: notification.body,
@@ -105,7 +105,7 @@
 //       image: notification.image,
 //       data: {
 //         ...notification.data,
-//         // 🔥 Add tracking IDs to notification data
+//         //  Add tracking IDs to notification data
 //         subscriber_id: subscriberId,
 //         campaign_id: campaignId || null,
 //         journey_id: journeyId || null,
@@ -117,7 +117,7 @@
 //     // Send notification
 //     await webpush.sendNotification(pushSubscription, payload);
 
-//     // 🔥 UPDATE log entry to delivered
+//     //  UPDATE log entry to delivered
 //     if (logEntry) {
 //       await supabase
 //         .from('notification_logs')
@@ -165,9 +165,9 @@ const supabase = createServiceClient();
 interface SendNotificationParams {
   subscriberId: string;
   websiteId: string;
-  campaignId?: string;  // 🔥 ADD THIS
-  journeyId?: string;   // 🔥 ADD THIS
-  nodeId?: string;      // 🔥 ADD THIS (for journey steps)
+  campaignId?: string;  //  ADD THIS
+  journeyId?: string;   //  ADD THIS
+  nodeId?: string;      //  ADD THIS (for journey steps)
   notification: {
     title: string;
     body: string;
@@ -180,7 +180,7 @@ interface SendNotificationParams {
 interface NotificationResult {
   success: boolean;
   error?: string;
-  logId?: string;  // 🔥 ADD THIS to track the log entry
+  logId?: string;  //  ADD THIS to track the log entry
 }
 
 /**
@@ -220,7 +220,7 @@ export async function sendNotification(
       throw new Error('VAPID keys not configured for website');
     }
 
-    // 🔥 CREATE LOG ENTRY FIRST (before sending)
+    //  CREATE LOG ENTRY FIRST (before sending)
     const { data: logEntry, error: logError } = await supabase
       .from('notification_logs')
       .insert({
@@ -254,7 +254,7 @@ export async function sendNotification(
       },
     };
 
-    // 🔥 ENHANCED: Include tracking data in notification payload
+    //  ENHANCED: Include tracking data in notification payload
     const payload = JSON.stringify({
       title: notification.title,
       body: notification.body,
@@ -262,7 +262,7 @@ export async function sendNotification(
       image: notification.image,
       data: {
         ...notification.data,
-        // 🔥 Add tracking IDs to notification data
+        //  Add tracking IDs to notification data
         subscriber_id: subscriberId,
         campaign_id: campaignId || null,
         journey_id: journeyId || null,
@@ -274,7 +274,7 @@ export async function sendNotification(
     // Send notification
     await webpush.sendNotification(pushSubscription, payload);
 
-    // 🔥 UPDATE log entry to delivered
+    //  UPDATE log entry to delivered
     if (logEntry) {
       await supabase
         .from('notification_logs')

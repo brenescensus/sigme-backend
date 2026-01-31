@@ -14,7 +14,7 @@
 
 // async function cleanupStuckJourneys() {
 //   console.log('🧹 Starting stuck journeys cleanup');
-//   console.log(`⏰ Current time: ${new Date().toISOString()}`);
+//   console.log(`Current time: ${new Date().toISOString()}`);
 
 //   try {
 //     // Find stuck active journeys (active for > 24 hours with no processing)
@@ -36,14 +36,14 @@
 //       return;
 //     }
 
-//     console.log(`📋 Found ${stuckJourneys.length} potentially stuck journeys`);
+//     console.log(` Found ${stuckJourneys.length} potentially stuck journeys`);
 
 //     let fixedCount = 0;
 //     let errorCount = 0;
 
 //     for (const journey of stuckJourneys) {
 //       try {
-//         console.log(`\n🔧 Checking journey state ${journey.id}`);
+//         console.log(`\n Checking journey state ${journey.id}`);
 //         console.log(`  Last processed: ${journey.last_processed_at || 'Never'}`);
 //         console.log(`  Current step: ${journey.current_step_id}`);
 
@@ -199,13 +199,13 @@ async function cleanupStuckJourneys() {
       return;
     }
 
-    console.log(`📋 Found ${stuckStates.length} stuck journey states`);
+    console.log(` Found ${stuckStates.length} stuck journey states`);
 
     let cleaned = 0;
 
     for (const state of stuckStates) {
       try {
-        console.log(`🔧 Cleaning up state ${state.id} (last processed: ${state.last_processed_at})`);
+        console.log(` Cleaning up state ${state.id} (last processed: ${state.last_processed_at})`);
 
         // Exit the journey with reason
         const { error: exitError } = await supabase.rpc('exit_journey', {

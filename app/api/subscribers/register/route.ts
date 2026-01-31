@@ -11,7 +11,7 @@
 // //     const body = await req.json();
 // //     const { websiteId, endpoint, p256dh, auth, platform, browser, os } = body;
 
-// //     console.log('📝 [Register Subscriber] Request for website:', websiteId);
+// //     console.log(' [Register Subscriber] Request for website:', websiteId);
 
 // //     // Validate required fields
 // //     if (!websiteId || !endpoint || !p256dh || !auth) {
@@ -53,12 +53,12 @@
 // //     const ipAddress = getClientIP(req.headers);
 // //     const userAgent = req.headers.get('user-agent') || '';
 
-// //     console.log('🌐 [Register Subscriber] Client IP:', ipAddress);
+// //     console.log(' [Register Subscriber] Client IP:', ipAddress);
 
 // //     // Fetch geolocation and device metadata
 // //     const metadata = await getSubscriberMetadata(ipAddress, userAgent);
 
-// //     console.log('📍 [Register Subscriber] Metadata:', {
+// //     console.log(' [Register Subscriber] Metadata:', {
 // //       city: metadata.city,
 // //       country: metadata.country,
 // //       device: metadata.device_type,
@@ -75,7 +75,7 @@
 
 // //     if (existing) {
 // //       if (existing.status === 'active') {
-// //         console.log('ℹ️ [Register Subscriber] Already subscribed:', existing.id);
+// //         console.log(' [Register Subscriber] Already subscribed:', existing.id);
 
 // //         // Update geo data even for existing subscribers
 // //         await supabase
@@ -161,7 +161,7 @@
 // //     }
 
 // //     console.log(' [Register Subscriber] New subscriber created:', newSubscriber.id);
-// //     console.log('📍 [Register Subscriber] Location:', newSubscriber.city, newSubscriber.country);
+// //     console.log(' [Register Subscriber] Location:', newSubscriber.city, newSubscriber.country);
 
 // //     return NextResponse.json(
 // //       {
@@ -212,7 +212,7 @@
 //     const body = await req.json();
 //     const { websiteId, endpoint, p256dh, auth, platform, browser, os } = body;
 
-//     console.log('📝 [Register Subscriber] Request for website:', websiteId);
+//     console.log(' [Register Subscriber] Request for website:', websiteId);
 
 //     // Validate required fields
 //     if (!websiteId || !endpoint || !p256dh || !auth) {
@@ -254,12 +254,12 @@
 //     const ipAddress = getClientIP(req.headers);
 //     const userAgent = req.headers.get('user-agent') || '';
 
-//     console.log('🌐 [Register Subscriber] Client IP:', ipAddress);
+//     console.log(' [Register Subscriber] Client IP:', ipAddress);
 
 //     // Fetch geolocation and device metadata
 //     const metadata = await getSubscriberMetadata(ipAddress, userAgent);
 
-//     console.log('📍 [Register Subscriber] Metadata:', {
+//     console.log(' [Register Subscriber] Metadata:', {
 //       city: metadata.city,
 //       country: metadata.country,
 //       device: metadata.device_type,
@@ -276,7 +276,7 @@
 
 //     if (existing) {
 //       if (existing.status === 'active') {
-//         console.log('ℹ️ [Register Subscriber] Already subscribed:', existing.id);
+//         console.log(' [Register Subscriber] Already subscribed:', existing.id);
 
 //         // Update geo data even for existing subscribers
 //         await supabase
@@ -385,7 +385,7 @@
 //     }
 
 //     console.log(' [Register Subscriber] New subscriber created:', newSubscriber.id);
-//     console.log('📍 [Register Subscriber] Location:', newSubscriber.city, newSubscriber.country);
+//     console.log(' [Register Subscriber] Location:', newSubscriber.city, newSubscriber.country);
 
 //     //  CRITICAL: TRACK SUBSCRIPTION EVENT
 //     console.log(' [Register Subscriber] Tracking user_subscribed event...');
@@ -464,7 +464,7 @@ async function handler(req: NextRequest) {
     const body = await req.json();
     const { websiteId, endpoint, p256dh, auth, platform, browser, os } = body;
 
-    console.log('📝 [Register Subscriber] Request for website:', websiteId);
+    console.log(' [Register Subscriber] Request for website:', websiteId);
 
     if (!websiteId || !endpoint || !p256dh || !auth) {
       console.log(' [Register Subscriber] Missing required fields');
@@ -502,11 +502,11 @@ async function handler(req: NextRequest) {
     const ipAddress = getClientIP(req.headers);
     const userAgent = req.headers.get('user-agent') || '';
 
-    console.log('🌐 [Register Subscriber] Client IP:', ipAddress);
+    console.log(' [Register Subscriber] Client IP:', ipAddress);
 
     const metadata = await getSubscriberMetadata(ipAddress, userAgent);
 
-    console.log('📍 [Register Subscriber] Metadata:', {
+    console.log(' [Register Subscriber] Metadata:', {
       city: metadata.city,
       country: metadata.country,
       device: metadata.device_type,
@@ -523,7 +523,7 @@ async function handler(req: NextRequest) {
 
     if (existing) {
       if (existing.status === 'active') {
-        console.log('ℹ️ [Register Subscriber] Already subscribed:', existing.id);
+        console.log(' [Register Subscriber] Already subscribed:', existing.id);
 
         // Update geo data
         await supabase
@@ -661,7 +661,7 @@ async function handler(req: NextRequest) {
     }
 
     console.log(' [Register Subscriber] New subscriber created:', newSubscriber.id);
-    console.log('📍 [Register Subscriber] Location:', newSubscriber.city, newSubscriber.country);
+    console.log(' [Register Subscriber] Location:', newSubscriber.city, newSubscriber.country);
 
     // Track subscription event for new subscriber
     console.log(' [Register Subscriber] Tracking user_subscribed event...');

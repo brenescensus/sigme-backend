@@ -34,7 +34,7 @@ export const GET = withAuth(
     try {
       const supabase = await getAuthenticatedClient(req);
 
-      console.log('📋 [Team] Fetching team members for user:', user.id);
+      console.log(' [Team] Fetching team members for user:', user.id);
 
       // Use the RPC function from your database
       const { data: members, error } = await supabase

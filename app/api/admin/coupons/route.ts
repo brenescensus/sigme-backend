@@ -31,7 +31,7 @@ export const GET = withAdmin(async (req: NextRequest, user: AdminAuthUser) => {
     redemptions_count: coupon.redemptions?.[0]?.count || 0,
   }));
 
-  console.log('📋 Fetched', couponsWithStats?.length || 0, 'coupons by', user.email);
+  console.log(' Fetched', couponsWithStats?.length || 0, 'coupons by', user.email);
 
   return NextResponse.json({
     success: true,

@@ -23,7 +23,7 @@
 //       if (error) {
 //         // If no subscription exists, create a default free one
 //         if (error.code === 'PGRST116') {
-//           console.log('📝 [Settings] No subscription found, creating free plan');
+//           console.log(' [Settings] No subscription found, creating free plan');
           
 //           const { data: newSub, error: createError } = await supabase
 //             .from('user_subscriptions')
@@ -134,7 +134,7 @@ export const GET = withAuth(
 
       // If no subscription exists, create a default free one
       if (!subscription) {
-        console.log('📋 [Settings] No subscription found, creating free tier');
+        console.log(' [Settings] No subscription found, creating free tier');
         
         const { data: newSub, error: createError } = await supabase
           .from('user_subscriptions')

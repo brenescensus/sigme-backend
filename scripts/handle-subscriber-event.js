@@ -15,7 +15,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
 console.log(' [Event Handler] Processing subscriber event...');
 console.log(` [Event Handler] Subscriber: ${subscriberId}`);
-console.log(`🎯 [Event Handler] Event: ${eventName}`);
+console.log(` [Event Handler] Event: ${eventName}`);
 
 // Validate inputs
 if (!subscriberId || !eventName) {
@@ -29,7 +29,7 @@ let eventData = {};
 try {
   if (eventDataJson) {
     eventData = JSON.parse(eventDataJson);
-    console.log(`📋 [Event Handler] Event data:`, eventData);
+    console.log(` [Event Handler] Event data:`, eventData);
   }
 } catch (error) {
   console.error(' [Event Handler] Failed to parse event_data JSON:', error.message);
@@ -60,7 +60,7 @@ const options = {
   timeout: 30000, // 30 second timeout
 };
 
-console.log(`📍 [Event Handler] Sending to: ${APP_URL}/api/events/subscriber`);
+console.log(` [Event Handler] Sending to: ${APP_URL}/api/events/subscriber`);
 
 const req = client.request(options, (res) => {
   let data = '';
