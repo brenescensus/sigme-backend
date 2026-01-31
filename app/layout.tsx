@@ -6,7 +6,7 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-import '@/lib/init';
+// import '@/lib/init';
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
