@@ -1954,7 +1954,7 @@ export async function getGeolocation(ip: string): Promise<GeoLocation> {
 
   // Step 3: Handle private/local IPs
   if (isPrivateIP(normalizedIP)) {
-    console.log(`[Geo] 🏠 Private/Local IP detected (cannot be geolocated)`);
+    console.log(`[Geo]  Private/Local IP detected (cannot be geolocated)`);
     
     //  CRITICAL FIX: Only return mock data in development
     if (process.env.NODE_ENV === 'development') {

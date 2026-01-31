@@ -584,7 +584,7 @@
     for (let script of scripts) {
       if (script.src && script.src.includes('sigme.js')) {
         const url = new URL(script.src);
-        console.log('[Sigme] 📍 Detected script URL:', url.origin);
+        console.log('[Sigme]  Detected script URL:');
         return url.origin;
       }
     }
@@ -600,8 +600,8 @@
   //  Service worker MUST be on same origin as the website
   const SW_PATH = '/sigme-universal-sw.js';
 
-  console.log('[Sigme] API URL:', SIGME_API);
-  console.log('[Sigme] 🔧 SW Path:', SW_PATH);
+  // console.log('[Sigme] API URL:', SIGME_API);
+  // console.log('[Sigme] SW Path:', SW_PATH);
 
   // ============================================
   // ENVIRONMENT CHECKS
@@ -668,14 +668,14 @@
    */
   function initPageTracking() {
     if (pageTrackingInitialized) {
-      console.log('[Sigme] ℹ️ Page tracking already initialized');
+      console.log('[Sigme] ℹ Page tracking already initialized');
       return;
     }
 
     const subscriberId = localStorage.getItem('sigme_subscriber_id');
     
     if (!subscriberId) {
-      console.log('[Sigme] ℹ️ No subscriber ID yet, page tracking will start after subscription');
+      console.log('[Sigme] ℹ No subscriber ID yet, page tracking will start after subscription');
       return;
     }
 
@@ -719,7 +719,7 @@
     const pageTitle = document.title;
     const pagePath = window.location.pathname;
 
-    console.log('[Sigme] 📄 Tracking page view:', pagePath);
+    console.log('[Sigme]  Tracking page view:', pagePath);
 
     try {
       const response = await fetch(`${SIGME_API}/api/events/track`, {
@@ -813,7 +813,7 @@
       // Add API URL to config so service worker knows where to send requests
       config.apiUrl = SIGME_API;
 
-      console.log('[Sigme] 🔧 Registering service worker...');
+      console.log('[Sigme]  Registering service worker...');
       
       // Check if service worker file exists
       try {
@@ -851,7 +851,7 @@
         console.log('[Sigme] Notification permission not requested yet');
         showSubscribePrompt(config, registration);
       } else {
-        console.log('[Sigme] 🚫 Notifications denied by user');
+        console.log('[Sigme]  Notifications denied by user');
       }
 
       //  START PAGE TRACKING IF ALREADY SUBSCRIBED
@@ -865,7 +865,7 @@
       console.error('[Sigme]  Initialization failed:', err);
       
       if (err.message.includes('ServiceWorker')) {
-        console.error('[Sigme] 💡 Make sure sigme-universal-sw.js exists in your /public folder');
+        console.error('[Sigme]  Make sure sigme-universal-sw.js exists in your /public folder');
         console.error('[Sigme]  Download from: ' + SIGME_API + '/sigme-universal-sw.js');
       }
     }

@@ -519,14 +519,14 @@ self.addEventListener('message', async (event) => {
   const { type, config } = event.data;
 
   if (type === 'SIGME_INIT') {
-    console.log('[Sigme SW Core]  Received configuration:', config);
+    // console.log('[Sigme SW Core]  Received configuration:', config);
     websiteConfig = config;
     
     // Store config in IndexedDB for persistence
     try {
       const db = await openConfigDB();
       await saveConfig(db, config);
-      console.log('[Sigme SW Core]  Config saved to IndexedDB');
+      // console.log('[Sigme SW Core]  Config saved to IndexedDB');
     } catch (err) {
       console.warn('[Sigme SW Core]  Could not save config to IndexedDB:', err);
     }
