@@ -1728,7 +1728,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import { sendWebPushNotification, type WebPushSubscription, type NotificationPayload } from '@/lib/push/web-push';
-
+import webpush from 'web-push';
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -2252,6 +2252,112 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
 // NODE PROCESSORS
 // ============================================================================
 
+// async function processSendNotification(
+//   state: JourneyState,
+//   node: JourneyNode,
+//   flowDefinition: FlowDefinition
+// ): Promise<void> {
+//   console.log('📨 [Processor] Sending notification');
+  
+//   await logExecution(
+//     state.journey_id,
+//     state.id,
+//     'notification_sending',
+//     `Sending notification: ${node.data.title}`,
+//     { title: node.data.title, body: node.data.body, url: node.data.url }
+//   );
+
+//   try {
+//     const { data: subscriber, error: subError } = await supabase
+//       .from('subscribers')
+//       .select('*')
+//       .eq('id', state.subscriber_id)
+//       .single();
+
+//     if (subError || !subscriber) {
+//       throw new Error('Subscriber not found');
+//     }
+
+//     const { data: website } = await supabase
+//       .from('websites')
+//       .select('*')
+//       .eq('id', subscriber.website_id)
+//       .single();
+
+//     if (!website) {
+//       throw new Error('Website not found');
+//     }
+
+//     const subscription: WebPushSubscription = {
+//       endpoint: subscriber.endpoint!,
+//       keys: {
+//         p256dh: subscriber.p256dh_key!,
+//         auth: subscriber.auth_key!,
+//       },
+//     };
+
+//     const notificationPayload: NotificationPayload = {
+//       title: node.data.title || 'Notification',
+//       body: node.data.body || '',
+//       icon: node.data.icon_url || (website.notification_branding as any)?.logo_url,
+//       url: node.data.url || node.data.click_url || '/',
+//       branding: website.notification_branding as any,
+//     };
+
+//     const result = await sendWebPushNotification(subscription, notificationPayload);
+
+//     await supabase.from('notification_logs').insert({
+//       website_id: subscriber.website_id,
+//       subscriber_id: subscriber.id,
+//       journey_id: state.journey_id,
+//       journey_step_id: node.id,
+//       user_journey_state_id: state.id,
+//       status: result.success ? 'sent' : 'failed',
+//       platform: 'web',
+//       sent_at: new Date().toISOString(),
+//       error_message: result.error,
+//     });
+
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       result.success ? 'notification_sent' : 'notification_failed',
+//       { 
+//         title: notificationPayload.title,
+//         error: result.error 
+//       },
+//       node.id
+//     );
+
+//     await logExecution(
+//       state.journey_id,
+//       state.id,
+//       'notification_sent',
+//       `Notification sent successfully`,
+//       { title: node.data.title, success: result.success }
+//     );
+
+//     await moveToNextNode(state, flowDefinition, node.id);
+
+//   } catch (error: any) {
+//     console.error('❌ [Processor] Notification error:', error.message);
+    
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       'notification_error',
+//       { error: error.message },
+//       node.id
+//     );
+    
+//     await moveToNextNode(state, flowDefinition, node.id);
+//   }
+// }
+
+// lib/journeys/processor.ts - Line ~500
+
 async function processSendNotification(
   state: JourneyState,
   node: JourneyNode,
@@ -2296,36 +2402,94 @@ async function processSendNotification(
       },
     };
 
-    const notificationPayload: NotificationPayload = {
+    // ✅ CREATE NOTIFICATION LOG FIRST
+    const { data: notificationLog, error: logError } = await supabase
+      .from('notification_logs')
+      .insert({
+        website_id: subscriber.website_id,
+        subscriber_id: subscriber.id,
+        journey_id: state.journey_id,
+        journey_step_id: node.id,
+        user_journey_state_id: state.id,
+        status: 'sent',
+        platform: 'web',
+        sent_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (logError || !notificationLog) {
+      throw new Error('Failed to create notification log');
+    }
+
+    console.log('📝 [Processor] Created notification log:', notificationLog.id);
+
+    // Parse branding
+    const branding = website.notification_branding as any;
+
+    // ✅ FIXED: Include ALL required fields like campaigns do
+    const payload = {
       title: node.data.title || 'Notification',
       body: node.data.body || '',
-      icon: node.data.icon_url || (website.notification_branding as any)?.logo_url,
-      url: node.data.url || node.data.click_url || '/',
-      branding: website.notification_branding as any,
+      icon: branding?.logo_url || node.data.icon_url || '/icon-192x192.png',
+      badge: '/badge-96x96.png',
+      image: node.data.image_url || undefined,
+      data: {
+        url: node.data.url || node.data.click_url || '/',
+        subscriber_id: subscriber.id,        // ✅ CRITICAL FOR CLICK TRACKING
+        campaign_id: null,                   // ✅ NULL for journeys
+        journey_id: state.journey_id,        // ✅ CRITICAL FOR CLICK TRACKING
+        journey_step_id: node.id,            // ✅ Track which step sent it
+        user_journey_state_id: state.id,     // ✅ Track user's journey state
+        timestamp: new Date().toISOString(),
+      },
+      // ✅ Include branding like campaigns
+      branding: {
+        primary_color: branding?.primary_color || '#667eea',
+        secondary_color: branding?.secondary_color || '#764ba2',
+        logo_url: branding?.logo_url,
+        font_family: branding?.font_family || 'Inter',
+        button_style: branding?.button_style || 'rounded',
+        notification_position: branding?.notification_position || 'top-right',
+        animation_style: branding?.animation_style || 'slide',
+        show_logo: branding?.show_logo ?? true,
+        show_branding: branding?.show_branding ?? true,
+      },
+      tag: notificationLog.id,  // ✅ Use notification ID as tag for click tracking
+      requireInteraction: false,
     };
 
-    const result = await sendWebPushNotification(subscription, notificationPayload);
-
-    await supabase.from('notification_logs').insert({
-      website_id: subscriber.website_id,
-      subscriber_id: subscriber.id,
-      journey_id: state.journey_id,
-      journey_step_id: node.id,
-      user_journey_state_id: state.id,
-      status: result.success ? 'sent' : 'failed',
-      platform: 'web',
-      sent_at: new Date().toISOString(),
-      error_message: result.error,
+    console.log('📤 [Processor] Sending notification with payload:', {
+      title: payload.title,
+      hasSubscriberId: !!payload.data.subscriber_id,
+      hasJourneyId: !!payload.data.journey_id,
+      notificationId: notificationLog.id,
     });
 
+    // Send via web push
+    await webpush.sendNotification(subscription, JSON.stringify(payload));
+
+    console.log('✅ [Processor] Notification sent successfully');
+
+    // Update notification log
+    await supabase
+      .from('notification_logs')
+      .update({
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      })
+      .eq('id', notificationLog.id);
+
+    // Log journey event
     await logJourneyEvent(
       state.journey_id,
       state.subscriber_id,
       state.id,
-      result.success ? 'notification_sent' : 'notification_failed',
+      'notification_sent',
       { 
-        title: notificationPayload.title,
-        error: result.error 
+        title: payload.title,
+        notification_id: notificationLog.id,
+        step_id: node.id,
       },
       node.id
     );
@@ -2335,9 +2499,10 @@ async function processSendNotification(
       state.id,
       'notification_sent',
       `Notification sent successfully`,
-      { title: node.data.title, success: result.success }
+      { title: node.data.title, notification_id: notificationLog.id }
     );
 
+    // Move to next node
     await moveToNextNode(state, flowDefinition, node.id);
 
   } catch (error: any) {
@@ -2352,6 +2517,7 @@ async function processSendNotification(
       node.id
     );
     
+    // Still move to next node even on error
     await moveToNextNode(state, flowDefinition, node.id);
   }
 }
