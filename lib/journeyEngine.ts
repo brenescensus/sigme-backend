@@ -1979,7 +1979,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
-import { scheduleTask, cancelScheduledTasks } from './scheduler';
+import { scheduleTask, cancelScheduledTasks } from './journeys/scheduler';
 import { sendNotification } from './notifications';
 
 // Create service role client for backend operations
