@@ -173,7 +173,7 @@
 // //         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
 // //           ${branding.logo_url 
 // //             ? `<img src="${branding.logo_url}" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px;">` 
-// //             : '🔔'
+// //             : ''
 // //           }
 // //           <div>
 // //             <div style="font-weight: 600; font-size: 16px; color: #1a1a1a;">
@@ -907,7 +907,7 @@
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
           ${branding.logo_url 
             ? `<img src="${branding.logo_url}" alt="Logo" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">` 
-            : '<div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🔔</div>'
+            : '<div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px;"></div>'
           }
           <div style="flex: 1;">
             <div style="font-weight: 600; font-size: 16px; color: #1a1a1a;">

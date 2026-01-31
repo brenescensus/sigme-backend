@@ -9,15 +9,15 @@ const supabase = createClient(
 );
 
 export async function POST(request: NextRequest) {
-  console.log('🔔 [Track Delivery] Notification delivery received');
+  console.log(' [Track Delivery] Notification delivery received');
 
   try {
     const body = await request.json();
     const { notification_id, subscriber_id, journey_id, delivered_at } = body;
 
-    console.log('🔔 [Track Delivery] Notification ID:', notification_id);
-    console.log('🔔 [Track Delivery] Subscriber ID:', subscriber_id);
-    console.log('🔔 [Track Delivery] Journey ID:', journey_id);
+    console.log(' [Track Delivery] Notification ID:', notification_id);
+    console.log(' [Track Delivery] Subscriber ID:', subscriber_id);
+    console.log(' [Track Delivery] Journey ID:', journey_id);
 
     if (!notification_id) {
       return NextResponse.json(
