@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ✅ UPDATE NOTIFICATION LOG WITH DELIVERED TIMESTAMP
+    //  UPDATE NOTIFICATION LOG WITH DELIVERED TIMESTAMP
     const { error: updateError } = await supabase
       .from('notification_logs')
       .update({
@@ -36,18 +36,18 @@ export async function POST(request: NextRequest) {
       .eq('id', notification_id);
 
     if (updateError) {
-      console.error('❌ [Track Delivery] Database error:', updateError);
+      console.error(' [Track Delivery] Database error:', updateError);
       return NextResponse.json(
         { success: false, error: updateError.message },
         { status: 500 }
       );
     }
 
-    console.log('✅ [Track Delivery] Delivery tracked successfully');
+    console.log(' [Track Delivery] Delivery tracked successfully');
 
-    // ✅ LOG JOURNEY EVENT IF THIS IS A JOURNEY NOTIFICATION
+    //  LOG JOURNEY EVENT IF THIS IS A JOURNEY NOTIFICATION
     if (journey_id && subscriber_id) {
-      console.log('📊 [Track Delivery] Logging journey event...');
+      console.log(' [Track Delivery] Logging journey event...');
 
       // Get the user_journey_state_id from notification_logs
       const { data: notificationLog } = await supabase
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        console.log('✅ [Track Delivery] Journey event logged');
+        console.log(' [Track Delivery] Journey event logged');
       }
     }
 
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('❌ [Track Delivery] Error:', error);
+    console.error(' [Track Delivery] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

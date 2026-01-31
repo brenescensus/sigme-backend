@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     console.log('[Event Track] 🎯 Request received');
     
     const body = await request.json();
-    console.log('[Event Track] 📦 Body:', JSON.stringify(body, null, 2));
+    console.log('[Event Track]  Body:', JSON.stringify(body, null, 2));
     
     const { 
       subscriber_id, 

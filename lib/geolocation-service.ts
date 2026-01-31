@@ -461,7 +461,7 @@
 
 // // /**
 // //  * Get mock data for development
-// //  * ✅ ALWAYS returns valid data structure
+// //  *  ALWAYS returns valid data structure
 // //  */
 // // function getMockGeoData(ip: string): GeoLocation {
 // //   console.log(`[Geo] Using mock data for development IP: ${ip}`);
@@ -545,13 +545,13 @@
 // //         region: data.regionName || data.region || null,
 // //       };
       
-// //       console.log(`[ip-api.com] ✅ Success: ${result.city}, ${result.country}`);
+// //       console.log(`[ip-api.com]  Success: ${result.city}, ${result.country}`);
 // //       return result;
 // //     }
 
 // //     throw new Error('Unexpected response format');
 // //   } catch (error: any) {
-// //     console.error(`[ip-api.com] ❌ Error:`, error.message);
+// //     console.error(`[ip-api.com]  Error:`, error.message);
 // //     throw error;
 // //   }
 // // }
@@ -595,10 +595,10 @@
 // //       region: data.region || null,
 // //     };
     
-// //     console.log(`[ipapi.co] ✅ Success: ${result.city}, ${result.country}`);
+// //     console.log(`[ipapi.co]  Success: ${result.city}, ${result.country}`);
 // //     return result;
 // //   } catch (error: any) {
-// //     console.error(`[ipapi.co] ❌ Error:`, error.message);
+// //     console.error(`[ipapi.co]  Error:`, error.message);
 // //     throw error;
 // //   }
 // // }
@@ -647,10 +647,10 @@
 // //       region: data.state_prov || null,
 // //     };
     
-// //     console.log(`[ipgeolocation.io] ✅ Success: ${result.city}, ${result.country}`);
+// //     console.log(`[ipgeolocation.io]  Success: ${result.city}, ${result.country}`);
 // //     return result;
 // //   } catch (error: any) {
-// //     console.error(`[ipgeolocation.io] ❌ Error:`, error.message);
+// //     console.error(`[ipgeolocation.io]  Error:`, error.message);
 // //     throw error;
 // //   }
 // // }
@@ -668,13 +668,13 @@
 // // //   // 1. Check cache first
 // // //   const cached = geoCache.get(ip);
 // // //   if (cached) {
-// // //     console.log(`[Geo] ✅ Returning cached data`);
+// // //     console.log(`[Geo]  Returning cached data`);
 // // //     return cached;
 // // //   }
 
 // // //   // 2. Validate IP
 // // //   if (!isValidIP(ip)) {
-// // //     console.log(`[Geo] ⚠️ Invalid IP format: ${ip}`);
+// // //     console.log(`[Geo]  Invalid IP format: ${ip}`);
 // // //     return { country: null, city: null };
 // // //   }
 
@@ -707,14 +707,14 @@
       
 // // //       // Validate we got useful data
 // // //       if (geoData.country || geoData.city) {
-// // //         console.log(`[Geo] ✅ Success with ${provider.name}: ${geoData.city}, ${geoData.country}`);
+// // //         console.log(`[Geo]  Success with ${provider.name}: ${geoData.city}, ${geoData.country}`);
 // // //         geoCache.set(ip, geoData);
 // // //         return geoData;
 // // //       } else {
-// // //         console.log(`[Geo] ⚠️ ${provider.name} returned empty data`);
+// // //         console.log(`[Geo]  ${provider.name} returned empty data`);
 // // //       }
 // // //     } catch (error: any) {
-// // //       console.error(`[Geo] ❌ ${provider.name} failed:`, error.message);
+// // //       console.error(`[Geo]  ${provider.name} failed:`, error.message);
 // // //       lastError = error;
       
 // // //       // If it's a rate limit error, try next provider immediately
@@ -729,7 +729,7 @@
 // // //   }
 
 // // //   // 5. All providers failed
-// // //   console.error(`[Geo] ❌ All providers failed. Last error:`, lastError?.message);
+// // //   console.error(`[Geo]  All providers failed. Last error:`, lastError?.message);
   
 // // //   // In development, return mock data as fallback
 // // //   if (process.env.NODE_ENV === 'development') {
@@ -755,15 +755,15 @@
 // //   // 1. Check cache first
 // //   const cached = geoCache.get(ip);
 // //   if (cached) {
-// //     console.log(`[Geo] ✅ Returning cached data`);
+// //     console.log(`[Geo]  Returning cached data`);
 // //     return cached;
 // //   }
 
 // //   // 2. Validate IP
 // //   if (!isValidIP(ip)) {
-// //     console.log(`[Geo] ⚠️ Invalid IP format: ${ip}`);
+// //     console.log(`[Geo]  Invalid IP format: ${ip}`);
     
-// //     // ✅ Return mock data instead of null for invalid IPs in dev
+// //     //  Return mock data instead of null for invalid IPs in dev
 // //     if (process.env.NODE_ENV === 'development') {
 // //       const mockData = getMockGeoData(ip);
 // //       geoCache.set(ip, mockData);
@@ -777,7 +777,7 @@
 // //   if (isPrivateIP(ip)) {
 // //     console.log(`[Geo] 🏠 Private/Local IP detected`);
     
-// //     // ✅ ALWAYS return mock data for private IPs in development
+// //     //  ALWAYS return mock data for private IPs in development
 // //     const mockData = getMockGeoData(ip);
 // //     geoCache.set(ip, mockData);
 // //     return mockData;
@@ -799,14 +799,14 @@
       
 // //       // Validate we got useful data
 // //       if (geoData.country || geoData.city) {
-// //         console.log(`[Geo] ✅ Success with ${provider.name}: ${geoData.city}, ${geoData.country}`);
+// //         console.log(`[Geo]  Success with ${provider.name}: ${geoData.city}, ${geoData.country}`);
 // //         geoCache.set(ip, geoData);
 // //         return geoData;
 // //       } else {
-// //         console.log(`[Geo] ⚠️ ${provider.name} returned empty data`);
+// //         console.log(`[Geo]  ${provider.name} returned empty data`);
 // //       }
 // //     } catch (error: any) {
-// //       console.error(`[Geo] ❌ ${provider.name} failed:`, error.message);
+// //       console.error(`[Geo]  ${provider.name} failed:`, error.message);
 // //       lastError = error;
       
 // //       if (error.message.includes('rate limit') || error.message.includes('429')) {
@@ -819,7 +819,7 @@
 // //   }
 
 // //   // 5. All providers failed - return mock data in development
-// //   console.error(`[Geo] ❌ All providers failed. Last error:`, lastError?.message);
+// //   console.error(`[Geo]  All providers failed. Last error:`, lastError?.message);
   
 // //   const mockData = getMockGeoData(ip);
 // //   geoCache.set(ip, mockData);
@@ -847,7 +847,7 @@
 // //     }
 // //   }
 
-// //   console.log(`[IP Detection] ⚠️ No valid IP found in headers`);
+// //   console.log(`[IP Detection]  No valid IP found in headers`);
 // //   return 'unknown';
 // // }
 
@@ -911,7 +911,7 @@
 // //   browser: string;
 // //   os: string;
 // // }> {
-// //   console.log(`\n[Metadata] 📋 Gathering for IP: ${ip}`);
+// //   console.log(`\n[Metadata] Gathering for IP: ${ip}`);
 // //   console.log(`[Metadata] User-Agent: ${userAgent.substring(0, 100)}...`);
   
 // //   const geoData = await getGeolocation(ip);
@@ -923,7 +923,7 @@
 // //     os: getOS(userAgent)
 // //   };
   
-// //   console.log(`[Metadata] ✅ Result:`, metadata);
+// //   console.log(`[Metadata]  Result:`, metadata);
 // //   return metadata;
 // // }
 
@@ -941,9 +941,9 @@
   
 // //   try {
 // //     const result = await getGeolocation(testIP);
-// //     console.log('\n✅ [Test] Result:', JSON.stringify(result, null, 2));
+// //     console.log('\n [Test] Result:', JSON.stringify(result, null, 2));
 // //   } catch (error: any) {
-// //     console.error('\n❌ [Test] Failed:', error.message);
+// //     console.error('\n [Test] Failed:', error.message);
 // //   }
   
 // //   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
@@ -1010,14 +1010,14 @@
 //  * Production-Ready Geolocation Service
 //  * 
 //  * Features:
-//  * ✅ Accurate device detection (mobile/tablet/desktop)
-//  * ✅ Precise browser identification
-//  * ✅ OS detection with version numbers
-//  * ✅ Multi-provider IP geolocation with fallback
-//  * ✅ Smart caching (1 hour TTL)
-//  * ✅ IPv6 support
-//  * ✅ Private IP handling
-//  * ✅ Development mock data
+//  *  Accurate device detection (mobile/tablet/desktop)
+//  *  Precise browser identification
+//  *  OS detection with version numbers
+//  *  Multi-provider IP geolocation with fallback
+//  *  Smart caching (1 hour TTL)
+//  *  IPv6 support
+//  *  Private IP handling
+//  *  Development mock data
 //  */
 
 // interface GeoLocation {
@@ -1323,7 +1323,7 @@
 //   // Check cache
 //   const cached = geoCache.get(normalizedIP);
 //   if (cached) {
-//     console.log(`[Geo] ✅ Returning cached data`);
+//     console.log(`[Geo]  Returning cached data`);
 //     return cached;
 //   }
 
@@ -1337,7 +1337,7 @@
 
 //   // Validate IP format
 //   if (!isValidIP(normalizedIP)) {
-//     console.log(`[Geo] ⚠️ Invalid IP format`);
+//     console.log(`[Geo]  Invalid IP format`);
 //     const mockData = getMockGeoData(normalizedIP);
 //     geoCache.set(normalizedIP, mockData);
 //     return mockData;
@@ -1356,12 +1356,12 @@
 //       const geoData = await provider.fn(normalizedIP);
       
 //       if (geoData.country || geoData.city) {
-//         console.log(`[Geo] ✅ Success: ${geoData.city}, ${geoData.country}`);
+//         console.log(`[Geo]  Success: ${geoData.city}, ${geoData.country}`);
 //         geoCache.set(normalizedIP, geoData);
 //         return geoData;
 //       }
 //     } catch (error: any) {
-//       console.error(`[Geo] ❌ ${provider.name} failed:`, error.message);
+//       console.error(`[Geo]  ${provider.name} failed:`, error.message);
       
 //       if (error.message.includes('429') || error.message.includes('rate limit')) {
 //         console.log(`[Geo] ⏭️ Rate limit, trying next...`);
@@ -1540,7 +1540,7 @@
 //   browser: string;
 //   os: string;
 // }> {
-//   console.log(`\n[Metadata] 📋 Gathering for IP: ${ip}`);
+//   console.log(`\n[Metadata] Gathering for IP: ${ip}`);
 //   console.log(`[Metadata] User-Agent: ${userAgent.substring(0, 100)}...`);
   
 //   const geoData = await getGeolocation(ip);
@@ -1552,7 +1552,7 @@
 //     os: getOS(userAgent)
 //   };
   
-//   console.log(`[Metadata] ✅ Result:`, metadata);
+//   console.log(`[Metadata]  Result:`, metadata);
 //   return metadata;
 // }
 
@@ -1566,9 +1566,9 @@
   
 //   try {
 //     const result = await getGeolocation(testIP);
-//     console.log('\n✅ Result:', JSON.stringify(result, null, 2));
+//     console.log('\n Result:', JSON.stringify(result, null, 2));
 //   } catch (error: any) {
-//     console.error('\n❌ Failed:', error.message);
+//     console.error('\n Failed:', error.message);
 //   }
   
 //   console.log('━'.repeat(50) + '\n');
@@ -1605,10 +1605,10 @@
 /**
  * Production-Ready Geolocation Service
  * 
- * ✅ FIXED: Only uses mock data as absolute last resort in development
- * ✅ Fetches real location data for all valid IPs
- * ✅ Accurate device/browser/OS detection
- * ✅ Multi-provider fallback with proper error handling
+ *  FIXED: Only uses mock data as absolute last resort in development
+ *  Fetches real location data for all valid IPs
+ *  Accurate device/browser/OS detection
+ *  Multi-provider fallback with proper error handling
  */
 
 interface GeoLocation {
@@ -1636,7 +1636,7 @@ class GeoCache {
   get(ip: string): GeoLocation | null {
     const cached = this.cache.get(ip);
     if (cached && Date.now() - cached.timestamp < this.TTL) {
-      console.log(`[GeoCache] ✅ Hit for ${ip}`);
+      console.log(`[GeoCache]  Hit for ${ip}`);
       return cached.data;
     }
     if (cached) {
@@ -1649,7 +1649,7 @@ class GeoCache {
     this.cache.set(ip, { data, timestamp: Date.now() });
     const city = data?.city || 'unknown';
     const country = data?.country || 'unknown';
-    console.log(`[GeoCache] 💾 Stored ${ip}: ${city}, ${country}`);
+    console.log(`[GeoCache]  Stored ${ip}: ${city}, ${country}`);
     this.cleanOldEntries();
   }
 
@@ -1741,13 +1741,13 @@ function isValidIP(ip: string): boolean {
 // ============================================================================
 
 /**
- * ⚠️ WARNING: This should ONLY be used when:
+ *  WARNING: This should ONLY be used when:
  * 1. IP is private/local (can't be geolocated)
  * 2. All providers have failed
  * 3. NODE_ENV === 'development'
  */
 function getMockGeoData(ip: string): GeoLocation {
-  console.log(`[Geo] ⚠️ WARNING: Using mock data for IP: ${ip}`);
+  console.log(`[Geo]  WARNING: Using mock data for IP: ${ip}`);
   console.log('[Geo] This should only happen in development with private IPs');
   
   const mockLocations: GeoLocation[] = [
@@ -1796,7 +1796,7 @@ function getMockGeoData(ip: string): GeoLocation {
  * - Very reliable
  */
 async function fetchFromIPAPI(ip: string): Promise<GeoLocation> {
-  console.log(`[ip-api.com] 🌐 Fetching real data for ${ip}...`);
+  console.log(`[ip-api.com] Fetching real data for ${ip}...`);
   
   const response = await fetch(
     `http://ip-api.com/json/${ip}?fields=status,message,country,countryCode,region,regionName,city,lat,lon,timezone`,
@@ -1830,7 +1830,7 @@ async function fetchFromIPAPI(ip: string): Promise<GeoLocation> {
     region: data.regionName || data.region || null,
   };
 
-  console.log(`[ip-api.com] ✅ SUCCESS: ${result.city}, ${result.country}`);
+  console.log(`[ip-api.com]  SUCCESS: ${result.city}, ${result.country}`);
   return result;
 }
 
@@ -1841,7 +1841,7 @@ async function fetchFromIPAPI(ip: string): Promise<GeoLocation> {
  * - Good fallback option
  */
 async function fetchFromIPAPICo(ip: string): Promise<GeoLocation> {
-  console.log(`[ipapi.co] 🌐 Fetching real data for ${ip}...`);
+  console.log(`[ipapi.co] Fetching real data for ${ip}...`);
   
   const apiKey = process.env.IPAPI_CO_API_KEY;
   const url = apiKey 
@@ -1877,7 +1877,7 @@ async function fetchFromIPAPICo(ip: string): Promise<GeoLocation> {
     region: data.region || null,
   };
 
-  console.log(`[ipapi.co] ✅ SUCCESS: ${result.city}, ${result.country}`);
+  console.log(`[ipapi.co]  SUCCESS: ${result.city}, ${result.country}`);
   return result;
 }
 
@@ -1888,7 +1888,7 @@ async function fetchFromIPAPICo(ip: string): Promise<GeoLocation> {
  * - Very accurate
  */
 async function fetchFromIPGeolocation(ip: string): Promise<GeoLocation> {
-  console.log(`[ipgeolocation.io] 🌐 Fetching real data for ${ip}...`);
+  console.log(`[ipgeolocation.io] Fetching real data for ${ip}...`);
   
   const apiKey = process.env.IPGEOLOCATION_API_KEY;
   if (!apiKey) {
@@ -1920,7 +1920,7 @@ async function fetchFromIPGeolocation(ip: string): Promise<GeoLocation> {
     region: data.state_prov || null,
   };
 
-  console.log(`[ipgeolocation.io] ✅ SUCCESS: ${result.city}, ${result.country}`);
+  console.log(`[ipgeolocation.io]  SUCCESS: ${result.city}, ${result.country}`);
   return result;
 }
 
@@ -1948,7 +1948,7 @@ export async function getGeolocation(ip: string): Promise<GeoLocation> {
   // Step 2: Check cache
   const cached = geoCache.get(normalizedIP);
   if (cached) {
-    console.log(`[Geo] ✅ Returning cached data`);
+    console.log(`[Geo]  Returning cached data`);
     return cached;
   }
 
@@ -1956,7 +1956,7 @@ export async function getGeolocation(ip: string): Promise<GeoLocation> {
   if (isPrivateIP(normalizedIP)) {
     console.log(`[Geo] 🏠 Private/Local IP detected (cannot be geolocated)`);
     
-    // ⚠️ CRITICAL FIX: Only return mock data in development
+    //  CRITICAL FIX: Only return mock data in development
     if (process.env.NODE_ENV === 'development') {
       console.log('[Geo] Development mode: Using mock data for private IP');
       const mockData = getMockGeoData(normalizedIP);
@@ -1971,7 +1971,7 @@ export async function getGeolocation(ip: string): Promise<GeoLocation> {
 
   // Step 4: Validate IP format
   if (!isValidIP(normalizedIP)) {
-    console.log(`[Geo] ⚠️ Invalid IP format: ${normalizedIP}`);
+    console.log(`[Geo]  Invalid IP format: ${normalizedIP}`);
     
     // Only use mock in development
     if (process.env.NODE_ENV === 'development') {
@@ -1984,7 +1984,7 @@ export async function getGeolocation(ip: string): Promise<GeoLocation> {
   }
 
   // Step 5: Fetch REAL data from providers
-  console.log(`[Geo] 🌐 IP is public - fetching REAL geolocation data...`);
+  console.log(`[Geo] IP is public - fetching REAL geolocation data...`);
   
   const providers = [
     { name: 'ip-api.com', fn: fetchFromIPAPI },
@@ -2002,14 +2002,14 @@ export async function getGeolocation(ip: string): Promise<GeoLocation> {
       
       // Validate we got useful data
       if (geoData.country || geoData.city) {
-        console.log(`[Geo] ✅ SUCCESS with ${provider.name}: ${geoData.city}, ${geoData.country}`);
+        console.log(`[Geo]  SUCCESS with ${provider.name}: ${geoData.city}, ${geoData.country}`);
         geoCache.set(normalizedIP, geoData);
         return geoData;
       } else {
-        console.log(`[Geo] ⚠️ ${provider.name} returned empty data, trying next...`);
+        console.log(`[Geo]  ${provider.name} returned empty data, trying next...`);
       }
     } catch (error: any) {
-      console.error(`[Geo] ❌ ${provider.name} failed:`, error.message);
+      console.error(`[Geo]  ${provider.name} failed:`, error.message);
       lastError = error;
       
       // If rate limited, try next provider immediately
@@ -2024,19 +2024,19 @@ export async function getGeolocation(ip: string): Promise<GeoLocation> {
   }
 
   // Step 6: All providers failed
-  console.error(`[Geo] ❌ ALL PROVIDERS FAILED for IP: ${normalizedIP}`);
+  console.error(`[Geo]  ALL PROVIDERS FAILED for IP: ${normalizedIP}`);
   console.error(`[Geo] Last error:`, lastError?.message);
   
   // CRITICAL FIX: Only use mock data in development as absolute last resort
   if (process.env.NODE_ENV === 'development') {
-    console.log('[Geo] ⚠️ Development mode: Using mock data as fallback');
+    console.log('[Geo]  Development mode: Using mock data as fallback');
     const mockData = getMockGeoData(normalizedIP);
     geoCache.set(normalizedIP, mockData);
     return mockData;
   }
   
   // In production: Return null if all providers fail
-  console.log('[Geo] ❌ Production mode: Returning null (all providers failed)');
+  console.log('[Geo]  Production mode: Returning null (all providers failed)');
   return { country: null, city: null };
 }
 
@@ -2061,13 +2061,13 @@ export function getClientIP(headers: Headers): string {
     if (ip && ip !== 'unknown') {
       const normalized = normalizeIP(ip);
       if (isValidIP(normalized)) {
-        console.log(`[IP Detection] ✅ Found valid IP: ${normalized}`);
+        console.log(`[IP Detection]  Found valid IP: ${normalized}`);
         return normalized;
       }
     }
   }
 
-  console.log(`[IP Detection] ⚠️ No valid public IP found in headers`);
+  console.log(`[IP Detection]  No valid public IP found in headers`);
   console.log('[IP Detection] This likely means user is on localhost/private network');
   return '127.0.0.1'; // Localhost
 }
@@ -2211,7 +2211,7 @@ export async function getSubscriberMetadata(
   browser: string;
   os: string;
 }> {
-  console.log(`\n[Metadata] 📋 Gathering metadata for IP: ${ip}`);
+  console.log(`\n[Metadata] Gathering metadata for IP: ${ip}`);
   console.log(`[Metadata] User-Agent: ${userAgent.substring(0, 100)}...`);
   
   // Get REAL geolocation data
@@ -2225,7 +2225,7 @@ export async function getSubscriberMetadata(
     os: getOS(userAgent)
   };
   
-  console.log(`[Metadata] ✅ Final metadata:`, metadata);
+  console.log(`[Metadata]  Final metadata:`, metadata);
   return metadata;
 }
 
@@ -2245,15 +2245,15 @@ export async function testGeolocation(testIP: string = '8.8.8.8'): Promise<void>
   
   try {
     const result = await getGeolocation(testIP);
-    console.log('\n✅ RESULT:', JSON.stringify(result, null, 2));
+    console.log('\n RESULT:', JSON.stringify(result, null, 2));
     
     if (result.country && result.city) {
-      console.log(`\n✅ SUCCESS: Got real data for ${testIP}`);
+      console.log(`\n SUCCESS: Got real data for ${testIP}`);
     } else {
-      console.log(`\n⚠️ WARNING: Got null data for ${testIP}`);
+      console.log(`\n WARNING: Got null data for ${testIP}`);
     }
   } catch (error: any) {
-    console.error('\n❌ FAILED:', error.message);
+    console.error('\n FAILED:', error.message);
   }
   
   console.log('='.repeat(60) + '\n');

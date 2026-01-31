@@ -204,7 +204,7 @@
 // import { createClient } from '@supabase/supabase-js';
 // import { withPublicCors } from '@/lib/auth-middleware';
 // import { getClientIP, getSubscriberMetadata } from '@/lib/geolocation-service';
-// import { trackEventWithJourneys } from '@/lib/journeys/entry-handler'; // ⭐ ADD THIS IMPORT
+// import { trackEventWithJourneys } from '@/lib/journeys/entry-handler'; //  ADD THIS IMPORT
 // import type { Database } from '@/types/database';
 
 // async function handler(req: NextRequest) {
@@ -216,7 +216,7 @@
 
 //     // Validate required fields
 //     if (!websiteId || !endpoint || !p256dh || !auth) {
-//       console.log('❌ [Register Subscriber] Missing required fields');
+//       console.log(' [Register Subscriber] Missing required fields');
 //       return NextResponse.json(
 //         { 
 //           success: false, 
@@ -241,14 +241,14 @@
 //       .single();
 
 //     if (websiteError || !website) {
-//       console.error('❌ [Register Subscriber] Website not found:', websiteId);
+//       console.error(' [Register Subscriber] Website not found:', websiteId);
 //       return NextResponse.json(
 //         { success: false, error: 'Website not found or inactive' },
 //         { status: 404 }
 //       );
 //     }
 
-//     console.log('✅ [Register Subscriber] Website verified:', website.name);
+//     console.log(' [Register Subscriber] Website verified:', website.name);
 
 //     // Get IP and user agent
 //     const ipAddress = getClientIP(req.headers);
@@ -316,7 +316,7 @@
 //         .single();
 
 //       if (reactivateError) {
-//         console.error('❌ [Register Subscriber] Reactivation error:', reactivateError);
+//         console.error(' [Register Subscriber] Reactivation error:', reactivateError);
 //         return NextResponse.json(
 //           { success: false, error: reactivateError.message },
 //           { status: 500 }
@@ -325,8 +325,8 @@
 
 //       console.log('♻️ [Register Subscriber] Reactivated:', reactivated.id);
 
-//       // ⭐ TRACK REACTIVATION EVENT
-//       console.log('📊 [Register Subscriber] Tracking user_subscribed event for reactivation...');
+//       //  TRACK REACTIVATION EVENT
+//       console.log(' [Register Subscriber] Tracking user_subscribed event for reactivation...');
 //       try {
 //         await trackEventWithJourneys({
 //           subscriber_id: reactivated.id,
@@ -342,9 +342,9 @@
 //           },
 //           timestamp: new Date().toISOString(),
 //         });
-//         console.log('✅ [Register Subscriber] Reactivation event tracked successfully');
+//         console.log(' [Register Subscriber] Reactivation event tracked successfully');
 //       } catch (eventError: any) {
-//         console.error('⚠️ [Register Subscriber] Event tracking failed:', eventError.message);
+//         console.error(' [Register Subscriber] Event tracking failed:', eventError.message);
 //       }
 
 //       return NextResponse.json({
@@ -377,18 +377,18 @@
 //       .single();
 
 //     if (insertError) {
-//       console.error('❌ [Register Subscriber] Insert error:', insertError);
+//       console.error(' [Register Subscriber] Insert error:', insertError);
 //       return NextResponse.json(
 //         { success: false, error: insertError.message },
 //         { status: 500 }
 //       );
 //     }
 
-//     console.log('✅ [Register Subscriber] New subscriber created:', newSubscriber.id);
+//     console.log(' [Register Subscriber] New subscriber created:', newSubscriber.id);
 //     console.log('📍 [Register Subscriber] Location:', newSubscriber.city, newSubscriber.country);
 
-//     // ⭐ CRITICAL: TRACK SUBSCRIPTION EVENT
-//     console.log('📊 [Register Subscriber] Tracking user_subscribed event...');
+//     //  CRITICAL: TRACK SUBSCRIPTION EVENT
+//     console.log(' [Register Subscriber] Tracking user_subscribed event...');
 //     try {
 //       await trackEventWithJourneys({
 //         subscriber_id: newSubscriber.id,
@@ -404,9 +404,9 @@
 //         },
 //         timestamp: new Date().toISOString(),
 //       });
-//       console.log('✅ [Register Subscriber] Event tracked successfully');
+//       console.log(' [Register Subscriber] Event tracked successfully');
 //     } catch (eventError: any) {
-//       console.error('⚠️ [Register Subscriber] Event tracking failed:', eventError.message);
+//       console.error(' [Register Subscriber] Event tracking failed:', eventError.message);
 //       // Don't fail registration if event tracking fails
 //     }
 
@@ -428,7 +428,7 @@
 //     );
 
 //   } catch (error: any) {
-//     console.error('❌ [Register Subscriber] Error:', error);
+//     console.error(' [Register Subscriber] Error:', error);
 //     return NextResponse.json(
 //       { success: false, error: error.message || 'Internal server error' },
 //       { status: 500 }
@@ -456,7 +456,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { withPublicCors } from '@/lib/auth-middleware';
 import { getClientIP, getSubscriberMetadata } from '@/lib/geolocation-service';
-import { trackEventWithJourneys } from '@/lib/journeys/entry-handler'; // ⭐ IMPORT
+import { trackEventWithJourneys } from '@/lib/journeys/entry-handler'; //  IMPORT
 import type { Database } from '@/types/database';
 
 async function handler(req: NextRequest) {
@@ -467,7 +467,7 @@ async function handler(req: NextRequest) {
     console.log('📝 [Register Subscriber] Request for website:', websiteId);
 
     if (!websiteId || !endpoint || !p256dh || !auth) {
-      console.log('❌ [Register Subscriber] Missing required fields');
+      console.log(' [Register Subscriber] Missing required fields');
       return NextResponse.json(
         {
           success: false,
@@ -490,14 +490,14 @@ async function handler(req: NextRequest) {
       .single();
 
     if (websiteError || !website) {
-      console.error('❌ [Register Subscriber] Website not found:', websiteId);
+      console.error(' [Register Subscriber] Website not found:', websiteId);
       return NextResponse.json(
         { success: false, error: 'Website not found or inactive' },
         { status: 404 }
       );
     }
 
-    console.log('✅ [Register Subscriber] Website verified:', website.name);
+    console.log(' [Register Subscriber] Website verified:', website.name);
 
     const ipAddress = getClientIP(req.headers);
     const userAgent = req.headers.get('user-agent') || '';
@@ -535,8 +535,8 @@ async function handler(req: NextRequest) {
           })
           .eq('id', existing.id);
 
-        // ⭐ CRITICAL: TRACK EVENT FOR EXISTING SUBSCRIBER TOO!
-        console.log('📊 [Register Subscriber] Tracking user_subscribed event for existing subscriber...');
+        //  CRITICAL: TRACK EVENT FOR EXISTING SUBSCRIBER TOO!
+        console.log(' [Register Subscriber] Tracking user_subscribed event for existing subscriber...');
         try {
           await trackEventWithJourneys({
             subscriber_id: existing.id,
@@ -552,9 +552,9 @@ async function handler(req: NextRequest) {
             },
             timestamp: new Date().toISOString(),
           });
-          console.log('✅ [Register Subscriber] Event tracked for existing subscriber');
+          console.log(' [Register Subscriber] Event tracked for existing subscriber');
         } catch (eventError: any) {
-          console.error('⚠️ [Register Subscriber] Event tracking failed:', eventError.message);
+          console.error(' [Register Subscriber] Event tracking failed:', eventError.message);
         }
 
         return NextResponse.json({
@@ -590,7 +590,7 @@ async function handler(req: NextRequest) {
         .single();
 
       if (reactivateError) {
-        console.error('❌ [Register Subscriber] Reactivation error:', reactivateError);
+        console.error(' [Register Subscriber] Reactivation error:', reactivateError);
         return NextResponse.json(
           { success: false, error: reactivateError.message },
           { status: 500 }
@@ -600,7 +600,7 @@ async function handler(req: NextRequest) {
       console.log('♻️ [Register Subscriber] Reactivated:', reactivated.id);
 
       // Track reactivation event
-      console.log('📊 [Register Subscriber] Tracking user_subscribed event for reactivation...');
+      console.log(' [Register Subscriber] Tracking user_subscribed event for reactivation...');
       try {
         await trackEventWithJourneys({
           subscriber_id: reactivated.id,
@@ -616,9 +616,9 @@ async function handler(req: NextRequest) {
           },
           timestamp: new Date().toISOString(),
         });
-        console.log('✅ [Register Subscriber] Reactivation event tracked');
+        console.log(' [Register Subscriber] Reactivation event tracked');
       } catch (eventError: any) {
-        console.error('⚠️ [Register Subscriber] Event tracking failed:', eventError.message);
+        console.error(' [Register Subscriber] Event tracking failed:', eventError.message);
       }
 
       return NextResponse.json({
@@ -653,18 +653,18 @@ async function handler(req: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('❌ [Register Subscriber] Insert error:', insertError);
+      console.error(' [Register Subscriber] Insert error:', insertError);
       return NextResponse.json(
         { success: false, error: insertError.message },
         { status: 500 }
       );
     }
 
-    console.log('✅ [Register Subscriber] New subscriber created:', newSubscriber.id);
+    console.log(' [Register Subscriber] New subscriber created:', newSubscriber.id);
     console.log('📍 [Register Subscriber] Location:', newSubscriber.city, newSubscriber.country);
 
     // Track subscription event for new subscriber
-    console.log('📊 [Register Subscriber] Tracking user_subscribed event...');
+    console.log(' [Register Subscriber] Tracking user_subscribed event...');
     try {
       await trackEventWithJourneys({
         subscriber_id: newSubscriber.id,
@@ -680,9 +680,9 @@ async function handler(req: NextRequest) {
         },
         timestamp: new Date().toISOString(),
       });
-      console.log('✅ [Register Subscriber] Event tracked successfully');
+      console.log(' [Register Subscriber] Event tracked successfully');
     } catch (eventError: any) {
-      console.error('⚠️ [Register Subscriber] Event tracking failed:', eventError.message);
+      console.error(' [Register Subscriber] Event tracking failed:', eventError.message);
     }
 
     return NextResponse.json(
@@ -713,7 +713,7 @@ async function handler(req: NextRequest) {
     );
 
   } catch (error: any) {
-    console.error('❌ [Register Subscriber] Error:', error);
+    console.error(' [Register Subscriber] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Internal server error' },
       { status: 500 }

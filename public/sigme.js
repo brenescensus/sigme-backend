@@ -347,7 +347,7 @@
 //   // ... [Keep all your existing code until the PUBLIC API section] ...
 
 //   // ===================================================== 
-//   // ✅ NEW: PAGE VIEW TRACKING
+//   //  NEW: PAGE VIEW TRACKING
 //   // ===================================================== 
 //   let pageTrackingInitialized = false;
 //   let lastTrackedUrl = null;
@@ -368,7 +368,7 @@
 //       return;
 //     }
 
-//     console.log('[Sigme] 📊 Initializing page tracking...');
+//     console.log('[Sigme]  Initializing page tracking...');
 //     pageTrackingInitialized = true;
 
 //     // Track initial page view
@@ -387,7 +387,7 @@
 //       trackPageView(subscriberId);
 //     });
 
-//     console.log('[Sigme] ✅ Page tracking initialized');
+//     console.log('[Sigme]  Page tracking initialized');
 //   }
 
 //   /**
@@ -429,28 +429,28 @@
 
 //       if (response.ok) {
 //         const result = await response.json();
-//         console.log('[Sigme] ✅ Page view tracked:', result);
+//         console.log('[Sigme]  Page view tracked:', result);
 //       } else {
 //         const errorText = await response.text();
-//         console.error('[Sigme] ❌ Page view tracking failed:', errorText);
+//         console.error('[Sigme]  Page view tracking failed:', errorText);
 //       }
 //     } catch (error) {
-//       console.error('[Sigme] ❌ Page view tracking error:', error);
+//       console.error('[Sigme]  Page view tracking error:', error);
 //     }
 //   }
 
 //   /**
-//    * ✅ NEW: Track custom events
+//    *  NEW: Track custom events
 //    */
 //   async function trackCustomEvent(eventName, properties = {}) {
 //     const subscriberId = localStorage.getItem('sigme_subscriber_id');
     
 //     if (!subscriberId) {
-//       console.warn('[Sigme] ⚠️ Cannot track event - no subscriber ID');
+//       console.warn('[Sigme]  Cannot track event - no subscriber ID');
 //       return { success: false, error: 'No subscriber ID' };
 //     }
 
-//     console.log(`[Sigme] 📊 Tracking custom event: ${eventName}`);
+//     console.log(`[Sigme]  Tracking custom event: ${eventName}`);
 
 //     try {
 //       const response = await fetch(`${SIGME_API}/api/events/track`, {
@@ -468,15 +468,15 @@
 
 //       if (response.ok) {
 //         const result = await response.json();
-//         console.log(`[Sigme] ✅ Event tracked:`, result);
+//         console.log(`[Sigme]  Event tracked:`, result);
 //         return { success: true, data: result };
 //       } else {
 //         const errorText = await response.text();
-//         console.error(`[Sigme] ❌ Event tracking failed:`, errorText);
+//         console.error(`[Sigme]  Event tracking failed:`, errorText);
 //         return { success: false, error: errorText };
 //       }
 //     } catch (error) {
-//       console.error(`[Sigme] ❌ Event tracking error:`, error);
+//       console.error(`[Sigme]  Event tracking error:`, error);
 //       return { success: false, error: error.message };
 //     }
 //   }
@@ -487,21 +487,21 @@
 //   navigator.serviceWorker.addEventListener('message', (event) => {
 //     if (event.data?.type === 'SIGME_SUBSCRIBED') {
 //       if (event.data.success) {
-//         console.log('[Sigme] ✅ Subscribed successfully!');
+//         console.log('[Sigme]  Subscribed successfully!');
         
-//         // ✅ SAVE SUBSCRIBER ID
+//         //  SAVE SUBSCRIBER ID
 //         if (event.data.data?.subscriber_id) {
 //           localStorage.setItem('sigme_subscriber_id', event.data.data.subscriber_id);
-//           console.log('[Sigme] 💾 Subscriber ID saved:', event.data.data.subscriber_id);
+//           console.log('[Sigme]  Subscriber ID saved:', event.data.data.subscriber_id);
           
-//           // ✅ START PAGE TRACKING AFTER SUBSCRIPTION
+//           //  START PAGE TRACKING AFTER SUBSCRIPTION
 //           setTimeout(() => {
 //             console.log('[Sigme] 🚀 Starting page tracking after subscription...');
 //             initPageTracking();
 //           }, 1000);
 //         }
 //       } else {
-//         console.warn('[Sigme] ❌ Subscription failed:', event.data.error);
+//         console.warn('[Sigme]  Subscription failed:', event.data.error);
 //       }
 //     }
 
@@ -522,12 +522,12 @@
 //     if (document.readyState === 'loading') {
 //       document.addEventListener('DOMContentLoaded', () => {
 //         initialize();
-//         // ✅ START PAGE TRACKING IF ALREADY SUBSCRIBED
+//         //  START PAGE TRACKING IF ALREADY SUBSCRIBED
 //         initPageTracking();
 //       });
 //     } else {
 //       initialize();
-//       // ✅ START PAGE TRACKING IF ALREADY SUBSCRIBED
+//       //  START PAGE TRACKING IF ALREADY SUBSCRIBED
 //       initPageTracking();
 //     }
 //   } else {
@@ -545,9 +545,9 @@
 //   window.Sigme = {
 //     subscribe: initialize,
 //     getPermission: () => Notification.permission,
-//     // ✅ NEW: Custom event tracking API
+//     //  NEW: Custom event tracking API
 //     track: trackCustomEvent,
-//     // ✅ NEW: Manual page tracking (if needed)
+//     //  NEW: Manual page tracking (if needed)
 //     trackPageView: () => {
 //       const subscriberId = localStorage.getItem('sigme_subscriber_id');
 //       if (subscriberId) {
@@ -590,17 +590,17 @@
     }
 
     // Fallback to default
-    console.log('[Sigme] ⚠️ Could not detect script URL, using default');
+    console.log('[Sigme]  Could not detect script URL, using default');
     return 'http://localhost:3000';
   };
 
   const API_BASE_URL = window.SIGME_API_URL || getCurrentScriptUrl();
   const SIGME_API = API_BASE_URL;
 
-  // ⚠️ Service worker MUST be on same origin as the website
+  //  Service worker MUST be on same origin as the website
   const SW_PATH = '/sigme-universal-sw.js';
 
-  console.log('[Sigme] 🌐 API URL:', SIGME_API);
+  console.log('[Sigme] API URL:', SIGME_API);
   console.log('[Sigme] 🔧 SW Path:', SW_PATH);
 
   // ============================================
@@ -611,12 +611,12 @@
   console.log('[Sigme] 🌍 Current domain:', currentDomain);
 
   if (!('serviceWorker' in navigator)) {
-    console.warn('[Sigme] ⚠️ Service workers not supported');
+    console.warn('[Sigme]  Service workers not supported');
     return;
   }
 
   if (!('PushManager' in window)) {
-    console.warn('[Sigme] ⚠️ Push notifications not supported');
+    console.warn('[Sigme]  Push notifications not supported');
     return;
   }
 
@@ -647,14 +647,14 @@
       const data = await response.json();
 
       if (!data.success) {
-        console.error('[Sigme] ❌ Website not found:', data.error);
+        console.error('[Sigme]  Website not found:', data.error);
         return null;
       }
 
-      console.log('[Sigme] ✅ Configuration loaded:', data.config.websiteName);
+      console.log('[Sigme]  Configuration loaded:', data.config.websiteName);
       return data.config;
     } catch (error) {
-      console.error('[Sigme] ❌ Failed to detect website:', error);
+      console.error('[Sigme]  Failed to detect website:', error);
       return null;
     }
   }
@@ -679,7 +679,7 @@
       return;
     }
 
-    console.log('[Sigme] 📊 Initializing page tracking...');
+    console.log('[Sigme]  Initializing page tracking...');
     pageTrackingInitialized = true;
 
     // Track initial page view
@@ -701,7 +701,7 @@
       }
     });
 
-    console.log('[Sigme] ✅ Page tracking initialized');
+    console.log('[Sigme]  Page tracking initialized');
   }
 
   /**
@@ -743,13 +743,13 @@
 
       if (response.ok) {
         const result = await response.json();
-        console.log('[Sigme] ✅ Page view tracked:', result);
+        console.log('[Sigme]  Page view tracked:', result);
       } else {
         const errorText = await response.text();
-        console.error('[Sigme] ❌ Page view tracking failed:', errorText);
+        console.error('[Sigme]  Page view tracking failed:', errorText);
       }
     } catch (error) {
-      console.error('[Sigme] ❌ Page view tracking error:', error);
+      console.error('[Sigme]  Page view tracking error:', error);
     }
   }
 
@@ -760,11 +760,11 @@
     const subscriberId = localStorage.getItem('sigme_subscriber_id');
     
     if (!subscriberId) {
-      console.warn('[Sigme] ⚠️ Cannot track event - no subscriber ID');
+      console.warn('[Sigme]  Cannot track event - no subscriber ID');
       return { success: false, error: 'No subscriber ID' };
     }
 
-    console.log(`[Sigme] 📊 Tracking custom event: ${eventName}`);
+    console.log(`[Sigme]  Tracking custom event: ${eventName}`);
 
     try {
       const response = await fetch(`${SIGME_API}/api/events/track`, {
@@ -782,15 +782,15 @@
 
       if (response.ok) {
         const result = await response.json();
-        console.log(`[Sigme] ✅ Event tracked:`, result);
+        console.log(`[Sigme]  Event tracked:`, result);
         return { success: true, data: result };
       } else {
         const errorText = await response.text();
-        console.error(`[Sigme] ❌ Event tracking failed:`, errorText);
+        console.error(`[Sigme]  Event tracking failed:`, errorText);
         return { success: false, error: errorText };
       }
     } catch (error) {
-      console.error(`[Sigme] ❌ Event tracking error:`, error);
+      console.error(`[Sigme]  Event tracking error:`, error);
       return { success: false, error: error.message };
     }
   }
@@ -803,7 +803,7 @@
     try {
       const config = await detectWebsite();
       if (!config) {
-        console.warn('[Sigme] ⚠️ Could not load configuration - aborting');
+        console.warn('[Sigme]  Could not load configuration - aborting');
         return;
       }
 
@@ -819,12 +819,12 @@
       try {
         const swCheck = await fetch(SW_PATH, { method: 'HEAD' });
         if (!swCheck.ok) {
-          console.error('[Sigme] ❌ Service worker file not found. Please add sigme-universal-sw.js to your /public folder.');
-          console.error('[Sigme] 📥 Download from: ' + SIGME_API + '/sigme-universal-sw.js');
+          console.error('[Sigme]  Service worker file not found. Please add sigme-universal-sw.js to your /public folder.');
+          console.error('[Sigme]  Download from: ' + SIGME_API + '/sigme-universal-sw.js');
           return;
         }
       } catch (e) {
-        console.error('[Sigme] ❌ Could not verify service worker file:', e.message);
+        console.error('[Sigme]  Could not verify service worker file:', e.message);
         return;
       }
 
@@ -833,7 +833,7 @@
       });
       
       await navigator.serviceWorker.ready;
-      console.log('[Sigme] ✅ Service worker registered successfully');
+      console.log('[Sigme]  Service worker registered successfully');
 
       // Send config to service worker
       if (registration.active) {
@@ -845,28 +845,28 @@
 
       // Handle notification permission state
       if (Notification.permission === 'granted') {
-        console.log('[Sigme] ✅ Notification permission already granted');
+        console.log('[Sigme]  Notification permission already granted');
         subscribeUser(registration);
       } else if (Notification.permission === 'default') {
-        console.log('[Sigme] 📋 Notification permission not requested yet');
+        console.log('[Sigme] Notification permission not requested yet');
         showSubscribePrompt(config, registration);
       } else {
         console.log('[Sigme] 🚫 Notifications denied by user');
       }
 
-      // ✅ START PAGE TRACKING IF ALREADY SUBSCRIBED
+      //  START PAGE TRACKING IF ALREADY SUBSCRIBED
       const subscriberId = localStorage.getItem('sigme_subscriber_id');
       if (subscriberId) {
-        console.log('[Sigme] 📊 Subscriber found, starting page tracking...');
+        console.log('[Sigme]  Subscriber found, starting page tracking...');
         initPageTracking();
       }
 
     } catch (err) {
-      console.error('[Sigme] ❌ Initialization failed:', err);
+      console.error('[Sigme]  Initialization failed:', err);
       
       if (err.message.includes('ServiceWorker')) {
         console.error('[Sigme] 💡 Make sure sigme-universal-sw.js exists in your /public folder');
-        console.error('[Sigme] 📥 Download from: ' + SIGME_API + '/sigme-universal-sw.js');
+        console.error('[Sigme]  Download from: ' + SIGME_API + '/sigme-universal-sw.js');
       }
     }
   }
@@ -980,13 +980,13 @@
       try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-          console.log('[Sigme] ✅ Permission granted');
+          console.log('[Sigme]  Permission granted');
           subscribeUser(registration);
         } else {
           console.log('[Sigme] 🚫 Permission denied');
         }
       } catch (error) {
-        console.error('[Sigme] ❌ Permission request failed:', error);
+        console.error('[Sigme]  Permission request failed:', error);
       }
       div.remove();
     };
@@ -1004,14 +1004,14 @@
   // ============================================
   
   function subscribeUser(registration) {
-    console.log('[Sigme] 📨 Initiating subscription...');
+    console.log('[Sigme]  Initiating subscription...');
     
     if (registration.active) {
       registration.active.postMessage({
         type: 'SIGME_SUBSCRIBE'
       });
     } else {
-      console.warn('[Sigme] ⚠️ No active service worker found');
+      console.warn('[Sigme]  No active service worker found');
     }
   }
 
@@ -1022,21 +1022,21 @@
   navigator.serviceWorker.addEventListener('message', (event) => {
     if (event.data?.type === 'SIGME_SUBSCRIBED') {
       if (event.data.success) {
-        console.log('[Sigme] ✅ Subscribed successfully!');
+        console.log('[Sigme]  Subscribed successfully!');
         
-        // ✅ SAVE SUBSCRIBER ID
+        //  SAVE SUBSCRIBER ID
         if (event.data.data?.subscriber_id) {
           localStorage.setItem('sigme_subscriber_id', event.data.data.subscriber_id);
-          console.log('[Sigme] 💾 Subscriber ID saved:', event.data.data.subscriber_id);
+          console.log('[Sigme]  Subscriber ID saved:', event.data.data.subscriber_id);
           
-          // ✅ START PAGE TRACKING AFTER SUBSCRIPTION
+          //  START PAGE TRACKING AFTER SUBSCRIPTION
           setTimeout(() => {
             console.log('[Sigme] 🚀 Starting page tracking after subscription...');
             initPageTracking();
           }, 1000);
         }
       } else {
-        console.warn('[Sigme] ❌ Subscription failed:', event.data.error);
+        console.warn('[Sigme]  Subscription failed:', event.data.error);
       }
     }
 
@@ -1151,7 +1151,7 @@
       if (subscriberId) {
         trackPageView(subscriberId);
       } else {
-        console.warn('[Sigme] ⚠️ Cannot track page - no subscriber ID');
+        console.warn('[Sigme]  Cannot track page - no subscriber ID');
       }
     },
 
@@ -1180,7 +1180,7 @@
     }
   };
 
-  console.log('[Sigme] ✅ Script ready');
+  console.log('[Sigme]  Script ready');
 
 
 
@@ -1188,13 +1188,13 @@
 
   // backend/public/sigme.js - Add at the very end, before closing })();
 
-// ⭐ FORCE CHECK FOR SUBSCRIBER ID AND START TRACKING
+//  FORCE CHECK FOR SUBSCRIBER ID AND START TRACKING
 setTimeout(() => {
   console.log('[Sigme] 🔄 Force-checking if page tracking should start...');
   const subscriberId = localStorage.getItem('sigme_subscriber_id');
   
   if (subscriberId) {
-    console.log('[Sigme] ✅ Subscriber ID found:', subscriberId);
+    console.log('[Sigme]  Subscriber ID found:', subscriberId);
     
     if (!pageTrackingInitialized) {
       console.log('[Sigme] 🚀 Force-starting page tracking...');
@@ -1203,11 +1203,11 @@ setTimeout(() => {
       console.log('[Sigme] ℹ️ Page tracking already initialized');
     }
   } else {
-    console.log('[Sigme] ⚠️ No subscriber ID found in localStorage');
+    console.log('[Sigme]  No subscriber ID found in localStorage');
     console.log('[Sigme] 💡 Try subscribing first: Sigme.subscribe()');
   }
 }, 3000); // Wait 3 seconds after page load
 
-console.log('[Sigme] ✅ Script ready');
+console.log('[Sigme]  Script ready');
 
 })();

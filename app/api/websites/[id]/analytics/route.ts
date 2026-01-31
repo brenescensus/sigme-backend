@@ -25,7 +25,7 @@
 // //     const { searchParams } = new URL(req.url);
 // //     const period = searchParams.get('period') || '7d';
 
-// //     console.log(`📊 [Analytics] Fetching for website: ${websiteId}, period: ${period}`);
+// //     console.log(` [Analytics] Fetching for website: ${websiteId}, period: ${period}`);
 
 // //     // Calculate date range
 // //     const now = new Date();
@@ -199,7 +199,7 @@
 // //     const { searchParams } = new URL(req.url);
 // //     const period = searchParams.get('period') || '7d';
 
-// //     console.log(`📊 [Analytics] Fetching for website: ${websiteId}, period: ${period}`);
+// //     console.log(` [Analytics] Fetching for website: ${websiteId}, period: ${period}`);
 
 // //     // Calculate date range
 // //     const now = new Date();
@@ -304,7 +304,7 @@
 //     const { searchParams } = new URL(req.url);
 //     const period = searchParams.get('period') || '7d';
 
-//     console.log(`📊 [Analytics] Fetching for website: ${websiteId}, period: ${period}`);
+//     console.log(` [Analytics] Fetching for website: ${websiteId}, period: ${period}`);
 
 //     // Calculate date range
 //     const now = new Date();
@@ -375,7 +375,7 @@
 //       .eq('event_name', 'notification_clicked')
 //       .gte('created_at', startDate.toISOString());
 
-//     console.log('📊 [Analytics] Click events found:', clickEvents?.length || 0);
+//     console.log(' [Analytics] Click events found:', clickEvents?.length || 0);
 
 //     // Calculate metrics
 //     const totalNotificationsSent = logs?.length || 0;
@@ -508,7 +508,7 @@ async function handleGetAnalytics(
   context: { params: Promise<{ id: string }> }
 ) {
   console.log('🚀 [Analytics] Handler started');
-  console.log('👤 [Analytics] User:', user.email);
+  console.log(' [Analytics] User:', user.email);
   
   try {
     // Await params in Next.js 15
@@ -573,7 +573,7 @@ async function handleGetAnalytics(
     console.log(' [Analytics] Website verified:', website.name);
 
     // Get total subscribers
-    console.log('📊 [Analytics] Fetching subscriber counts...');
+    console.log(' [Analytics] Fetching subscriber counts...');
     const { count: totalSubscribers, error: subCountError } = await supabase
       .from('subscribers')
       .select('*', { count: 'exact', head: true })
@@ -611,7 +611,7 @@ async function handleGetAnalytics(
     }
 
     // Get click events
-    console.log('🖱️ [Analytics] Fetching click events...');
+    console.log(' [Analytics] Fetching click events...');
     const { data: clickEvents, error: clickError } = await supabase
       .from('subscriber_events')
       .select('*')
@@ -622,7 +622,7 @@ async function handleGetAnalytics(
     if (clickError) {
       console.error(' [Analytics] Click events error:', clickError);
     } else {
-      console.log('🖱️ [Analytics] Found', clickEvents?.length || 0, 'click events');
+      console.log(' [Analytics] Found', clickEvents?.length || 0, 'click events');
     }
 
     // Calculate metrics

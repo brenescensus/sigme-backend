@@ -13,8 +13,8 @@ const [subscriberId, eventName, eventDataJson] = process.argv.slice(2);
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 
-console.log('📨 [Event Handler] Processing subscriber event...');
-console.log(`👤 [Event Handler] Subscriber: ${subscriberId}`);
+console.log(' [Event Handler] Processing subscriber event...');
+console.log(` [Event Handler] Subscriber: ${subscriberId}`);
 console.log(`🎯 [Event Handler] Event: ${eventName}`);
 
 // Validate inputs
@@ -75,7 +75,7 @@ const req = client.request(options, (res) => {
       
       if (res.statusCode === 200) {
         console.log(' [Event Handler] Event processed successfully');
-        console.log(`📊 [Event Handler] Result:`, JSON.stringify(result, null, 2));
+        console.log(` [Event Handler] Result:`, JSON.stringify(result, null, 2));
         
         if (result.triggered_journeys) {
           console.log(`\n🚀 Triggered ${result.triggered_journeys.length} journey(s):`);

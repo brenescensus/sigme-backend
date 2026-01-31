@@ -14,7 +14,7 @@ const API_KEY = process.env.INTERNAL_API_KEY;
 console.log('🔄 [Processor] Starting journey step processing...');
 console.log('📋 [Processor] Environment check:');
 console.log(`   - NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL ? ' Set' : ' NOT SET'}`);
-console.log(`   - INTERNAL_API_KEY: ${API_KEY ? ' Set' : '⚠️  Optional (not set)'}`);
+console.log(`   - INTERNAL_API_KEY: ${API_KEY ? ' Set' : '  Optional (not set)'}`);
 
 // Validate required environment variables
 if (!BACKEND_URL) {
@@ -39,7 +39,7 @@ try {
 
 // Check if using localhost (common mistake in production)
 if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
-  console.warn('\n⚠️  [Processor] WARNING: Using localhost URL!');
+  console.warn('\n  [Processor] WARNING: Using localhost URL!');
   console.warn('This will not work in GitHub Actions.');
   console.warn('Please set NEXT_PUBLIC_BACKEND_URL to your production URL.');
 }
@@ -68,7 +68,7 @@ console.log(`   - Path: ${options.path}`);
 const req = client.request(options, (res) => {
   let data = '';
 
-  console.log(`\n📥 [Processor] Response received (HTTP ${res.statusCode})`);
+  console.log(`\n [Processor] Response received (HTTP ${res.statusCode})`);
 
   res.on('data', (chunk) => {
     data += chunk;
@@ -97,7 +97,7 @@ const req = client.request(options, (res) => {
             });
           }
         } else {
-          console.log(`📊 [Processor] Response:`, JSON.stringify(result, null, 2));
+          console.log(` [Processor] Response:`, JSON.stringify(result, null, 2));
         }
         
         process.exit(0);

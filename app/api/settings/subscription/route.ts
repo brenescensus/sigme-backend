@@ -11,7 +11,7 @@
 // export const GET = withAuth(
 //   async (req: NextRequest, user: AuthUser) => {
 //     try {
-//       console.log('📊 [Settings] Fetching subscription for user:', user.email);
+//       console.log(' [Settings] Fetching subscription for user:', user.email);
 
 //       // Get user subscription
 //       const { data: subscription, error } = await supabase
@@ -117,7 +117,7 @@ const supabase = createClient(
 export const GET = withAuth(
   async (req: NextRequest, user: AuthUser) => {
     try {
-      console.log(`📊 [Settings] Fetching subscription for user: ${user.email}`);
+      console.log(` [Settings] Fetching subscription for user: ${user.email}`);
 
       //  Get subscription from user_subscriptions table
       const { data: subscription, error: subError } = await supabase

@@ -66,12 +66,12 @@
 //       console.log(' [Detect Website] Found website:', website.name);
 //     }
 
-//     // ⭐ FIX: Use NEXT_PUBLIC_ prefix instead of VITE_
+//     //  FIX: Use NEXT_PUBLIC_ prefix instead of VITE_
 //     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 //     const apiUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 //     // Log for debugging
-//     console.log('🔑 [Detect Website] VAPID Public Key available:', !!vapidPublicKey);
+//     console.log(' [Detect Website] VAPID Public Key available:', !!vapidPublicKey);
 //     console.log('🌐 [Detect Website] API URL:', apiUrl);
 
 //     if (!vapidPublicKey) {

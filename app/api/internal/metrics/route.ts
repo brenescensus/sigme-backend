@@ -127,7 +127,7 @@ const supabase = createClient<Database>(
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('📊 [Metrics] Fetching processor metrics...');
+    console.log(' [Metrics] Fetching processor metrics...');
 
     // Get current time
     const now = new Date();
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
       .eq('status', 'pending');
 
     if (pendingError) {
-      console.error('❌ [Metrics] Error counting pending steps:', pendingError);
+      console.error(' [Metrics] Error counting pending steps:', pendingError);
     }
 
     // Count active journeys
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
       .eq('status', 'active');
 
     if (journeysError) {
-      console.error('❌ [Metrics] Error counting active journeys:', journeysError);
+      console.error(' [Metrics] Error counting active journeys:', journeysError);
     }
 
     // Get last processor run (from execution logs)
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
       .in('status', ['active', 'waiting']);
 
     if (statesError) {
-      console.error('❌ [Metrics] Error counting active states:', statesError);
+      console.error(' [Metrics] Error counting active states:', statesError);
     }
 
     // Count recent errors (last hour)
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
       .gte('created_at', oneHourAgo.toISOString());
 
     if (errorsError) {
-      console.error('❌ [Metrics] Error counting errors:', errorsError);
+      console.error(' [Metrics] Error counting errors:', errorsError);
     }
 
     const metrics = {
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     };
 
-    console.log('✅ [Metrics] Returning metrics:', metrics);
+    console.log(' [Metrics] Returning metrics:', metrics);
 
     return NextResponse.json(metrics, {
       headers: {
@@ -202,7 +202,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('❌ [Metrics] Fatal error:', error);
+    console.error(' [Metrics] Fatal error:', error);
     return NextResponse.json(
       { 
         success: false, 

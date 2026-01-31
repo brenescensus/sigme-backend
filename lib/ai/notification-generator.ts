@@ -706,7 +706,7 @@ class NotificationGenerator {
       const suggestions = this.parseGeneratedText(generatedText, includeEmojis);
 
       if (suggestions.length === 0) {
-        console.warn('⚠️ [AI] No valid suggestions generated, using fallback');
+        console.warn(' [AI] No valid suggestions generated, using fallback');
         return {
           success: true,
           suggestions: this.generateFallbackSuggestions(prompt),

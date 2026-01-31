@@ -39,7 +39,7 @@ jobs:
             attempt=$((attempt + 1))
             
             if [ $attempt -lt $max_attempts ]; then
-              echo "⚠️ Failed, retrying in 10s..."
+              echo " Failed, retrying in 10s..."
               sleep 10
             fi
           done

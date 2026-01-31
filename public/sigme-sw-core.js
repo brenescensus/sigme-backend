@@ -234,7 +234,7 @@
 // // Handle push notifications
 // // ============================================
 // self.addEventListener('push', (event) => {
-//   console.log('[Sigme SW Core] 📨 Push received');
+//   console.log('[Sigme SW Core]  Push received');
 
 //   let notification = {
 //     title: 'New Notification',
@@ -247,11 +247,11 @@
 //   if (event.data) {
 //     try {
 //       const data = event.data.json();
-//       console.log('[Sigme SW Core] 📦 Push data:', data);
+//       console.log('[Sigme SW Core]  Push data:', data);
 //         if (data.data) {
 //         console.log('[Sigme SW Core] current_step_id Data object exists:', data.data);
-//         console.log('[Sigme SW Core] 📋 subscriber_id:', data.data.subscriber_id);
-//         console.log('[Sigme SW Core] 📋 campaign_id:', data.data.campaign_id);
+//         console.log('[Sigme SW Core] subscriber_id:', data.data.subscriber_id);
+//         console.log('[Sigme SW Core] campaign_id:', data.data.campaign_id);
 //       } else {
 //         console.error('[Sigme SW Core]  NO DATA OBJECT IN PUSH!');
 //         console.error('[Sigme SW Core]  Push payload:', JSON.stringify(data));
@@ -266,7 +266,7 @@
 //         data: data.data || {},
 //       };
       
-//       console.log('[Sigme SW Core] 📋 Notification data:', notification.data);
+//       console.log('[Sigme SW Core] Notification data:', notification.data);
 //     } catch (e) {
 //       console.error('[Sigme SW Core] Failed to parse push data:', e);
 //     }
@@ -274,7 +274,7 @@
 
 //   // Track notification received event
 //   if (notification.data && notification.data.subscriber_id) {
-//     console.log('[Sigme SW Core] 📊 Tracking received event');
+//     console.log('[Sigme SW Core]  Tracking received event');
 //     event.waitUntil(
 //       trackEvent('notification_received', notification.data.subscriber_id, {
 //         title: notification.title,
@@ -305,18 +305,18 @@
 // // Handle notification clicks
 // // ============================================
 // self.addEventListener('notificationclick', (event) => {
-//   console.log('[Sigme SW Core] 🖱️ Notification clicked');
-//   console.log('[Sigme SW Core] 📋 Full notification:', event.notification);
-//   console.log('[Sigme SW Core] 📋 Notification data:', event.notification.data);
+//   console.log('[Sigme SW Core]  Notification clicked');
+//   console.log('[Sigme SW Core] Full notification:', event.notification);
+//   console.log('[Sigme SW Core] Notification data:', event.notification.data);
   
 //   event.notification.close();
 
 //   const notificationData = event.notification.data || {};
 //   const urlToOpen = notificationData.url || '/';
 
-//   console.log('[Sigme SW Core] 🔗 URL to open:', urlToOpen);
-//   console.log('[Sigme SW Core] 👤 Subscriber ID:', notificationData.subscriber_id);
-//   console.log('[Sigme SW Core] 📧 Campaign ID:', notificationData.campaign_id);
+//   console.log('[Sigme SW Core]  URL to open:', urlToOpen);
+//   console.log('[Sigme SW Core]  Subscriber ID:', notificationData.subscriber_id);
+//   console.log('[Sigme SW Core]  Campaign ID:', notificationData.campaign_id);
 
 //   // Track notification click event
 //   if (notificationData.subscriber_id) {
@@ -338,7 +338,7 @@
 //     event.waitUntil(trackingPromise);
 //   } else {
 //     console.error('[Sigme SW Core]  Cannot track click - missing subscriber_id');
-//     console.error('[Sigme SW Core] 📋 Available data:', notificationData);
+//     console.error('[Sigme SW Core] Available data:', notificationData);
 //   }
 
 //   // Open the URL
@@ -365,10 +365,10 @@
 // //     const apiUrl = getApiUrl();
 // //     const trackingUrl = `${apiUrl}/api/events/track`;
     
-// //     console.log(`[Sigme SW Core] 📊 Tracking: ${eventName}`);
-// //     console.log(`[Sigme SW Core] 🌐 API URL: ${trackingUrl}`);
-// //     console.log(`[Sigme SW Core] 👤 Subscriber: ${subscriberId}`);
-// //     console.log(`[Sigme SW Core] 📦 Properties:`, properties);
+// //     console.log(`[Sigme SW Core]  Tracking: ${eventName}`);
+// //     console.log(`[Sigme SW Core] API URL: ${trackingUrl}`);
+// //     console.log(`[Sigme SW Core]  Subscriber: ${subscriberId}`);
+// //     console.log(`[Sigme SW Core]  Properties:`, properties);
 
 // //     const payload = {
 // //       subscriber_id: subscriberId,
@@ -376,7 +376,7 @@
 // //       properties: properties
 // //     };
 
-// //     console.log(`[Sigme SW Core] 📤 Sending payload:`, JSON.stringify(payload, null, 2));
+// //     console.log(`[Sigme SW Core]  Sending payload:`, JSON.stringify(payload, null, 2));
 
 // //     const response = await fetch(trackingUrl, {
 // //       method: 'POST',
@@ -386,7 +386,7 @@
 // //       body: JSON.stringify(payload)
 // //     });
 
-// //     console.log(`[Sigme SW Core] 📥 Response status: ${response.status}`);
+// //     console.log(`[Sigme SW Core]  Response status: ${response.status}`);
 
 // //     if (response.ok) {
 // //       const result = await response.json();
@@ -409,21 +409,21 @@
 //     const apiUrl = getApiUrl();
 //     const trackingUrl = `${apiUrl}/api/events/track`;
     
-//     console.log(`[Sigme SW Core] 📊 Tracking: ${eventName}`);
-//     console.log(`[Sigme SW Core] 🌐 API URL: ${trackingUrl}`);
-//     console.log(`[Sigme SW Core] 👤 Subscriber: ${subscriberId}`);
-//     console.log(`[Sigme SW Core] 📦 Properties:`, properties);
+//     console.log(`[Sigme SW Core]  Tracking: ${eventName}`);
+//     console.log(`[Sigme SW Core] API URL: ${trackingUrl}`);
+//     console.log(`[Sigme SW Core]  Subscriber: ${subscriberId}`);
+//     console.log(`[Sigme SW Core]  Properties:`, properties);
 
-//     // ⭐ CRITICAL: Include website_id from config
+//     //  CRITICAL: Include website_id from config
 //     const config = await getConfig();
 //     const payload = {
 //       subscriber_id: subscriberId,
 //       event_name: eventName,
 //       properties: properties,
-//       website_id: config?.websiteId || null, // ⭐ ADD THIS
+//       website_id: config?.websiteId || null, //  ADD THIS
 //     };
 
-//     console.log(`[Sigme SW Core] 📤 Sending payload:`, JSON.stringify(payload, null, 2));
+//     console.log(`[Sigme SW Core]  Sending payload:`, JSON.stringify(payload, null, 2));
 
 //     const response = await fetch(trackingUrl, {
 //       method: 'POST',
@@ -433,18 +433,18 @@
 //       body: JSON.stringify(payload)
 //     });
 
-//     console.log(`[Sigme SW Core] 📥 Response status: ${response.status}`);
+//     console.log(`[Sigme SW Core]  Response status: ${response.status}`);
 
 //     if (response.ok) {
 //       const result = await response.json();
-//       console.log(`[Sigme SW Core] ✅ Event tracked successfully:`, result);
+//       console.log(`[Sigme SW Core]  Event tracked successfully:`, result);
 //       return result;
 //     } else {
 //       const errorText = await response.text();
-//       console.error(`[Sigme SW Core] ❌ Tracking failed (${response.status}):`, errorText);
+//       console.error(`[Sigme SW Core]  Tracking failed (${response.status}):`, errorText);
 //     }
 //   } catch (err) {
-//     console.error(`[Sigme SW Core] ❌ Tracking error:`, err);
+//     console.error(`[Sigme SW Core]  Tracking error:`, err);
 //   }
 // }
 
@@ -519,21 +519,21 @@ self.addEventListener('message', async (event) => {
   const { type, config } = event.data;
 
   if (type === 'SIGME_INIT') {
-    console.log('[Sigme SW Core] 📥 Received configuration:', config);
+    console.log('[Sigme SW Core]  Received configuration:', config);
     websiteConfig = config;
     
     // Store config in IndexedDB for persistence
     try {
       const db = await openConfigDB();
       await saveConfig(db, config);
-      console.log('[Sigme SW Core] 💾 Config saved to IndexedDB');
+      console.log('[Sigme SW Core]  Config saved to IndexedDB');
     } catch (err) {
-      console.warn('[Sigme SW Core] ⚠️ Could not save config to IndexedDB:', err);
+      console.warn('[Sigme SW Core]  Could not save config to IndexedDB:', err);
     }
   }
 
   if (type === 'SIGME_SUBSCRIBE') {
-    console.log('[Sigme SW Core] 📨 Subscribe request received');
+    console.log('[Sigme SW Core]  Subscribe request received');
     await handleSubscribe(event);
   }
 });
@@ -595,7 +595,7 @@ async function getConfig() {
       return config;
     }
   } catch (err) {
-    console.warn('[Sigme SW Core] ⚠️ Could not load config from IndexedDB:', err);
+    console.warn('[Sigme SW Core]  Could not load config from IndexedDB:', err);
   }
   
   return null;
@@ -611,10 +611,10 @@ function getApiUrl() {
   try {
     const scriptUrl = new URL(self.location.href);
     const apiUrl = scriptUrl.origin;
-    console.log('[Sigme SW Core] 🌐 Using API URL from origin:', apiUrl);
+    console.log('[Sigme SW Core] Using API URL from origin:', apiUrl);
     return apiUrl;
   } catch (e) {
-    console.error('[Sigme SW Core] ❌ Could not determine API URL:', e);
+    console.error('[Sigme SW Core]  Could not determine API URL:', e);
     return 'http://localhost:3000'; // Development fallback
   }
 }
@@ -637,14 +637,14 @@ async function handleSubscribe(event) {
       throw new Error('VAPID public key not found in configuration');
     }
 
-    console.log('[Sigme SW Core] 🔑 Subscribing with VAPID key...');
+    console.log('[Sigme SW Core]  Subscribing with VAPID key...');
 
     const subscription = await self.registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
     });
 
-    console.log('[Sigme SW Core] ✅ Subscription obtained');
+    console.log('[Sigme SW Core]  Subscription obtained');
 
     const subscriptionJSON = subscription.toJSON();
     const endpoint = subscriptionJSON.endpoint;
@@ -675,7 +675,7 @@ async function handleSubscribe(event) {
 
     const apiUrl = getApiUrl();
     
-    console.log('[Sigme SW Core] 📤 Registering with API:', apiUrl);
+    console.log('[Sigme SW Core]  Registering with API:', apiUrl);
 
     const response = await fetch(`${apiUrl}/api/subscribers/register`, {
       method: 'POST',
@@ -695,7 +695,7 @@ async function handleSubscribe(event) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[Sigme SW Core] ❌ API Error:', errorText);
+      console.error('[Sigme SW Core]  API Error:', errorText);
       throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
@@ -705,7 +705,7 @@ async function handleSubscribe(event) {
       throw new Error(result.error || 'Registration failed');
     }
 
-    console.log('[Sigme SW Core] ✅ Registration successful:', result);
+    console.log('[Sigme SW Core]  Registration successful:', result);
 
     // Notify all clients
     const clients = await self.clients.matchAll();
@@ -718,7 +718,7 @@ async function handleSubscribe(event) {
     });
 
   } catch (error) {
-    console.error('[Sigme SW Core] ❌ Registration failed:', error.message);
+    console.error('[Sigme SW Core]  Registration failed:', error.message);
 
     const clients = await self.clients.matchAll();
     clients.forEach(client => {
@@ -736,7 +736,7 @@ async function handleSubscribe(event) {
 // ============================================
 
 self.addEventListener('push', (event) => {
-  console.log('[Sigme SW Core] 📨 Push received');
+  console.log('[Sigme SW Core]  Push received');
 
   let notification = {
     title: 'New Notification',
@@ -749,16 +749,16 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const data = event.data.json();
-      console.log('[Sigme SW Core] 📦 Push data:', data);
+      console.log('[Sigme SW Core]  Push data:', data);
       
       if (data.data) {
-        console.log('[Sigme SW Core] ✅ Data object exists:', data.data);
-        console.log('[Sigme SW Core] 📋 subscriber_id:', data.data.subscriber_id);
-        console.log('[Sigme SW Core] 📋 campaign_id:', data.data.campaign_id);
-        console.log('[Sigme SW Core] 📋 journey_id:', data.data.journey_id);
+        console.log('[Sigme SW Core]  Data object exists:', data.data);
+        console.log('[Sigme SW Core] subscriber_id:', data.data.subscriber_id);
+        console.log('[Sigme SW Core] campaign_id:', data.data.campaign_id);
+        console.log('[Sigme SW Core] journey_id:', data.data.journey_id);
       } else {
-        console.error('[Sigme SW Core] ❌ NO DATA OBJECT IN PUSH!');
-        console.error('[Sigme SW Core] 📦 Push payload:', JSON.stringify(data));
+        console.error('[Sigme SW Core]  NO DATA OBJECT IN PUSH!');
+        console.error('[Sigme SW Core]  Push payload:', JSON.stringify(data));
       }
       
       notification = {
@@ -771,9 +771,9 @@ self.addEventListener('push', (event) => {
         data: data.data || {},
       };
       
-      console.log('[Sigme SW Core] 📋 Notification data:', notification.data);
+      console.log('[Sigme SW Core] Notification data:', notification.data);
     } catch (e) {
-      console.error('[Sigme SW Core] ❌ Failed to parse push data:', e);
+      console.error('[Sigme SW Core]  Failed to parse push data:', e);
     }
   }
 
@@ -788,14 +788,14 @@ self.addEventListener('push', (event) => {
     vibrate: [200, 100, 200]
   };
 
-  // ✅ SHOW NOTIFICATION AND TRACK DELIVERY
+  //  SHOW NOTIFICATION AND TRACK DELIVERY
   const showAndTrackPromise = self.registration.showNotification(notification.title, options)
     .then(() => {
-      console.log('[Sigme SW Core] 📨 Notification shown successfully');
+      console.log('[Sigme SW Core]  Notification shown successfully');
       
-      // ✅ TRACK DELIVERY
+      //  TRACK DELIVERY
       if (notification.tag && notification.data && notification.data.subscriber_id) {
-        console.log('[Sigme SW Core] 📊 Tracking delivery...');
+        console.log('[Sigme SW Core]  Tracking delivery...');
         
         return trackDelivery(
           notification.tag, // notification_log.id
@@ -803,13 +803,13 @@ self.addEventListener('push', (event) => {
           notification.data.journey_id
         );
       } else {
-        console.warn('[Sigme SW Core] ⚠️ Cannot track delivery - missing required data');
-        console.warn('[Sigme SW Core] tag:', notification.tag);
-        console.warn('[Sigme SW Core] subscriber_id:', notification.data?.subscriber_id);
+        console.warn('[Sigme SW Core]  Cannot track delivery - missing required data');
+        // console.warn('[Sigme SW Core] tag:', notification.tag);
+        // console.warn('[Sigme SW Core] subscriber_id:', notification.data?.subscriber_id);
       }
     })
     .catch((error) => {
-      console.error('[Sigme SW Core] ❌ Error showing notification:', error);
+      console.error('[Sigme SW Core]  Error showing notification:', error);
     });
 
   event.waitUntil(showAndTrackPromise);
@@ -820,23 +820,23 @@ self.addEventListener('push', (event) => {
 // ============================================
 
 self.addEventListener('notificationclick', (event) => {
-  console.log('[Sigme SW Core] 🖱️ Notification clicked');
-  console.log('[Sigme SW Core] 📋 Full notification:', event.notification);
-  console.log('[Sigme SW Core] 📋 Notification data:', event.notification.data);
+  console.log('[Sigme SW Core]  Notification clicked');
+  console.log('[Sigme SW Core] Full notification:', event.notification);
+  console.log('[Sigme SW Core] Notification data:', event.notification.data);
   
   event.notification.close();
 
   const notificationData = event.notification.data || {};
   const urlToOpen = notificationData.url || '/';
 
-  console.log('[Sigme SW Core] 🔗 URL to open:', urlToOpen);
-  console.log('[Sigme SW Core] 👤 Subscriber ID:', notificationData.subscriber_id);
-  console.log('[Sigme SW Core] 📧 Campaign ID:', notificationData.campaign_id);
-  console.log('[Sigme SW Core] 🗺️ Journey ID:', notificationData.journey_id);
+  console.log('[Sigme SW Core]  URL to open:', urlToOpen);
+  console.log('[Sigme SW Core]  Subscriber ID:', notificationData.subscriber_id);
+  console.log('[Sigme SW Core]  Campaign ID:', notificationData.campaign_id);
+  console.log('[Sigme SW Core] Journey ID:', notificationData.journey_id);
 
-  // ✅ TRACK NOTIFICATION CLICK
+  //  TRACK NOTIFICATION CLICK
   if (notificationData.subscriber_id) {
-    console.log('[Sigme SW Core] 📊 Tracking click event...');
+    console.log('[Sigme SW Core]  Tracking click event...');
     
     const trackingPromise = trackEvent(
       'notification_clicked',
@@ -854,11 +854,11 @@ self.addEventListener('notificationclick', (event) => {
 
     event.waitUntil(trackingPromise);
   } else {
-    console.error('[Sigme SW Core] ❌ Cannot track click - missing subscriber_id');
-    console.error('[Sigme SW Core] 📋 Available data:', notificationData);
+    console.error('[Sigme SW Core]  Cannot track click - missing subscriber_id');
+    console.error('[Sigme SW Core] Available data:', notificationData);
   }
 
-  // ✅ OPEN THE URL
+  //  OPEN THE URL
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
@@ -881,19 +881,19 @@ self.addEventListener('notificationclick', (event) => {
 // ============================================
 
 /**
- * ✅ Track custom events
+ *  Track custom events
  */
 async function trackEvent(eventName, subscriberId, properties = {}) {
   try {
     const apiUrl = getApiUrl();
     const trackingUrl = `${apiUrl}/api/events/track`;
     
-    console.log(`[Sigme SW Core] 📊 Tracking: ${eventName}`);
-    console.log(`[Sigme SW Core] 🌐 API URL: ${trackingUrl}`);
-    console.log(`[Sigme SW Core] 👤 Subscriber: ${subscriberId}`);
-    console.log(`[Sigme SW Core] 📦 Properties:`, properties);
+    // console.log(`[Sigme SW Core]  Tracking: ${eventName}`);
+    // console.log(`[Sigme SW Core] API URL: ${trackingUrl}`);
+    // console.log(`[Sigme SW Core]  Subscriber: ${subscriberId}`);
+    // console.log(`[Sigme SW Core]  Properties:`, properties);
 
-    // ✅ INCLUDE WEBSITE_ID FROM CONFIG
+    //  INCLUDE WEBSITE_ID FROM CONFIG
     const config = await getConfig();
     const payload = {
       subscriber_id: subscriberId,
@@ -902,7 +902,7 @@ async function trackEvent(eventName, subscriberId, properties = {}) {
       website_id: config?.websiteId || null,
     };
 
-    console.log(`[Sigme SW Core] 📤 Sending payload:`, JSON.stringify(payload, null, 2));
+    console.log(`[Sigme SW Core]  Sending payload:`, JSON.stringify(payload, null, 2));
 
     const response = await fetch(trackingUrl, {
       method: 'POST',
@@ -912,30 +912,30 @@ async function trackEvent(eventName, subscriberId, properties = {}) {
       body: JSON.stringify(payload)
     });
 
-    console.log(`[Sigme SW Core] 📥 Response status: ${response.status}`);
+    console.log(`[Sigme SW Core]  Response status: ${response.status}`);
 
     if (response.ok) {
       const result = await response.json();
-      console.log(`[Sigme SW Core] ✅ Event tracked successfully:`, result);
+      console.log(`[Sigme SW Core]  Event tracked successfully:`, result);
       return result;
     } else {
       const errorText = await response.text();
-      console.error(`[Sigme SW Core] ❌ Tracking failed (${response.status}):`, errorText);
+      console.error(`[Sigme SW Core]  Tracking failed (${response.status}):`, errorText);
     }
   } catch (err) {
-    console.error(`[Sigme SW Core] ❌ Tracking error:`, err);
+    console.error(`[Sigme SW Core]  Tracking error:`, err);
   }
 }
 
 /**
- * ✅ Track notification delivery
+ *  Track notification delivery
  */
 async function trackDelivery(notificationId, subscriberId, journeyId) {
   try {
     const apiUrl = getApiUrl();
     const deliveryUrl = `${apiUrl}/api/notifications/track-delivery`;
     
-    console.log('[Sigme SW Core] 📊 Tracking delivery for notification:', notificationId);
+    console.log('[Sigme SW Core]  Tracking delivery for notification:', notificationId);
 
     const payload = {
       notification_id: notificationId,
@@ -944,7 +944,7 @@ async function trackDelivery(notificationId, subscriberId, journeyId) {
       delivered_at: new Date().toISOString(),
     };
 
-    console.log('[Sigme SW Core] 📤 Delivery payload:', JSON.stringify(payload, null, 2));
+    console.log('[Sigme SW Core]  Delivery payload:', JSON.stringify(payload, null, 2));
 
     const response = await fetch(deliveryUrl, {
       method: 'POST',
@@ -954,18 +954,18 @@ async function trackDelivery(notificationId, subscriberId, journeyId) {
       body: JSON.stringify(payload)
     });
 
-    console.log('[Sigme SW Core] 📥 Delivery response status:', response.status);
+    console.log('[Sigme SW Core]  Delivery response status:', response.status);
 
     if (response.ok) {
       const result = await response.json();
-      console.log('[Sigme SW Core] ✅ Delivery tracked successfully:', result);
+      console.log('[Sigme SW Core]  Delivery tracked successfully:', result);
       return result;
     } else {
       const errorText = await response.text();
-      console.error('[Sigme SW Core] ❌ Delivery tracking failed:', errorText);
+      console.error('[Sigme SW Core]  Delivery tracking failed:', errorText);
     }
   } catch (err) {
-    console.error('[Sigme SW Core] ❌ Delivery tracking error:', err);
+    console.error('[Sigme SW Core]  Delivery tracking error:', err);
   }
 }
 
@@ -995,4 +995,4 @@ function urlBase64ToUint8Array(base64String) {
 // READY
 // ============================================
 
-console.log('[Sigme SW Core] ✅ Ready');
+console.log('[Sigme SW Core]  Ready');

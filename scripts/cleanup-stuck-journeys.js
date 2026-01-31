@@ -108,10 +108,10 @@
 //       }
 //     }
 
-//     console.log(`\n📊 Cleanup Summary:`);
+//     console.log(`\n Cleanup Summary:`);
 //     console.log(`   Fixed: ${fixedCount}`);
 //     console.log(`   Errors: ${errorCount}`);
-//     console.log(`  📋 Total checked: ${stuckJourneys.length}`);
+//     console.log(`  Total checked: ${stuckJourneys.length}`);
 
 //   } catch (error) {
 //     console.error(' Fatal error in cleanup process:', error);
@@ -226,7 +226,7 @@ async function cleanupStuckJourneys() {
       }
     }
 
-    console.log(`\n📊 Cleanup Summary:`);
+    console.log(`\n Cleanup Summary:`);
     console.log(`  🧹 Cleaned: ${cleaned}`);
     console.log(`   Failed: ${stuckStates.length - cleaned}`);
 

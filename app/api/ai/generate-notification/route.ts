@@ -345,9 +345,9 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
         .limit(10); // Top 10 campaigns
 
       if (campaignsError) {
-        console.warn('⚠️  [AI Generate] Could not fetch campaigns:', campaignsError.message);
+        console.warn('  [AI Generate] Could not fetch campaigns:', campaignsError.message);
       } else {
-        console.log(`📊 [AI Generate] Found ${campaigns?.length || 0} historical campaigns`);
+        console.log(` [AI Generate] Found ${campaigns?.length || 0} historical campaigns`);
       }
 
       // Build context object with historical data

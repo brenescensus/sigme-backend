@@ -112,7 +112,7 @@ export const POST = withAuth(
 
       const supabase = await getAuthenticatedClient(req);
 
-      console.log('📨 [Team] Inviting user:', email, 'as', role);
+      console.log(' [Team] Inviting user:', email, 'as', role);
 
       // Check if already invited
       const { data: existing } = await supabase

@@ -159,7 +159,7 @@
 // //     }
 
 // //     console.log('📋 [Journeys] Fetching journeys for website:', websiteId);
-// //     console.log('👤 [Journeys] User:', user.id);
+// //     console.log(' [Journeys] User:', user.id);
 
 // //     // Fetch journeys
 // //     const { data: journeys, error: journeysError } = await supabase
@@ -182,7 +182,7 @@
 // //       });
 // //     }
 
-// //     console.log(`📊 [Journeys] Found ${journeys.length} journeys, calculating stats...`);
+// //     console.log(` [Journeys] Found ${journeys.length} journeys, calculating stats...`);
 
 // //     // Calculate stats for each journey by querying user_journey_states
 // //     const journeysWithStats = await Promise.all(
@@ -213,7 +213,7 @@
 // //           const total_completed = allStates.filter(s => s.status === 'completed').length;
 // //           const total_exited = allStates.filter(s => s.status === 'exited').length;
 
-// //           console.log(`  📊 ${journey.name}:`, {
+// //           console.log(`   ${journey.name}:`, {
 // //             entered: total_entered,
 // //             active: total_active,
 // //             completed: total_completed,

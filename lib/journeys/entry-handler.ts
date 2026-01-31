@@ -338,7 +338,7 @@
 //   journey: any,
 //   triggerEvent: TrackedEvent
 // ): Promise<void> {
-//   console.log(`[JourneyEntry] ⭐ Entering subscriber into: ${journey.name}`);
+//   console.log(`[JourneyEntry]  Entering subscriber into: ${journey.name}`);
 
 //   // Parse flow
 //   const flowDefinition = parseFlowDefinition(journey.flow_definition);
@@ -404,7 +404,7 @@
 //     },
 //   });
 
-//   // ⭐ CRITICAL FIX: Process first step IMMEDIATELY
+//   //  CRITICAL FIX: Process first step IMMEDIATELY
 //   console.log('[JourneyEntry] 🚀 Processing first step immediately...');
   
 //   try {
@@ -445,7 +445,7 @@
 //     return;
 //   }
 
-//   console.log(`[JourneyEntry] ⭐ Processing first step immediately: ${stepId} (${step.type})`);
+//   console.log(`[JourneyEntry]  Processing first step immediately: ${stepId} (${step.type})`);
 
 //   //  FIX: Don't schedule, just process immediately
 //   try {
@@ -591,7 +591,7 @@ export interface TrackedEvent {
   timestamp: string;
 }
 
-// ✅ FIX: Add proper type definitions
+//  FIX: Add proper type definitions
 interface FlowNode {
   id: string;
   type: string;
@@ -614,7 +614,7 @@ interface FlowDefinition {
   start_step_id?: string;
 }
 
-// ✅ FIX: Add return type
+//  FIX: Add return type
 function parseFlowDefinition(data: any): FlowDefinition {
   if (!data || typeof data !== 'object') {
     console.warn('[JourneyEntry] Invalid flow definition, returning empty flow');
@@ -918,11 +918,11 @@ class JourneyEntryHandler {
     journey: any,
     triggerEvent: TrackedEvent
   ): Promise<void> {
-    console.log(`[JourneyEntry] ⭐ Entering subscriber into: ${journey.name}`);
+    console.log(`[JourneyEntry]  Entering subscriber into: ${journey.name}`);
 
     const flowDefinition = parseFlowDefinition(journey.flow_definition);
     
-    // ✅ FIX: Add type to find callback
+    //  FIX: Add type to find callback
     const entryNode = flowDefinition.nodes.find((n: FlowNode) => n.type === 'entry');
     const startNode = entryNode || flowDefinition.nodes[0];
 
@@ -956,7 +956,7 @@ class JourneyEntryHandler {
       return;
     }
 
-    console.log(`[JourneyEntry] ✅ Created journey state: ${journeyState.id}`);
+    console.log(`[JourneyEntry]  Created journey state: ${journeyState.id}`);
 
     // Update journey stats
     await supabase.rpc('increment', {
@@ -986,7 +986,7 @@ class JourneyEntryHandler {
     
     try {
       if (startNode.type === 'entry') {
-        // ✅ FIX: Add type to find callback
+        //  FIX: Add type to find callback
         const nextEdge = flowDefinition.edges.find((e: FlowEdge) => e.from === startNode.id);
         if (nextEdge) {
           await supabase
@@ -1000,9 +1000,9 @@ class JourneyEntryHandler {
         await journeyProcessor.processJourneyStep(journeyState.id);
       }
       
-      console.log('[JourneyEntry] ✅ First step processed');
+      console.log('[JourneyEntry]  First step processed');
     } catch (error: any) {
-      console.error('[JourneyEntry] ❌ First step failed:', error.message);
+      console.error('[JourneyEntry]  First step failed:', error.message);
     }
   }
 
@@ -1011,7 +1011,7 @@ class JourneyEntryHandler {
     stepId: string,
     journey: any
   ): Promise<void> {
-    // ✅ FIX: Add type to find callback
+    //  FIX: Add type to find callback
     const step = journey.flow_definition.nodes.find(
       (n: any) => n.id === stepId
     );
@@ -1021,13 +1021,13 @@ class JourneyEntryHandler {
       return;
     }
 
-    console.log(`[JourneyEntry] ⭐ Processing first step immediately: ${stepId} (${step.type})`);
+    console.log(`[JourneyEntry]  Processing first step immediately: ${stepId} (${step.type})`);
 
     try {
       await journeyProcessor.processJourneyStep(journeyStateId);
-      console.log('[JourneyEntry] ✅ First step processed successfully');
+      console.log('[JourneyEntry]  First step processed successfully');
     } catch (error: any) {
-      console.error('[JourneyEntry] ❌ First step failed:', error.message);
+      console.error('[JourneyEntry]  First step failed:', error.message);
     }
   }
 

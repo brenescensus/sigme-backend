@@ -186,7 +186,7 @@
 
 // //     // Prevent deletion if active with users in it
 // //     if (journey.status === 'active' && journey.total_active && journey.total_active > 0) {
-// //       console.log('⚠️ [DELETE] Journey has active users, cannot delete');
+// //       console.log(' [DELETE] Journey has active users, cannot delete');
 // //       return NextResponse.json({ 
 // //         error: `Cannot delete active journey with ${journey.total_active} active users. Please pause it first.`,
 // //         total_active: journey.total_active,
@@ -450,7 +450,7 @@
 
 //     // Prevent deletion if active with users in it
 //     if (journey.status === 'active' && journey.total_active && journey.total_active > 0) {
-//       console.log('⚠️ [DELETE] Journey has active users, cannot delete');
+//       console.log(' [DELETE] Journey has active users, cannot delete');
 //       return NextResponse.json({ 
 //         error: `Cannot delete active journey with ${journey.total_active} active users. Please pause it first.`,
 //         total_active: journey.total_active,
@@ -728,7 +728,7 @@ export async function DELETE(
 
     // Prevent deletion if active with users in it
     if (journey.status === 'active' && journey.total_active && journey.total_active > 0) {
-      console.log('⚠️ [DELETE] Journey has active users, cannot delete');
+      console.log(' [DELETE] Journey has active users, cannot delete');
       return NextResponse.json({ 
         error: `Cannot delete active journey with ${journey.total_active} active users. Please pause it first.`,
         total_active: journey.total_active,

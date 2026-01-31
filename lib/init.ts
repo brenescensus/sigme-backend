@@ -17,7 +17,7 @@ if (isServer && (isDevelopment || isProduction)) {
   // Start journey processor
   startScheduler();
   
-  console.log('✅ [Init] Background services started');
+  console.log(' [Init] Background services started');
 }
 
 export {};

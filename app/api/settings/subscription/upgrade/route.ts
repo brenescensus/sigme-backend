@@ -746,7 +746,7 @@ export const POST = withAuth(async (req, user) => {
   try {
     const { plan_id, coupon_code, currency = 'USD', amount } = await req.json();
 
-    console.log('📦 Upgrade request:', {
+    console.log(' Upgrade request:', {
       plan_id,
       coupon_code,
       currency,

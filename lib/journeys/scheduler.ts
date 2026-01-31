@@ -59,13 +59,13 @@ let isShuttingDown = false;
 export function startScheduler() {
   // Prevent multiple schedulers
   if (intervalId) {
-    console.log('⚠️ [Scheduler] Already running');
+    console.log(' [Scheduler] Already running');
     return;
   }
 
   // Only run in server environment (not during build)
   if (typeof window !== 'undefined') {
-    console.log('⚠️ [Scheduler] Skipping in browser environment');
+    console.log(' [Scheduler] Skipping in browser environment');
     return;
   }
 
@@ -75,8 +75,8 @@ export function startScheduler() {
 
   // Run immediately on start
   processDueSteps()
-    .then(() => console.log('✅ [Scheduler] Initial run completed'))
-    .catch(err => console.error('❌ [Scheduler] Initial run failed:', err));
+    .then(() => console.log(' [Scheduler] Initial run completed'))
+    .catch(err => console.error(' [Scheduler] Initial run failed:', err));
 
   // Then run every 30 seconds
   intervalId = setInterval(async () => {
@@ -94,13 +94,13 @@ export function startScheduler() {
       isRunning = true;
       await processDueSteps();
     } catch (error: any) {
-      console.error('❌ [Scheduler] Error:', error.message);
+      console.error(' [Scheduler] Error:', error.message);
     } finally {
       isRunning = false;
     }
   }, 30000); // 30 seconds
 
-  console.log('✅ [Scheduler] Journey processor started successfully');
+  console.log(' [Scheduler] Journey processor started successfully');
 }
 
 /**
