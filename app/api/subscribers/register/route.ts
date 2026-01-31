@@ -76,7 +76,7 @@
 // //     if (existing) {
 // //       if (existing.status === 'active') {
 // //         console.log('ℹ️ [Register Subscriber] Already subscribed:', existing.id);
-        
+
 // //         // Update geo data even for existing subscribers
 // //         await supabase
 // //           .from('subscribers')
@@ -277,7 +277,7 @@
 //     if (existing) {
 //       if (existing.status === 'active') {
 //         console.log('ℹ️ [Register Subscriber] Already subscribed:', existing.id);
-        
+
 //         // Update geo data even for existing subscribers
 //         await supabase
 //           .from('subscribers')
@@ -469,9 +469,9 @@ async function handler(req: NextRequest) {
     if (!websiteId || !endpoint || !p256dh || !auth) {
       console.log('❌ [Register Subscriber] Missing required fields');
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Missing required fields: websiteId, endpoint, p256dh, auth' 
+        {
+          success: false,
+          error: 'Missing required fields: websiteId, endpoint, p256dh, auth'
         },
         { status: 400 }
       );
@@ -524,7 +524,7 @@ async function handler(req: NextRequest) {
     if (existing) {
       if (existing.status === 'active') {
         console.log('ℹ️ [Register Subscriber] Already subscribed:', existing.id);
-        
+
         // Update geo data
         await supabase
           .from('subscribers')
@@ -559,6 +559,11 @@ async function handler(req: NextRequest) {
 
         return NextResponse.json({
           success: true,
+          subscriber_id: existing.id,
+          data: {
+            id: existing.id,
+            status: existing.status,
+          },
           subscriber: existing,
           message: 'Already subscribed',
         });
@@ -618,6 +623,8 @@ async function handler(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
+        subscriber_id: reactivated.id,
+        data: reactivated,
         subscriber: reactivated,
         message: 'Subscriber reactivated',
       });
@@ -681,6 +688,16 @@ async function handler(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
+        subscriber_id: newSubscriber.id,
+        data: {
+          id: newSubscriber.id,
+          country: newSubscriber.country,
+          city: newSubscriber.city,
+          browser: newSubscriber.browser,
+          device_type: newSubscriber.device_type,
+          status: newSubscriber.status,
+          created_at: newSubscriber.created_at
+        },
         subscriber: {
           id: newSubscriber.id,
           country: newSubscriber.country,

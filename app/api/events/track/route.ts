@@ -1,5 +1,5 @@
 
-// app/api/events/track/route.ts - CORS FIXED
+// app/api/events/track/route.ts 
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
