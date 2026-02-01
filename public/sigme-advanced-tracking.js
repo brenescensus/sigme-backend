@@ -397,7 +397,7 @@
 
 
 
-// backend/public/sigme-advanced-tracking.js - FIXED VERSION
+// backend/public/sigme-advanced-tracking.js 
 // Enhanced tracking capabilities for Sigme SDK
 
 (function() {
@@ -572,7 +572,7 @@
         const href = link.href;
         const isExternal = !href.startsWith(window.location.origin);
         
-        console.log('[Sigme] 🔗 Link clicked:', href);
+        console.log('[Sigme]  Link clicked:', href);
         
         //  FIXED: Use .track() not .trackEvent()
         window.Sigme.track('link_clicked', {

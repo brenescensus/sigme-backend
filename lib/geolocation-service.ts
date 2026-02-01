@@ -719,7 +719,7 @@
       
 // // //       // If it's a rate limit error, try next provider immediately
 // // //       if (error.message.includes('rate limit') || error.message.includes('429')) {
-// // //         console.log(`[Geo] ⏭️ Rate limit hit, trying next provider...`);
+// // //         console.log(`[Geo] Rate limit hit, trying next provider...`);
 // // //         continue;
 // // //       }
       
@@ -810,7 +810,7 @@
 // //       lastError = error;
       
 // //       if (error.message.includes('rate limit') || error.message.includes('429')) {
-// //         console.log(`[Geo] ⏭️ Rate limit hit, trying next provider...`);
+// //         console.log(`[Geo] Rate limit hit, trying next provider...`);
 // //         continue;
 // //       }
       
@@ -1364,7 +1364,7 @@
 //       console.error(`[Geo]  ${provider.name} failed:`, error.message);
       
 //       if (error.message.includes('429') || error.message.includes('rate limit')) {
-//         console.log(`[Geo] ⏭️ Rate limit, trying next...`);
+//         console.log(`[Geo] Rate limit, trying next...`);
 //         continue;
 //       }
 //     }
@@ -2014,7 +2014,7 @@ export async function getGeolocation(ip: string): Promise<GeoLocation> {
       
       // If rate limited, try next provider immediately
       if (error.message.includes('429') || error.message.includes('rate limit')) {
-        console.log(`[Geo] ⏭️ Rate limit hit, trying next provider...`);
+        console.log(`[Geo] Rate limit hit, trying next provider...`);
         continue;
       }
       

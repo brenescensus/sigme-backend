@@ -1,10 +1,8 @@
-
-// // app/api/events/track/route.ts 
-
 // import { NextRequest, NextResponse } from 'next/server';
 // import { createClient } from '@supabase/supabase-js';
 // import type { Database } from '@/types/database';
 // import { trackEventWithJourneys } from '@/lib/journeys/entry-handler';
+// // import { checkAdvancedTriggers } from '@/lib/journeys/advanced-entry-checker';
 
 // const supabase = createClient<Database>(
 //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,18 +15,27 @@
 //   }
 // );
 
-// /**
-//  * Track subscriber events and trigger journeys
-//  */
+// //  HELPER: Create consistent CORS headers
+// function getCorsHeaders(request: NextRequest) {
+//   const origin = request.headers.get('origin') || '*';
+  
+//   return {
+//     'Access-Control-Allow-Origin': origin,
+//     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+//     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+//     'Access-Control-Allow-Credentials': 'false',
+//   };
+// }
+
 // export async function POST(request: NextRequest) {
 //   try {
 //     console.log('[Event Track]  Request received');
 
 //     const body = await request.json();
-//     console.log('[Event Track]  Body:', JSON.stringify(body, null, 2));
+//     console.log('[Event Track] 📦 Body:', JSON.stringify(body, null, 2));
 
-//     const { 
-//       subscriber_id, 
+//     const {
+//       subscriber_id,
 //       event_name,
 //       event_data,
 //       properties = {},
@@ -38,22 +45,13 @@
 //       tags
 //     } = body;
 
-//     // Validate
 //     if (!subscriber_id || !event_name) {
 //       return NextResponse.json(
 //         { success: false, error: 'subscriber_id and event_name are required' },
-//         { 
-//           status: 400,
-//           headers: {
-//             'Access-Control-Allow-Origin': '*',
-//             'Access-Control-Allow-Methods': 'POST, OPTIONS',
-//             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-//           },
-//         }
+//         { status: 400, headers: getCorsHeaders(request) }
 //       );
 //     }
 
-//     // Get subscriber
 //     const { data: subscriber, error: subError } = await supabase
 //       .from('subscribers')
 //       .select('*')
@@ -63,14 +61,7 @@
 //     if (subError || !subscriber) {
 //       return NextResponse.json(
 //         { success: false, error: 'Subscriber not found' },
-//         { 
-//           status: 404,
-//           headers: {
-//             'Access-Control-Allow-Origin': '*',
-//             'Access-Control-Allow-Methods': 'POST, OPTIONS',
-//             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-//           },
-//         }
+//         { status: 404, headers: getCorsHeaders(request) }
 //       );
 //     }
 
@@ -79,28 +70,19 @@
 //     if (!finalWebsiteId) {
 //       return NextResponse.json(
 //         { success: false, error: 'website_id is required' },
-//         { 
-//           status: 400,
-//           headers: {
-//             'Access-Control-Allow-Origin': '*',
-//             'Access-Control-Allow-Methods': 'POST, OPTIONS',
-//             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-//           },
-//         }
+//         { status: 400, headers: getCorsHeaders(request) }
 //       );
 //     }
 
-//     // Merge properties
 //     const mergedProperties = {
 //       ...properties,
 //       ...event_data,
 //       current_url: current_url || properties.current_url || event_data?.current_url,
 //     };
 
-//     // Update subscriber
 //     await supabase
 //       .from('subscribers')
-//       .update({ 
+//       .update({
 //         last_active_at: new Date().toISOString(),
 //         last_seen_at: new Date().toISOString()
 //       })
@@ -109,39 +91,41 @@
 //     // Handle notification clicks
 //     if (event_name === 'notification_clicked') {
 //       const campaignId = mergedProperties?.campaign_id;
+//       const journeyId = mergedProperties?.journey_id;
+
+//       // Update notification logs
+//       if (journeyId) {
+//         const { data: logs } = await supabase
+//           .from('notification_logs')
+//           .select('*')
+//           .eq('journey_id', journeyId)
+//           .eq('subscriber_id', subscriber_id)
+//           .is('clicked_at', null)
+//           .order('created_at', { ascending: false })
+//           .limit(1);
+
+//         if (logs && logs.length > 0) {
+//           await supabase
+//             .from('notification_logs')
+//             .update({ clicked_at: new Date().toISOString() })
+//             .eq('id', logs[0].id);
+
+//           console.log('[Event Track]  Updated notification log click');
+//         }
+//       }
 
 //       if (campaignId) {
-//         try {
-//           const { data: logs } = await supabase
-//             .from('notification_logs')
-//             .select('*')
-//             .eq('campaign_id', campaignId)
-//             .eq('subscriber_id', subscriber_id)
-//             .is('clicked_at', null)
-//             .order('created_at', { ascending: false })
-//             .limit(1);
+//         const { data: campaign } = await supabase
+//           .from('campaigns')
+//           .select('clicked_count')
+//           .eq('id', campaignId)
+//           .single();
 
-//           if (logs && logs.length > 0) {
-//             await supabase
-//               .from('notification_logs')
-//               .update({ clicked_at: new Date().toISOString() })
-//               .eq('id', logs[0].id);
-//           }
-
-//           const { data: campaign } = await supabase
+//         if (campaign) {
+//           await supabase
 //             .from('campaigns')
-//             .select('clicked_count')
-//             .eq('id', campaignId)
-//             .single();
-
-//           if (campaign) {
-//             await supabase
-//               .from('campaigns')
-//               .update({ clicked_count: (campaign.clicked_count || 0) + 1 })
-//               .eq('id', campaignId);
-//           }
-//         } catch (error: any) {
-//           console.error('[Event Track] Click tracking error:', error);
+//             .update({ clicked_count: (campaign.clicked_count || 0) + 1 })
+//             .eq('id', campaignId);
 //         }
 //       }
 //     }
@@ -159,22 +143,19 @@
 //       .single();
 
 //     if (insertError) {
-//       console.error('[Event Track] Insert error:', insertError);
+//       console.error('[Event Track]  Insert error:', insertError);
 //       return NextResponse.json(
 //         { success: false, error: 'Failed to track event' },
-//         { 
-//           status: 500,
-//           headers: {
-//             'Access-Control-Allow-Origin': '*',
-//             'Access-Control-Allow-Methods': 'POST, OPTIONS',
-//             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-//           },
-//         }
+//         { status: 500, headers: getCorsHeaders(request) }
 //       );
 //     }
 
-//     // Trigger journeys (non-blocking)
+//     console.log('[Event Track]  Event tracked:', event.id);
+
+//     let journeysTriggered = 0;
+
 //     try {
+//            // Check legacy triggers
 //       await trackEventWithJourneys({
 //         subscriber_id,
 //         website_id: finalWebsiteId,
@@ -182,83 +163,97 @@
 //         event_data: mergedProperties,
 //         timestamp: new Date().toISOString(),
 //       });
+
 //     } catch (journeyError: any) {
-//       console.error('[Event Track] Journey trigger error:', journeyError);
+//       console.error('[Event Track]  Journey error:', journeyError);
 //     }
 
-//     //  RETURN WITH CORS HEADERS
 //     return NextResponse.json(
 //       {
 //         success: true,
 //         event_id: event.id,
 //         message: 'Event tracked successfully',
+//         journeys_triggered: journeysTriggered,
 //       },
 //       {
-//         headers: {
-//           'Access-Control-Allow-Origin': '*',
-//           'Access-Control-Allow-Methods': 'POST, OPTIONS',
-//           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-//         },
+//         headers: getCorsHeaders(request),
 //       }
 //     );
 
 //   } catch (error: any) {
-//     console.error('[Event Track] Fatal error:', error);
+//     console.error('[Event Track]  Fatal error:', error);
 //     return NextResponse.json(
 //       { success: false, error: 'Internal server error' },
-//       { 
-//         status: 500,
-//         headers: {
-//           'Access-Control-Allow-Origin': '*',
-//           'Access-Control-Allow-Methods': 'POST, OPTIONS',
-//           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-//         },
-//       }
+//       { status: 500, headers: getCorsHeaders(request) }
 //     );
 //   }
 // }
 
-// /**
-//  * OPTIONS /api/events/track
-//  * Handle CORS preflight requests
-//  *  CRITICAL FIX: Include Authorization in allowed headers
-//  */
 // export async function OPTIONS(request: NextRequest) {
 //   return new NextResponse(null, {
 //     status: 204,
 //     headers: {
-//       'Access-Control-Allow-Origin': '*',
-//       'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-//       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+//       ...getCorsHeaders(request),
 //       'Access-Control-Max-Age': '86400',
-//       'Access-Control-Allow-Credentials': 'false',
 //     },
 //   });
+// }
+
+// export async function GET(request: NextRequest) {
+//   try {
+//     const { searchParams } = new URL(request.url);
+//     const subscriberId = searchParams.get('subscriber_id');
+//     const limit = parseInt(searchParams.get('limit') || '50');
+
+//     if (!subscriberId) {
+//       return NextResponse.json(
+//         { success: false, error: 'subscriber_id is required' },
+//         { status: 400, headers: getCorsHeaders(request) }
+//       );
+//     }
+
+//     const { data: events, error } = await supabase
+//       .from('subscriber_events')
+//       .select('*')
+//       .eq('subscriber_id', subscriberId)
+//       .order('created_at', { ascending: false })
+//       .limit(limit);
+
+//     if (error) {
+//       return NextResponse.json(
+//         { success: false, error: error.message },
+//         { status: 500, headers: getCorsHeaders(request) }
+//       );
+//     }
+
+//     return NextResponse.json(
+//       {
+//         success: true,
+//         events: events || [],
+//         count: events?.length || 0,
+//       },
+//       {
+//         headers: getCorsHeaders(request),
+//       }
+//     );
+
+//   } catch (error: any) {
+//     console.error('[Event Track] GET error:', error);
+//     return NextResponse.json(
+//       { success: false, error: 'Internal server error' },
+//       { status: 500, headers: getCorsHeaders(request) }
+//     );
+//   }
 // }
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-// app/api/events/track/route.ts - COMPLETE WITH ADVANCED TRIGGERS
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import { trackEventWithJourneys } from '@/lib/journeys/entry-handler';
-import { checkAdvancedTriggers } from '@/lib/journeys/advanced-entry-checker';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -271,16 +266,32 @@ const supabase = createClient<Database>(
   }
 );
 
-/**
- * Track subscriber events and trigger journeys
- */
+//  FIXED: Explicit return type, consistent structure
+function getCorsHeaders(request: NextRequest): Record<string, string> {
+  const origin = request.headers.get('origin');
+  
+  if (origin) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Max-Age': '86400',
+    };
+  }
+  
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
-    console.log('[Event Track]  Request received');
-
     const body = await request.json();
-    console.log('[Event Track]  Body:', JSON.stringify(body, null, 2));
-
+    
     const {
       subscriber_id,
       event_name,
@@ -288,26 +299,15 @@ export async function POST(request: NextRequest) {
       properties = {},
       website_id,
       current_url,
-      user_attributes,
-      tags
     } = body;
 
-    // Validate
     if (!subscriber_id || !event_name) {
       return NextResponse.json(
         { success: false, error: 'subscriber_id and event_name are required' },
-        {
-          status: 400,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          },
-        }
+        { status: 400, headers: getCorsHeaders(request) }
       );
     }
 
-    // Get subscriber
     const { data: subscriber, error: subError } = await supabase
       .from('subscribers')
       .select('*')
@@ -317,14 +317,7 @@ export async function POST(request: NextRequest) {
     if (subError || !subscriber) {
       return NextResponse.json(
         { success: false, error: 'Subscriber not found' },
-        {
-          status: 404,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          },
-        }
+        { status: 404, headers: getCorsHeaders(request) }
       );
     }
 
@@ -333,25 +326,16 @@ export async function POST(request: NextRequest) {
     if (!finalWebsiteId) {
       return NextResponse.json(
         { success: false, error: 'website_id is required' },
-        {
-          status: 400,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          },
-        }
+        { status: 400, headers: getCorsHeaders(request) }
       );
     }
 
-    // Merge properties
     const mergedProperties = {
       ...properties,
       ...event_data,
       current_url: current_url || properties.current_url || event_data?.current_url,
     };
 
-    // Update subscriber
     await supabase
       .from('subscribers')
       .update({
@@ -363,44 +347,42 @@ export async function POST(request: NextRequest) {
     // Handle notification clicks
     if (event_name === 'notification_clicked') {
       const campaignId = mergedProperties?.campaign_id;
+      const journeyId = mergedProperties?.journey_id;
+
+      if (journeyId) {
+        const { data: logs } = await supabase
+          .from('notification_logs')
+          .select('*')
+          .eq('journey_id', journeyId)
+          .eq('subscriber_id', subscriber_id)
+          .is('clicked_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (logs && logs.length > 0) {
+          await supabase
+            .from('notification_logs')
+            .update({ clicked_at: new Date().toISOString() })
+            .eq('id', logs[0].id);
+        }
+      }
 
       if (campaignId) {
-        try {
-          const { data: logs } = await supabase
-            .from('notification_logs')
-            .select('*')
-            .eq('campaign_id', campaignId)
-            .eq('subscriber_id', subscriber_id)
-            .is('clicked_at', null)
-            .order('created_at', { ascending: false })
-            .limit(1);
+        const { data: campaign } = await supabase
+          .from('campaigns')
+          .select('clicked_count')
+          .eq('id', campaignId)
+          .single();
 
-          if (logs && logs.length > 0) {
-            await supabase
-              .from('notification_logs')
-              .update({ clicked_at: new Date().toISOString() })
-              .eq('id', logs[0].id);
-          }
-
-          const { data: campaign } = await supabase
+        if (campaign) {
+          await supabase
             .from('campaigns')
-            .select('clicked_count')
-            .eq('id', campaignId)
-            .single();
-
-          if (campaign) {
-            await supabase
-              .from('campaigns')
-              .update({ clicked_count: (campaign.clicked_count || 0) + 1 })
-              .eq('id', campaignId);
-          }
-        } catch (error: any) {
-          console.error('[Event Track] Click tracking error:', error);
+            .update({ clicked_count: (campaign.clicked_count || 0) + 1 })
+            .eq('id', campaignId);
         }
       }
     }
 
-    // Insert event
     const { data: event, error: insertError } = await supabase
       .from('subscriber_events')
       .insert({
@@ -413,54 +395,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('[Event Track] ❌ Insert error:', insertError);
+      console.error('[Event Track]  Insert error:', insertError);
       return NextResponse.json(
         { success: false, error: 'Failed to track event' },
-        {
-          status: 500,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          },
-        }
+        { status: 500, headers: getCorsHeaders(request) }
       );
     }
 
-    console.log('[Event Track]  Event tracked in database:', event.id);
-
-    //  ADVANCED TRIGGER INTEGRATION 
-    let journeysTriggered = 0;
-
     try {
-      // 1. Check advanced triggers (NEW!)
-      const advancedMatches = await checkAdvancedTriggers(
-        {
-          event_name,
-          properties: mergedProperties,
-          subscriber_id,
-          website_id: finalWebsiteId,
-        },
-        subscriber
-      );
-
-      journeysTriggered += advancedMatches.length;
-
-      if (advancedMatches.length > 0) {
-        console.log('[Event Track]  Advanced triggers matched:', advancedMatches.length);
-        // advancedMatches.forEach(j => {
-        //   console.log(`[Event Track]    - ${j.name} (${j.entry_trigger.type})`);
-
-        //  Fixed with proper type assertion and safe access
-        (advancedMatches as any[]).forEach((journey: any) => {
-          const journeyName = journey?.name || journey?.id || 'Unknown Journey';
-          const triggerType = journey?.entry_trigger?.type || 'event';
-          console.log(`[Event Track]    - ${journeyName} (${triggerType})`);
-        });
-        // });
-      }
-
-      // 2. Check legacy triggers
       await trackEventWithJourneys({
         subscriber_id,
         website_id: finalWebsiteId,
@@ -468,66 +410,35 @@ export async function POST(request: NextRequest) {
         event_data: mergedProperties,
         timestamp: new Date().toISOString(),
       });
-
     } catch (journeyError: any) {
-      console.error('[Event Track] ❌ Journey trigger error:', journeyError);
-      // Don't fail the request if journey processing fails
+      console.error('[Event Track] Journey error:', journeyError);
     }
 
-    // Return with journey count
     return NextResponse.json(
       {
         success: true,
         event_id: event.id,
         message: 'Event tracked successfully',
-        journeys_triggered: journeysTriggered,
       },
-      {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-      }
+      { headers: getCorsHeaders(request) }
     );
 
   } catch (error: any) {
-    console.error('[Event Track] ❌ Fatal error:', error);
+    console.error('[Event Track] Fatal error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
-      {
-        status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-      }
+      { status: 500, headers: getCorsHeaders(request) }
     );
   }
 }
 
-/**
- * OPTIONS /api/events/track
- * Handle CORS preflight requests
- */
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
-      'Access-Control-Max-Age': '86400',
-      'Access-Control-Allow-Credentials': 'false',
-    },
+    headers: getCorsHeaders(request),
   });
 }
 
-/**
- * GET /api/events/track
- * Retrieve tracked events for a subscriber
- */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -537,7 +448,7 @@ export async function GET(request: NextRequest) {
     if (!subscriberId) {
       return NextResponse.json(
         { success: false, error: 'subscriber_id is required' },
-        { status: 400 }
+        { status: 400, headers: getCorsHeaders(request) }
       );
     }
 
@@ -551,21 +462,24 @@ export async function GET(request: NextRequest) {
     if (error) {
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500 }
+        { status: 500, headers: getCorsHeaders(request) }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      events: events || [],
-      count: events?.length || 0,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        events: events || [],
+        count: events?.length || 0,
+      },
+      { headers: getCorsHeaders(request) }
+    );
 
   } catch (error: any) {
     console.error('[Event Track] GET error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(request) }
     );
   }
 }

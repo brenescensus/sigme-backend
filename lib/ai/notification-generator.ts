@@ -73,7 +73,7 @@
 // //   private getTemplates(goal: string) {
 // //     const templates: Record<string, Array<{ title: string; body: string; emoji: string }>> = {
 // //       promotion: [
-// //         { title: '🎉 Limited Time Offer!', body: 'Get [X]% off today only. Shop now!', emoji: '🎉' },
+// //         { title: ' Limited Time Offer!', body: 'Get [X]% off today only. Shop now!', emoji: '' },
 // //         { title: '💰 Special Deal Inside', body: 'Exclusive discount just for you. Tap to claim!', emoji: '💰' },
 // //         { title: '⚡ Flash Sale Alert', body: 'Hurry! [Product] is [X]% off for 2 hours.', emoji: '⚡' },
 // //       ],
@@ -352,7 +352,7 @@
 //   {
 //     "title": "Notification title here",
 //     "body": "Notification body here",
-//     "emoji": "🎉",
+//     "emoji": "",
 //     "reason": "Why this notification works"
 //   }
 // ]`;
@@ -770,7 +770,7 @@ Generate exactly 3 notification suggestions in this JSON format:
   {
     "title": "Notification title here",
     "body": "Notification body here",
-    "emoji": "🎉",
+    "emoji": "",
     "reason": "Why this notification works"
   },
   {

@@ -85,7 +85,7 @@ const req = client.request(options, (res) => {
         }
         
         if (result.advanced_users) {
-          console.log(`\n⏭️  Advanced ${result.advanced_users.length} user(s) in existing journeys`);
+          console.log(`\n Advanced ${result.advanced_users.length} user(s) in existing journeys`);
         }
         
         process.exit(0);
