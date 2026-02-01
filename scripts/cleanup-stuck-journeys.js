@@ -13,7 +13,7 @@
 // );
 
 // async function cleanupStuckJourneys() {
-//   console.log('🧹 Starting stuck journeys cleanup');
+//   console.log(' Starting stuck journeys cleanup');
 //   console.log(`Current time: ${new Date().toISOString()}`);
 
 //   try {
@@ -161,7 +161,7 @@ const supabase = createClient(
 const STUCK_THRESHOLD_DAYS = 30; // Days of inactivity before considering stuck
 
 async function cleanupStuckJourneys() {
-  console.log('🧹 Starting stuck journey cleanup...');
+  console.log(' Starting stuck journey cleanup...');
   
   try {
     const thresholdDate = new Date();
@@ -227,11 +227,11 @@ async function cleanupStuckJourneys() {
     }
 
     console.log(`\n Cleanup Summary:`);
-    console.log(`  🧹 Cleaned: ${cleaned}`);
+    console.log(`   Cleaned: ${cleaned}`);
     console.log(`   Failed: ${stuckStates.length - cleaned}`);
 
     // Cleanup old scheduled steps
-    console.log('\n🗑️  Cleaning up old scheduled steps...');
+    console.log('\n  Cleaning up old scheduled steps...');
     
     const { data: cleanupResult, error: cleanupError } = await supabase
       .rpc('cleanup_old_scheduled_steps');
@@ -251,10 +251,10 @@ async function cleanupStuckJourneys() {
 // Run cleanup
 cleanupStuckJourneys()
   .then(() => {
-    console.log('✨ Cleanup completed');
+    console.log(' Cleanup completed');
     process.exit(0);
   })
   .catch(error => {
-    console.error('💥 Cleanup failed:', error);
+    console.error(' Cleanup failed:', error);
     process.exit(1);
   });

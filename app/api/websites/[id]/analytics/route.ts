@@ -517,7 +517,7 @@ async function handleGetAnalytics(
     
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || '7d';
-    console.log('📅 [Analytics] Period:', period);
+    console.log('[Analytics] Period:', period);
 
     // Calculate date range
     const now = new Date();
@@ -540,7 +540,7 @@ async function handleGetAnalytics(
         startDate.setDate(now.getDate() - 7);
     }
 
-    console.log('📆 [Analytics] Date range:', {
+    console.log('[Analytics] Date range:', {
       from: startDate.toISOString(),
       to: now.toISOString()
     });
@@ -594,7 +594,7 @@ async function handleGetAnalytics(
       .eq('status', 'active')
       .gte('last_seen_at', thirtyDaysAgo.toISOString());
 
-    console.log('👥 [Analytics] Subscribers - Total:', totalSubscribers, 'Active:', activeSubscribers);
+    console.log(' [Analytics] Subscribers - Total:', totalSubscribers, 'Active:', activeSubscribers);
 
     // Get notification logs
     console.log(' [Analytics] Fetching notification logs...');

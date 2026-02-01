@@ -212,7 +212,7 @@ export function withSuperAdmin(
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     const origin = req.headers.get('origin');
     
-    console.log(`🛡️ [Super Admin] ${req.method} ${req.url} from ${origin}`);
+    console.log(` [Super Admin] ${req.method} ${req.url} from ${origin}`);
     
     // Handle OPTIONS preflight
     if (req.method === 'OPTIONS') {
@@ -250,7 +250,7 @@ export function withAdmin(
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     const origin = req.headers.get('origin');
     
-    console.log(`🛡️ [Admin] ${req.method} ${req.url} from ${origin}`);
+    console.log(`[Admin] ${req.method} ${req.url} from ${origin}`);
     
     // Handle OPTIONS preflight
     if (req.method === 'OPTIONS') {

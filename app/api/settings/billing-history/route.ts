@@ -11,7 +11,7 @@
 // export const GET = withAuth(
 //   async (req: NextRequest, user: AuthUser) => {
 //     try {
-//       console.log('💳 [Billing History] Fetching for user:', user.email);
+//       console.log(' [Billing History] Fetching for user:', user.email);
 
 //       const { data: history, error } = await supabase
 //         .from('billing_history')
@@ -60,7 +60,7 @@ const supabase = createClient(
 export const GET = withAuth(
   async (req: NextRequest, user: AuthUser) => {
     try {
-      console.log(`💳 [Billing History] Fetching for user: ${user.email}`);
+      console.log(` [Billing History] Fetching for user: ${user.email}`);
 
       // Get user's Stripe customer ID
       const { data: userRecord } = await supabase

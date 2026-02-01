@@ -294,7 +294,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           return timeOnPage >= minTime;
         });
         
-        console.log('[Processor] 🚪 Page abandonment check:', { minTime, hasAbandoned });
+        console.log('[Processor] Page abandonment check:', { minTime, hasAbandoned });
         return hasAbandoned;
       }
 
@@ -323,7 +323,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           return seconds >= threshold;
         });
         
-        console.log('[Processor] ⏱️ Time on page check:', { 
+        console.log('[Processor]  Time on page check:', { 
           threshold, 
           recentTimes: events.map(e => getEventProperties(e.properties).seconds),
           hasReached 
@@ -399,7 +399,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           .limit(1);
 
         const hasAbandonedCart = !purchases || purchases.length === 0;
-        console.log('[Processor] 🛒 Cart abandoned check:', { delayValue, delayUnit, hasAbandonedCart });
+        console.log('[Processor]  Cart abandoned check:', { delayValue, delayUnit, hasAbandonedCart });
         return hasAbandonedCart;
       }
 
@@ -424,7 +424,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
             const items = props.items || [];
             return items.some((item: any) => item.id === productId || item.product_id === productId);
           });
-          console.log('[Processor] 💰 Product purchase check:', { productId, hasPurchased });
+          console.log('[Processor]  Product purchase check:', { productId, hasPurchased });
           return hasPurchased;
         }
 
@@ -435,11 +435,11 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
             const items = props.items || [];
             return items.some((item: any) => item.category === category);
           });
-          console.log('[Processor] 💰 Category purchase check:', { category, hasPurchased });
+          console.log('[Processor] Category purchase check:', { category, hasPurchased });
           return hasPurchased;
         }
 
-        console.log('[Processor] 💰 Any product purchased: true');
+        console.log('[Processor]  Any product purchased: true');
         return true;
       }
 
@@ -474,7 +474,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         }
 
         const matches = allowedDevices.includes(device);
-        console.log('[Processor] 📱 Device filter:', { allowedDevices, device, matches });
+        console.log('[Processor]  Device filter:', { allowedDevices, device, matches });
         return matches;
       }
 
@@ -493,12 +493,12 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         const regionMatch = allowedRegions.length === 0 || allowedRegions.some((r: string) => region.includes(r));
 
         const matches = countryMatch && regionMatch;
-        console.log('[Processor] 🌍 Geography filter:', { country, region, matches });
+        console.log('[Processor]  Geography filter:', { country, region, matches });
         return matches;
       }
 
       default:
-        console.log('[Processor] ⚠️ Unknown trigger type:', trigger.type);
+        console.log('[Processor]  Unknown trigger type:', trigger.type);
         return false;
     }
   } catch (error: any) {
@@ -536,7 +536,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
       return { processed: 0, failed: 0, skipped: 0, total: 0 };
     }
 
-    console.log(`📋 [Processor] Found ${dueSteps.length} due steps to process`);
+    console.log(` [Processor] Found ${dueSteps.length} due steps to process`);
 
     let processed = 0;
     let failed = 0;
@@ -563,7 +563,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           .single();
 
         if (stateError || !stateData) {
-          console.warn(`⚠️ [Processor] Journey state ${step.user_journey_state_id} not found, cancelling step`);
+          console.warn(` [Processor] Journey state ${step.user_journey_state_id} not found, cancelling step`);
           await supabase
             .from('scheduled_journey_steps')
             .update({ 
@@ -579,7 +579,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
         const state = toJourneyState(stateData);
 
         if (stepPayload?.step_type?.includes('wait')) {
-          console.log('⏰ [Processor] Wait step completed, advancing journey...');
+          console.log(' [Processor] Wait step completed, advancing journey...');
           
           const { data: journey } = await supabase
             .from('journeys')
@@ -689,7 +689,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     console.log(`    Processed: ${processed}`);
     console.log(`    Failed: ${failed}`);
     console.log(`    Skipped: ${skipped}`);
-    console.log(`   📊 Total: ${total}`);
+    console.log(`   Total: ${total}`);
     
     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
 
@@ -835,7 +835,7 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
     const state = toJourneyState(stateData);
 
     if (state.status !== 'active' && state.status !== 'waiting') {
-      console.log(`⏸️  [Processor] Journey state is ${state.status}, cannot process`);
+      console.log(`  [Processor] Journey state is ${state.status}, cannot process`);
       return;
     }
 
@@ -858,7 +858,7 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
       return;
     }
 
-    console.log(`📍 [Processor] Current node: ${currentNode.id} (type: ${currentNode.type})`);
+    console.log(` [Processor] Current node: ${currentNode.id} (type: ${currentNode.type})`);
 
     const nodeHistory = Array.isArray(state.node_history) ? state.node_history : [];
     if (!nodeHistory.includes(currentNode.id)) {
@@ -892,7 +892,7 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
         await moveToNextNode(state, flowDefinition, currentNode.id);
         break;
       default:
-        console.warn(`⚠️ [Processor] Unknown node type: ${currentNode.type}, moving to next`);
+        console.warn(` [Processor] Unknown node type: ${currentNode.type}, moving to next`);
         await moveToNextNode(state, flowDefinition, currentNode.id);
     }
 
@@ -930,7 +930,7 @@ async function processSendNotification(
   node: JourneyNode,
   flowDefinition: FlowDefinition
 ): Promise<void> {
-  console.log('📨 [Processor] Sending notification');
+  console.log('[Processor] Sending notification');
   
   await logExecution(
     state.journey_id,
@@ -1032,7 +1032,7 @@ async function processSendNotification(
       },
     };
 
-    console.log('📤 [Processor] Sending notification...');
+    console.log(' [Processor] Sending notification...');
 
     const result = await sendNotificationToSubscriber(subscriber, notificationPayload);
 
@@ -1115,7 +1115,7 @@ async function processWaitNode(
   node: JourneyNode,
   flowDefinition: FlowDefinition
 ): Promise<void> {
-  console.log('⏰ [Processor] Processing wait node');
+  console.log(' [Processor] Processing wait node');
 
   const { data: freshState } = await supabase
     .from('user_journey_states')
@@ -1143,7 +1143,7 @@ async function processWaitNode(
     .single();
 
   if (existingSchedule) {
-    console.log('ℹ️  [Processor] Wait already scheduled, skipping');
+    console.log('  [Processor] Wait already scheduled, skipping');
     return;
   }
 
@@ -1202,7 +1202,7 @@ async function processWaitNode(
     const timeoutSeconds = node.data.timeout_seconds || 604800;
     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
 
-    console.log(`⏳ [Processor] Waiting for event "${eventName}" (timeout: ${timeoutAt.toISOString()})`);
+    console.log(` [Processor] Waiting for event "${eventName}" (timeout: ${timeoutAt.toISOString()})`);
 
     await supabase
       .from('user_journey_states')
@@ -1256,7 +1256,7 @@ async function processConditionNode(
   node: JourneyNode,
   flowDefinition: FlowDefinition
 ): Promise<void> {
-  console.log('🔀 [Processor] Processing condition');
+  console.log(' [Processor] Processing condition');
 
   const conditionType = node.data.check || node.data.condition_type;
   const lookbackSeconds = node.data.lookback || node.data.lookback_seconds || 86400;
@@ -1339,7 +1339,7 @@ async function processConditionNode(
         break;
 
       default:
-        console.warn(`⚠️ [Processor] Unknown condition type: ${conditionType}`);
+        console.warn(` [Processor] Unknown condition type: ${conditionType}`);
         conditionMet = false;
     }
 
@@ -1390,12 +1390,12 @@ async function processAbSplitNode(
   node: JourneyNode,
   flowDefinition: FlowDefinition
 ): Promise<void> {
-  console.log('🎲 [Processor] Processing A/B split');
+  console.log('[Processor] Processing A/B split');
 
   const branches = node.data.branches || [];
   
   if (!branches || branches.length === 0) {
-    console.warn('⚠️ [Processor] No branches defined, completing journey');
+    console.warn(' [Processor] No branches defined, completing journey');
     await completeJourney(state.id);
     return;
   }
@@ -1443,7 +1443,7 @@ async function processAbSplitNode(
 
     await processJourneyStep(state.id);
   } else {
-    console.warn('⚠️ [Processor] No edge found for selected branch');
+    console.warn(' [Processor] No edge found for selected branch');
     await completeJourney(state.id);
   }
 }
@@ -1468,7 +1468,7 @@ async function moveToNextNode(
   );
 
   if (nextNodeId) {
-    console.log(`➡️  [Processor] Moving to next node: ${nextNodeId}`);
+    console.log(`  [Processor] Moving to next node: ${nextNodeId}`);
     
     await supabase
       .from('user_journey_states')
@@ -1536,7 +1536,7 @@ async function completeJourney(journeyStateId: string): Promise<void> {
 }
 
 async function exitJourney(journeyStateId: string, reason: string): Promise<void> {
-  console.log('🚪 [Processor] Exiting journey:', journeyStateId, 'Reason:', reason);
+  console.log(' [Processor] Exiting journey:', journeyStateId, 'Reason:', reason);
 
   try {
     const { data: stateData } = await supabase
@@ -1656,7 +1656,7 @@ export async function handleSubscriberEvent(
       .contains('context', { waiting_for_event: eventName });
 
     if (!waitingStates || waitingStates.length === 0) {
-      console.log('ℹ️  [Processor] No waiting states for this event');
+      console.log('[Processor] No waiting states for this event');
       return;
     }
 

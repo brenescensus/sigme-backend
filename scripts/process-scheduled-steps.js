@@ -83,7 +83,7 @@ const req = client.request(options, (res) => {
         
         if (result.result) {
           const { processed, failed, skipped, total, duration_ms } = result.result;
-          console.log(`\n📈 Summary:`);
+          console.log(`\n Summary:`);
           console.log(`   - Processed: ${processed || 0}`);
           console.log(`   - Failed: ${failed || 0}`);
           console.log(`   - Skipped: ${skipped || 0}`);

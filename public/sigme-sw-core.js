@@ -591,7 +591,7 @@
 // //     const config = await loadConfig(db);
 // //     if (config) {
 // //       websiteConfig = config;
-// //       console.log('[Sigme SW Core] 📂 Config loaded from IndexedDB');
+// //       console.log('[Sigme SW Core] Config loaded from IndexedDB');
 // //       return config;
 // //     }
 // //   } catch (err) {
@@ -1124,7 +1124,7 @@
 //     const config = await loadConfig(db);
 //     if (config) {
 //       websiteConfig = config;
-//       console.log('[Sigme SW Core] 📂 Config loaded from IndexedDB');
+//       console.log('[Sigme SW Core]  Config loaded from IndexedDB');
 //       return config;
 //     }
 //   } catch (err) {
@@ -1375,7 +1375,7 @@
 //     includeUncontrolled: true 
 //   })
 //   .then((clientList) => {
-//     console.log('[Sigme SW Core] 🪟 Found', clientList.length, 'open windows');
+//     console.log('[Sigme SW Core]  Found', clientList.length, 'open windows');
     
 //     const targetUrlObj = new URL(urlToOpen);
     
@@ -1389,19 +1389,19 @@
 //           return client.focus().then(() => client.navigate(urlToOpen));
 //         }
 //       } catch (e) {
-//         console.warn('[Sigme SW Core] ⚠️ Error parsing client URL:', e);
+//         console.warn('[Sigme SW Core]  Error parsing client URL:', e);
 //       }
 //     }
     
 //     // Open new window
-//     console.log('[Sigme SW Core] 🆕 Opening new window');
+//     console.log('[Sigme SW Core]  Opening new window');
 //     if (self.clients.openWindow) {
 //       return self.clients.openWindow(urlToOpen);
 //     }
 //   })
 //   .then(() => {
 //     if (notificationData.subscriber_id) {
-//       console.log('[Sigme SW Core] 📊 Tracking click event...');
+//       console.log('[Sigme SW Core] Tracking click event...');
       
 //       return trackEvent(
 //         'notification_clicked',
@@ -1452,7 +1452,7 @@
 // //   event.waitUntil(
 // //     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
 // //       .then((clientList) => {
-// //         console.log('[Sigme SW Core] 🪟 Found', clientList.length, 'open windows');
+// //         console.log('[Sigme SW Core]  Found', clientList.length, 'open windows');
         
 // //         const targetUrlObj = new URL(urlToOpen);
         
@@ -1467,12 +1467,12 @@
 // //               return client.focus().then(() => client.navigate(urlToOpen));
 // //             }
 // //           } catch (e) {
-// //             console.warn('[Sigme SW Core] ⚠️ Error parsing client URL:', e);
+// //             console.warn('[Sigme SW Core]  Error parsing client URL:', e);
 // //           }
 // //         }
         
 // //         // No suitable window found, open a new one
-// //         console.log('[Sigme SW Core] 🆕 Opening new window:', urlToOpen);
+// //         console.log('[Sigme SW Core]  Opening new window:', urlToOpen);
 // //         if (self.clients.openWindow) {
 // //           return self.clients.openWindow(urlToOpen);
 // //         }
@@ -1754,7 +1754,7 @@ async function getConfig() {
     const config = await loadConfig(db);
     if (config) {
       websiteConfig = config;
-      console.log('[Sigme SW Core] 📂 Config loaded from IndexedDB');
+      // console.log('[Sigme SW Core]  Config loaded from IndexedDB');
       return config;
     }
   } catch (err) {
@@ -2024,9 +2024,9 @@ self.addEventListener('notificationclick', (event) => {
       const blob = new Blob([payload], { type: 'application/json' });
       const sent = self.navigator.sendBeacon(trackingUrl, blob);
       
-      console.log('[Sigme SW Core] 📊 Click tracking sent via beacon:', sent);
+      console.log('[Sigme SW Core] Click tracking sent via beacon:', sent);
     } catch (beaconError) {
-      console.warn('[Sigme SW Core] ⚠️ Beacon tracking failed:', beaconError);
+      console.warn('[Sigme SW Core]  Beacon tracking failed:', beaconError);
     }
   }
 
@@ -2036,7 +2036,7 @@ self.addEventListener('notificationclick', (event) => {
     includeUncontrolled: true 
   })
   .then((clientList) => {
-    console.log('[Sigme SW Core] 🪟 Found', clientList.length, 'open windows');
+    console.log('[Sigme SW Core]  Found', clientList.length, 'open windows');
     
     const targetUrlObj = new URL(urlToOpen);
     
@@ -2050,12 +2050,12 @@ self.addEventListener('notificationclick', (event) => {
           return client.focus().then(() => client.navigate(urlToOpen));
         }
       } catch (e) {
-        console.warn('[Sigme SW Core] ⚠️ Error parsing client URL:', e);
+        console.warn('[Sigme SW Core]  Error parsing client URL:', e);
       }
     }
     
     // Open new window
-    console.log('[Sigme SW Core] 🆕 Opening new window');
+    console.log('[Sigme SW Core]  Opening new window');
     if (self.clients.openWindow) {
       return self.clients.openWindow(urlToOpen);
     }

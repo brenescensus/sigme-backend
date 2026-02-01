@@ -405,7 +405,7 @@
 // //     const pageTitle = document.title;
 // //     const pagePath = window.location.pathname;
 
-// //     console.log('[Sigme] 📄 Tracking page view:', pagePath);
+// //     console.log('[Sigme]  Tracking page view:', pagePath);
 
 // //     try {
 // //       const response = await fetch(`${SIGME_API}/api/events/track`, {
@@ -1265,7 +1265,7 @@
 (function () {
   'use strict';
 
-  console.log('[Sigme] Universal script loading...');
+  console.log('[Sigme]  Scripts loading...');
   
   // ============================================
   // API URL DETECTION
@@ -1475,7 +1475,7 @@
 
       if (response.ok) {
         const result = await response.json();
-        console.log(`[Sigme]  Event tracked:`, result);
+        console.log(`[Sigme]  Event tracked: successfully`);
         return { success: true, data: result };
       } else {
         const errorText = await response.text();

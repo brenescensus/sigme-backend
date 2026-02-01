@@ -839,7 +839,7 @@ export const POST = withAuth(async (req, user) => {
     // Validate coupon if provided
 
         if (coupon_code) {
-      console.log('🎫 Validating coupon:', {
+      console.log(' Validating coupon:', {
         code: coupon_code,
         uppercase: coupon_code.toUpperCase(),
         plan_price: plan.price
@@ -1021,7 +1021,7 @@ export const POST = withAuth(async (req, user) => {
     // Use provided amount or calculated final price
     const paymentAmount = amount || finalPrice;
 
-    console.log('💰 Payment calculation:', {
+    console.log('Payment calculation:', {
       plan_price: plan.price,
       discount: discountAmount,
       final_price: finalPrice,

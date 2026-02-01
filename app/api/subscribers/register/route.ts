@@ -122,7 +122,7 @@
 // //         );
 // //       }
 
-// //       console.log('♻️ [Register Subscriber] Reactivated:', reactivated.id);
+// //       console.log(' [Register Subscriber] Reactivated:', reactivated.id);
 // //       return NextResponse.json({
 // //         success: true,
 // //         subscriber: reactivated,
@@ -323,7 +323,7 @@
 //         );
 //       }
 
-//       console.log('♻️ [Register Subscriber] Reactivated:', reactivated.id);
+//       console.log(' [Register Subscriber] Reactivated:', reactivated.id);
 
 //       //  TRACK REACTIVATION EVENT
 //       console.log(' [Register Subscriber] Tracking user_subscribed event for reactivation...');
@@ -597,7 +597,7 @@ async function handler(req: NextRequest) {
         );
       }
 
-      console.log('♻️ [Register Subscriber] Reactivated:', reactivated.id);
+      console.log(' [Register Subscriber] Reactivated:', reactivated.id);
 
       // Track reactivation event
       console.log(' [Register Subscriber] Tracking user_subscribed event for reactivation...');

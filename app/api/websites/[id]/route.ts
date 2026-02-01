@@ -131,7 +131,7 @@ export const DELETE = withAuth(
       const params = await context.params;
       const websiteId = params.id;
       
-      console.log('🗑️ [WEBSITE DELETE] User:', user.email, 'Website:', websiteId);
+      console.log(' [WEBSITE DELETE] User:', user.email, 'Website:', websiteId);
       
       //  Get authenticated client from request
       const supabase = await getAuthenticatedClient(req);

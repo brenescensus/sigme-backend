@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const planId = searchParams.get('plan_id');
 
-    console.log('📢 Fetching public coupons for plan:', planId);
+    console.log(' Fetching public coupons for plan:', planId);
 
     // Build query for active coupons
     let query = supabase

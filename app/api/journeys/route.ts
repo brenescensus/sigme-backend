@@ -175,7 +175,7 @@
 // //     }
 
 // //     if (!journeys || journeys.length === 0) {
-// //       console.log('📭 [Journeys] No journeys found');
+// //       console.log(' [Journeys] No journeys found');
 // //       return NextResponse.json({
 // //         success: true,
 // //         journeys: [],

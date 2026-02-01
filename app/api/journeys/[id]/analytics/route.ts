@@ -661,7 +661,7 @@
 // //       process.env.SUPABASE_SERVICE_ROLE_KEY!
 // //     );
 
-// //     console.log('🧹 [API] Cleaning up stuck journeys');
+// //     console.log(' [API] Cleaning up stuck journeys');
 
 // //     const now = new Date();
 // //     const stuckThreshold = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago

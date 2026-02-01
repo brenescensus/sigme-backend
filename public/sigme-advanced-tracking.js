@@ -199,7 +199,7 @@
 //   function trackCartAbandonment() {
 //     // This should be called by your e-commerce platform
 //     window.Sigme.trackCartAbandonment = function(cartData) {
-//       console.log('[Sigme] 🛒 Cart abandoned:', cartData);
+//       console.log('[Sigme]  Cart abandoned:', cartData);
       
 //       window.Sigme.trackEvent('cart_abandoned', {
 //         cart_id: cartData.cart_id || null,
@@ -403,6 +403,26 @@
 (function() {
   'use strict';
 
+
+// ==========================================
+  // CONFIGURATION
+  // ==========================================
+  
+  const CONFIG = {
+    SCROLL_MILESTONES: [25, 50, 75, 100],
+    TIME_MILESTONES: [10, 30, 60, 120, 300], // seconds
+    ABANDONMENT_DELAY: 100, // ms to wait before sending abandonment
+  };
+
+  // ==========================================
+  // STATE MANAGEMENT
+  // ==========================================
+  
+ 
+  let pageLoadTime = Date.now();
+  let isPageAbandoned = false;
+  let abandonmentTimeout = null;
+
   // ==========================================
   // 1. SPECIFIC PAGE LANDING TRACKING
   // ==========================================
@@ -471,66 +491,228 @@
   // 3. PAGE ABANDONMENT TRACKING
   // ==========================================
   
-  let pageLoadTime = Date.now();
-  let isPageAbandoned = false;
+  // let pageLoadTime = Date.now();
+  // let isPageAbandoned = false;
 
-  function trackPageAbandonment() {
-    if (isPageAbandoned) return;
-    isPageAbandoned = true;
+  // function trackPageAbandonment() {
+  //   if (isPageAbandoned) return;
+  //   isPageAbandoned = true;
 
-    const timeOnPage = Math.round((Date.now() - pageLoadTime) / 1000);
+  //   const timeOnPage = Math.round((Date.now() - pageLoadTime) / 1000);
     
-    console.log('[Sigme]  Page abandonment detected. Time on page:', timeOnPage, 'seconds');
+  //   console.log('[Sigme]  Page abandonment detected. Time on page:', timeOnPage, 'seconds');
 
-    // Use sendBeacon for reliable tracking during page unload
-    if (navigator.sendBeacon) {
-      const subscriberId = localStorage.getItem('sigme_subscriber_id');
-      const websiteId = window.Sigme?.getConfig?.()?.websiteId;
+  //   // Use sendBeacon for reliable tracking during page unload
+  //   if (navigator.sendBeacon) {
+  //     const subscriberId = localStorage.getItem('sigme_subscriber_id');
+  //     const websiteId = window.Sigme?.getConfig?.()?.websiteId;
       
-      if (subscriberId && websiteId) {
-        const apiUrl = window.Sigme.getConfig?.()?.apiUrl || window.location.origin;
+  //     if (subscriberId && websiteId) {
+  //       const apiUrl = window.Sigme.getConfig?.()?.apiUrl || window.location.origin;
         
-        const blob = new Blob([JSON.stringify({
-          subscriber_id: subscriberId,
-          website_id: websiteId,
-          event_name: 'page_abandoned',
-          properties: {
-            url: window.location.href,
-            path: window.location.pathname,
-            time_on_page_seconds: timeOnPage,
-            scroll_depth: getCurrentScrollPercentage(),
-            timestamp: new Date().toISOString(),
-          }
-        })], { type: 'application/json' });
+  //       const blob = new Blob([JSON.stringify({
+  //         subscriber_id: subscriberId,
+  //         website_id: websiteId,
+  //         event_name: 'page_abandoned',
+  //         properties: {
+  //           url: window.location.href,
+  //           path: window.location.pathname,
+  //           time_on_page_seconds: timeOnPage,
+  //           scroll_depth: getCurrentScrollPercentage(),
+  //           timestamp: new Date().toISOString(),
+  //         }
+  //       })], { type: 'application/json' });
         
-        navigator.sendBeacon(`${apiUrl}/api/events/track`, blob);
-      }
-    } else {
-      // Fallback
-      window.Sigme.track('page_abandoned', {
-        url: window.location.href,
-        path: window.location.pathname,
-        time_on_page_seconds: timeOnPage,
-        scroll_depth: getCurrentScrollPercentage(),
-        timestamp: new Date().toISOString(),
-      });
+  //       navigator.sendBeacon(`${apiUrl}/api/events/track`, blob);
+  //     }
+  //   } else {
+  //     // Fallback
+  //     window.Sigme.track('page_abandoned', {
+  //       url: window.location.href,
+  //       path: window.location.pathname,
+  //       time_on_page_seconds: timeOnPage,
+  //       scroll_depth: getCurrentScrollPercentage(),
+  //       timestamp: new Date().toISOString(),
+  //     });
+  //   }
+  // }
+
+  // function getCurrentScrollPercentage() {
+  //   return Math.round(
+  //     (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight * 100
+  //   );
+  // }
+
+  // // Track abandonment on beforeunload and visibility change
+  // window.addEventListener('beforeunload', trackPageAbandonment);
+  // document.addEventListener('visibilitychange', () => {
+  //   if (document.hidden) {
+  //     trackPageAbandonment();
+  //   }
+  // });
+
+
+
+
+
+  function getCurrentScrollPercentage() {
+    try {
+      return Math.round(
+        (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight * 100
+      );
+    } catch (e) {
+      return 0;
     }
   }
 
-  function getCurrentScrollPercentage() {
-    return Math.round(
-      (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight * 100
-    );
+  function getTimeOnPage() {
+    return Math.round((Date.now() - pageLoadTime) / 1000);
   }
 
-  // Track abandonment on beforeunload and visibility change
-  window.addEventListener('beforeunload', trackPageAbandonment);
+  function trackPageAbandonment() {
+    if (isPageAbandoned) {
+      console.log('[Sigme]  Abandonment already tracked');
+      return;
+    }
+    
+    isPageAbandoned = true;
+    const timeOnPage = getTimeOnPage();
+    const scrollDepth = getCurrentScrollPercentage();
+    
+    console.log('[Sigme] Page abandonment detected');
+    console.log('[Sigme]   Time on page:', timeOnPage, 'seconds');
+    console.log('[Sigme]   Scroll depth:', scrollDepth, '%');
+
+    const subscriberId = localStorage.getItem('sigme_subscriber_id');
+    
+    if (!subscriberId) {
+      console.log('[Sigme]  No subscriber ID, skipping abandonment tracking');
+      return;
+    }
+
+    const eventData = {
+      url: window.location.href,
+      path: window.location.pathname,
+      time_on_page_seconds: timeOnPage,
+      scroll_depth: scrollDepth,
+      timestamp: new Date().toISOString(),
+    };
+
+    // console.log('[Sigme]  Abandonment data:', eventData);
+
+    //  METHOD 1: Try sendBeacon first (most reliable)
+    if (navigator.sendBeacon) {
+      try {
+        const websiteId = window.Sigme?.getConfig?.()?.websiteId;
+        const apiUrl = window.Sigme?.getConfig?.()?.apiUrl || window.location.origin;
+        
+        if (websiteId) {
+          const payload = {
+            subscriber_id: subscriberId,
+            website_id: websiteId,
+            event_name: 'page_abandoned',
+            properties: eventData
+          };
+
+          const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+          const sent = navigator.sendBeacon(`${apiUrl}/api/events/track`, blob);
+          
+          console.log('[Sigme]  Beacon sent:', sent);
+          
+          if (sent) {
+            return; // Success
+          }
+        }
+      } catch (beaconError) {
+        // console.error('[Sigm/e]  Beacon failed:', beaconError);
+      }
+    }
+
+    //  METHOD 2: Fallback to synchronous fetch with keepalive
+    try {
+      if (window.Sigme && typeof window.Sigme.track === 'function') {
+        // console.log('[Sigme]  Using fallback track method');
+        
+        // Use fetch with keepalive flag
+        const websiteId = window.Sigme?.getConfig?.()?.websiteId;
+        const apiUrl = window.Sigme?.getConfig?.()?.apiUrl || window.location.origin;
+        
+        if (websiteId) {
+          fetch(`${apiUrl}/api/events/track`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subscriber_id: subscriberId,
+              website_id: websiteId,
+              event_name: 'page_abandoned',
+              properties: eventData
+            }),
+            keepalive: true //  This keeps request alive during page unload
+          }).then(() => {
+            console.log('[Sigme]  Fetch with keepalive sent');
+          }).catch(err => {
+            console.error('[Sigme]  Fetch failed:', err);
+          });
+        }
+      }
+    } catch (fallbackError) {
+      console.error('[Sigme]  All methods failed:', fallbackError);
+    }
+  }
+
+  //  IMPROVED: Track abandonment with slight delay to ensure data is sent
+  function scheduleAbandonment() {
+    if (abandonmentTimeout) {
+      clearTimeout(abandonmentTimeout);
+    }
+    
+    abandonmentTimeout = setTimeout(() => {
+      trackPageAbandonment();
+    }, CONFIG.ABANDONMENT_DELAY);
+  }
+
+  //  Track on multiple events for better coverage
+  window.addEventListener('beforeunload', (e) => {
+    console.log('[Sigme]  beforeunload event');
+    trackPageAbandonment();
+  });
+
+  window.addEventListener('pagehide', (e) => {
+    console.log('[Sigme]  pagehide event');
+    trackPageAbandonment();
+  });
+
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      trackPageAbandonment();
+      console.log('[Sigme]  visibility hidden');
+      scheduleAbandonment();
+    } else {
+      // Cancel scheduled abandonment if user comes back
+      if (abandonmentTimeout) {
+        clearTimeout(abandonmentTimeout);
+        abandonmentTimeout = null;
+      }
     }
   });
 
+  //  Also track on blur (when window loses focus)
+  let blurTimeout;
+  window.addEventListener('blur', () => {
+    blurTimeout = setTimeout(() => {
+      console.log('[Sigme]  window blur');
+      scheduleAbandonment();
+    }, 5000); // Wait 5 seconds of blur before considering abandonment
+  });
+
+  window.addEventListener('focus', () => {
+    if (blurTimeout) {
+      clearTimeout(blurTimeout);
+    }
+    if (abandonmentTimeout) {
+      clearTimeout(abandonmentTimeout);
+      abandonmentTimeout = null;
+    }
+  });
   // ==========================================
   // 4. TIME ON PAGE TRACKING
   // ==========================================
@@ -592,7 +774,7 @@
   
   function setupCartTracking() {
     window.Sigme.trackCartAbandonment = function(cartData) {
-      console.log('[Sigme] 🛒 Cart abandoned:', cartData);
+      console.log('[Sigme]  Cart abandoned:', cartData);
       
       //  FIXED: Use .track() not .trackEvent()
       window.Sigme.track('cart_abandoned', {
@@ -612,7 +794,7 @@
   
   function setupPurchaseTracking() {
     window.Sigme.trackPurchase = function(purchaseData) {
-      console.log('[Sigme] 💰 Purchase completed:', purchaseData);
+      console.log('[Sigme]  Purchase completed:', purchaseData);
       
       //  FIXED: Use .track() not .trackEvent()
       window.Sigme.track('product_purchased', {
@@ -707,7 +889,7 @@
 
     // Wait for Sigme to be ready
     if (!window.Sigme || typeof window.Sigme.track !== 'function') {
-      console.warn('[Sigme] ⏳ Main SDK not loaded yet, waiting...');
+      console.warn('[Sigme]  Main SDK not loaded yet, waiting...');
       setTimeout(initAdvancedTracking, 500);
       return;
     }

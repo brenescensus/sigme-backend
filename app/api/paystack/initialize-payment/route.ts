@@ -45,7 +45,7 @@
 
 //     // Validate coupon if provided
 //     if (coupon_code) {
-//       console.log('🎫 Validating coupon:', coupon_code);
+//       console.log(' Validating coupon:', coupon_code);
 
 //       const { data: coupon, error: couponError } = await supabase
 //         .from('coupons')

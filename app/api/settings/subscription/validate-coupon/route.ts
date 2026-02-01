@@ -156,7 +156,7 @@
 //       );
 //     }
 
-//     console.log('🎫 Validating coupon:', {
+//     console.log(' Validating coupon:', {
 //       code: coupon_code,
 //       price: plan_price,
 //       user_id: user.id,

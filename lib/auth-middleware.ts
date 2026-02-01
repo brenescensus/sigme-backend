@@ -146,7 +146,7 @@
     
 //     // Handle OPTIONS preflight
 //     if (req.method === 'OPTIONS') {
-//       console.log('✨ [CORS] Auth endpoint OPTIONS');
+//       console.log(' [CORS] Auth endpoint OPTIONS');
 //       const response = new NextResponse(null, { status: 204 });
 //       return addAuthCorsHeaders(response, origin);
 //     }
@@ -198,7 +198,7 @@
     
 //     // Handle OPTIONS preflight
 //     if (req.method === 'OPTIONS') {
-//       console.log('✨ [CORS] Public endpoint OPTIONS');
+//       console.log(' [CORS] Public endpoint OPTIONS');
 //       const response = new NextResponse(null, { status: 204 });
 //       return addPublicCorsHeaders(response, origin);
 //     }
@@ -480,7 +480,7 @@ export function withAuth(
     
     // Handle OPTIONS preflight
     if (req.method === 'OPTIONS') {
-      console.log('✨ [CORS] Auth endpoint OPTIONS');
+      console.log(' [CORS] Auth endpoint OPTIONS');
       const response = new NextResponse(null, { status: 204 });
       return addAuthCorsHeaders(response, origin);
     }
@@ -536,7 +536,7 @@ export function withPublicCors(
     
     // Handle OPTIONS preflight
     if (req.method === 'OPTIONS') {
-      console.log('✨ [CORS] Public endpoint OPTIONS');
+      console.log(' [CORS] Public endpoint OPTIONS');
       const response = new NextResponse(null, { status: 204 });
       return addPublicCorsHeaders(response, origin);
     }

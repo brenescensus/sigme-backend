@@ -678,7 +678,7 @@ class NotificationGenerator {
       const systemPrompt = this.buildSystemPrompt(goal, tone, maxLength, includeEmojis, context);
       const userPrompt = this.buildUserPrompt(prompt, context);
 
-      console.log('🤖 [AI] Calling HuggingFace Chat Completion API...');
+      console.log(' [AI] Calling HuggingFace Chat Completion API...');
 
       // Use chatCompletion instead of textGeneration
       const response = await this.hf.chatCompletion({
