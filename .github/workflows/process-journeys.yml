@@ -3,7 +3,7 @@ name: Journey Processor
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Every 5 minutes
+    - cron: '* * * * *'  # Every 5 minutes
   workflow_dispatch:  # Manual trigger
 
 jobs:
