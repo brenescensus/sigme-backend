@@ -11,18 +11,12 @@ const http = require('http');
 const BACKEND_URL = process.env.BACKEND_URL;
 const API_KEY = process.env.INTERNAL_API_KEY;
 
-console.log(' [Processor] Starting journey step processing...');
-console.log(' [Processor] Environment check:');
-console.log(`   - NEXT_PUBLIC_BACKEND_URL: ${BACKEND_URL ? ' Set' : ' NOT SET'}`);
-console.log(`   - INTERNAL_API_KEY: ${API_KEY ? ' Set' : '  Optional (not set)'}`);
 
 // Validate required environment variables
 if (!BACKEND_URL) {
-  console.error('\n [Processor] FATAL ERROR: NEXT_PUBLIC_BACKEND_URL is not set!');
   console.error('Please set this in your GitHub repository secrets:');
   console.error('  Settings > Secrets and variables > Actions > New repository secret');
-  console.error('  Name: NEXT_PUBLIC_BACKEND_URL');
-  console.error('  Value: https://your-backend-url.com');
+ 
   process.exit(1);
 }
 
