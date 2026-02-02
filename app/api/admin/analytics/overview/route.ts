@@ -2,9 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withSuperAdmin, logAdminActivity, getAdminClient } from '@/lib/admin-middleware';
 export const GET = withSuperAdmin(async (req, user) => {
-  const supabase = getAdminClient();
-
-  try {
+  // const supabase = getAdminClient();
+ const supabase = await getAdminClient();
+   try {
     // Get all users
     const { data: { users } } = await supabase.auth.admin.listUsers();
     

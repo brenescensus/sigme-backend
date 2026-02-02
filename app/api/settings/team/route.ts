@@ -1,6 +1,6 @@
 
 // ============================================
-// app/api/settings/team/route.ts - FINAL FIX
+// app/api/settings/team/route.ts 
 // ============================================
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, getAuthenticatedClient, AuthUser } from '@/lib/auth-middleware';
