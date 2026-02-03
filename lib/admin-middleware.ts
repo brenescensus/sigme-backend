@@ -332,7 +332,6 @@
 
 
 // lib/admin-middleware.ts - Token-based Super Admin Authentication
-// FIXED: Proper async client creation
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
