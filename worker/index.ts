@@ -27,7 +27,7 @@ const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:noreply@yourdomain.com';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-  console.log('✅ VAPID configured');
+  console.log(' VAPID configured');
 } else {
   console.warn('⚠️  VAPID keys not configured - web push will not work');
 }
@@ -256,7 +256,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
       })
       .eq('id', scheduledStepId);
 
-    console.log(`✅ [Worker] Job ${job.id} completed successfully\n`);
+    console.log(` [Worker] Job ${job.id} completed successfully\n`);
 
   } catch (error: any) {
     console.error(`❌ [Worker] Job ${job.id} failed:`, error.message);
@@ -470,7 +470,7 @@ async function scheduleWaitStep(state: any, node: any, flowDefinition: any) {
 
 // Helper: Process condition
 async function processConditionStep(state: any, node: any, flowDefinition: any, journey: any) {
-  console.log(`[Worker] 🔍 Evaluating condition: ${node.data.check}`);
+  console.log(`[Worker]  Evaluating condition: ${node.data.check}`);
   
   const conditionType = node.data.check || node.data.condition_type;
   const lookbackSeconds = node.data.lookback || 86400;
@@ -583,7 +583,7 @@ const worker = new Worker<NotificationJobData>(
 
 // Event handlers
 worker.on('completed', (job) => {
-  console.log(`✅ Job ${job.id} completed`);
+  console.log(` Job ${job.id} completed`);
 });
 
 worker.on('failed', (job, err) => {
@@ -594,7 +594,7 @@ worker.on('error', (err) => {
   console.error('❌ Worker error:', err);
 });
 
-console.log('\n🚀 Journey notification worker started');
+console.log('\n Journey notification worker started');
 console.log(`📡 Redis: ${redisConnection.host}:${redisConnection.port}`);
 console.log(`⚙️  Concurrency: 10 jobs\n`);
 
