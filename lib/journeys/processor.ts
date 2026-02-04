@@ -3661,18 +3661,20 @@ async function processSendNotification(
         node.id
       );
 
-      if (result.error?.includes('410') ||
-        result.error?.includes('404') ||
-        result.error?.includes('SUBSCRIPTION_EXPIRED') ||
-        result.error?.includes('Invalid subscription keys')) {
-        await supabase
-          .from('subscribers')
-          .update({
-            status: 'inactive',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', subscriber.id);
-      }
+      // if (result.error?.includes('410') ||
+      //   result.error?.includes('404') ||
+      //   result.error?.includes('SUBSCRIPTION_EXPIRED') ||
+      //   result.error?.includes('Invalid subscription keys')) {
+      //   await supabase
+      //     .from('subscribers')
+      //     .update({
+      //       status: 'inactive',
+      //       updated_at: new Date().toISOString(),
+      //     })
+      //     .eq('id', subscriber.id);
+      // }
+            console.log('[Processor]  Notification failed but subscriber remains active for future journeys');
+
     }
 
     await moveToNextNode(state, flowDefinition, node.id);
@@ -4543,6 +4545,8 @@ if (Object.keys(eventConfig).length > 0) {
           }
         })
         .eq('id', state.id);
+
+        
 
       // Log the event receipt
       await logJourneyEvent(

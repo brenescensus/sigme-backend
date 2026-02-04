@@ -653,7 +653,7 @@
 
 
 
-// backend/lib/journeys/entry-handler.ts - FIXED VERSION
+// backend/lib/journeys/entry-handler.ts
 import { createClient } from '@supabase/supabase-js';
 import { journeyProcessor } from './processor';
 
