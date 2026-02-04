@@ -941,10 +941,6 @@
 // ============================================
 // FILE: BACKEND/public/sigme-advanced-tracking.js (FIXED VERSION)
 // Enhanced tracking capabilities for Sigme SDK
-// FIXES:
-// 1. Only starts tracking AFTER subscription
-// 2. Listens for subscription events
-// 3. Better state management
 // ============================================
 
 (function() {

@@ -4,6 +4,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import { sendNotificationToSubscriber } from '@/lib/push/sender';
+import { getNotificationQueue } from '../queue/notification-queue';
 
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -1110,12 +1111,156 @@ async function processSendNotification(
   }
 }
 
+// async function processWaitNode(
+//   state: JourneyState,
+//   node: JourneyNode,
+//   flowDefinition: FlowDefinition
+// ): Promise<void> {
+//   console.log(' [Processor] Processing wait node');
+
+//   const { data: freshState } = await supabase
+//     .from('user_journey_states')
+//     .select('status, next_execution_at')
+//     .eq('id', state.id)
+//     .single();
+
+//   if (freshState?.next_execution_at) {
+//     const waitUntil = new Date(freshState.next_execution_at);
+//     const now = new Date();
+    
+//     if (now >= waitUntil) {
+//       console.log(' [Processor] Wait period completed, advancing to next node');
+//       await moveToNextNode(state, flowDefinition, node.id);
+//       return;
+//     }
+//   }
+
+//   const { data: existingSchedule } = await supabase
+//     .from('scheduled_journey_steps')
+//     .select('id')
+//     .eq('user_journey_state_id', state.id)
+//     .eq('step_id', node.id)
+//     .eq('status', 'pending')
+//     .single();
+
+//   if (existingSchedule) {
+//     console.log('  [Processor] Wait already scheduled, skipping');
+//     return;
+//   }
+
+//   const waitMode = node.data.mode || 'duration';
+
+//   if (waitMode === 'duration') {
+//     const durationSeconds = node.data.duration || 86400;
+//     const executeAt = new Date(Date.now() + durationSeconds * 1000);
+
+//     console.log(`  [Processor] Scheduling wait for ${durationSeconds}s until ${executeAt.toISOString()}`);
+
+//     await supabase
+//       .from('user_journey_states')
+//       .update({
+//         status: 'waiting',
+//         next_execution_at: executeAt.toISOString(),
+//       })
+//       .eq('id', state.id);
+
+//     const { data: scheduledStep, error: scheduleError } = await supabase
+//       .from('scheduled_journey_steps')
+//       .insert({
+//         user_journey_state_id: state.id,
+//         step_id: node.id,
+//         execute_at: executeAt.toISOString(),
+//         status: 'pending',
+//         payload: { 
+//           mode: 'duration',
+//           step_type: 'wait_duration'
+//         },
+//       })
+//       .select()
+//       .single();
+
+//     if (scheduleError) {
+//       throw scheduleError;
+//     }
+
+//     console.log(` [Processor] Step scheduled: ${scheduledStep.id}`);
+
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       'wait_started',
+//       { 
+//         duration_seconds: durationSeconds, 
+//         until: executeAt.toISOString(),
+//         scheduled_step_id: scheduledStep.id 
+//       },
+//       node.id
+//     );
+
+//   } else if (waitMode === 'until_event') {
+//     const eventName = node.data.event?.name || node.data.event_name;
+//     const timeoutSeconds = node.data.timeout_seconds || 604800;
+//     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
+
+//     console.log(` [Processor] Waiting for event "${eventName}" (timeout: ${timeoutAt.toISOString()})`);
+
+//     await supabase
+//       .from('user_journey_states')
+//       .update({
+//         status: 'waiting',
+//         next_execution_at: timeoutAt.toISOString(),
+//         context: {
+//           ...state.context,
+//           waiting_for_event: eventName,
+//         },
+//       })
+//       .eq('id', state.id);
+
+//     const { data: scheduledStep, error: scheduleError } = await supabase
+//       .from('scheduled_journey_steps')
+//       .insert({
+//         user_journey_state_id: state.id,
+//         step_id: node.id,
+//         execute_at: timeoutAt.toISOString(),
+//         status: 'pending',
+//         payload: { 
+//           mode: 'event_timeout',
+//           event_name: eventName,
+//           step_type: 'wait_event_timeout'
+//         },
+//       })
+//       .select()
+//       .single();
+
+//     if (scheduleError) {
+//       throw scheduleError;
+//     }
+
+//     await logJourneyEvent(
+//       state.journey_id,
+//       state.subscriber_id,
+//       state.id,
+//       'wait_for_event_started',
+//       { 
+//         event_name: eventName, 
+//         timeout: timeoutAt.toISOString(),
+//         scheduled_step_id: scheduledStep.id 
+//       },
+//       node.id
+//     );
+//   }
+// }
+
+// Add this import at the top
+
+// Replace the processWaitNode function using queues now:
 async function processWaitNode(
   state: JourneyState,
   node: JourneyNode,
   flowDefinition: FlowDefinition
 ): Promise<void> {
-  console.log(' [Processor] Processing wait node');
+  console.log('🔔 [Processor] Processing wait node');
 
   const { data: freshState } = await supabase
     .from('user_journey_states')
@@ -1128,12 +1273,13 @@ async function processWaitNode(
     const now = new Date();
     
     if (now >= waitUntil) {
-      console.log(' [Processor] Wait period completed, advancing to next node');
+      console.log('✅ [Processor] Wait period completed');
       await moveToNextNode(state, flowDefinition, node.id);
       return;
     }
   }
 
+  // Check if already scheduled
   const { data: existingSchedule } = await supabase
     .from('scheduled_journey_steps')
     .select('id')
@@ -1143,7 +1289,7 @@ async function processWaitNode(
     .single();
 
   if (existingSchedule) {
-    console.log('  [Processor] Wait already scheduled, skipping');
+    console.log('⏭️  [Processor] Wait already scheduled');
     return;
   }
 
@@ -1153,8 +1299,9 @@ async function processWaitNode(
     const durationSeconds = node.data.duration || 86400;
     const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-    console.log(`  [Processor] Scheduling wait for ${durationSeconds}s until ${executeAt.toISOString()}`);
+    console.log(`⏰ [Processor] Scheduling wait: ${durationSeconds}s`);
 
+    // Update journey state
     await supabase
       .from('user_journey_states')
       .update({
@@ -1163,6 +1310,7 @@ async function processWaitNode(
       })
       .eq('id', state.id);
 
+    // Create database record
     const { data: scheduledStep, error: scheduleError } = await supabase
       .from('scheduled_journey_steps')
       .insert({
@@ -1182,7 +1330,36 @@ async function processWaitNode(
       throw scheduleError;
     }
 
-    console.log(` [Processor] Step scheduled: ${scheduledStep.id}`);
+    // 🚀 Schedule in BullMQ
+    try {
+      const queue = getNotificationQueue();
+      
+      await queue.add(
+        'wait-completion',
+        {
+          scheduledStepId: scheduledStep.id,
+          journeyStateId: state.id,
+          stepType: 'wait_duration',
+          executeAt: executeAt.toISOString(),
+        },
+        {
+          delay: durationSeconds * 1000,
+          jobId: `wait-${scheduledStep.id}`,
+        }
+      );
+
+      console.log(`✅ [Processor] Job queued: wait-${scheduledStep.id}`);
+    } catch (queueError: any) {
+      console.error('[Processor] Queue error:', queueError.message);
+      // Fallback: mark for manual processing
+      await supabase
+        .from('scheduled_journey_steps')
+        .update({ 
+          status: 'pending',
+          error: `Queue failed: ${queueError.message}` 
+        })
+        .eq('id', scheduledStep.id);
+    }
 
     await logJourneyEvent(
       state.journey_id,
@@ -1190,7 +1367,7 @@ async function processWaitNode(
       state.id,
       'wait_started',
       { 
-        duration_seconds: durationSeconds, 
+        duration_seconds: durationSeconds,
         until: executeAt.toISOString(),
         scheduled_step_id: scheduledStep.id 
       },
@@ -1202,7 +1379,7 @@ async function processWaitNode(
     const timeoutSeconds = node.data.timeout_seconds || 604800;
     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
 
-    console.log(` [Processor] Waiting for event "${eventName}" (timeout: ${timeoutAt.toISOString()})`);
+    console.log(`⏰ [Processor] Waiting for event: ${eventName}`);
 
     await supabase
       .from('user_journey_states')
@@ -1216,7 +1393,7 @@ async function processWaitNode(
       })
       .eq('id', state.id);
 
-    const { data: scheduledStep, error: scheduleError } = await supabase
+    const { data: scheduledStep } = await supabase
       .from('scheduled_journey_steps')
       .insert({
         user_journey_state_id: state.id,
@@ -1232,8 +1409,25 @@ async function processWaitNode(
       .select()
       .single();
 
-    if (scheduleError) {
-      throw scheduleError;
+    // Schedule timeout in queue
+    try {
+      const queue = getNotificationQueue();
+      
+      await queue.add(
+        'event-timeout',
+        {
+          scheduledStepId: scheduledStep!.id,
+          journeyStateId: state.id,
+          stepType: 'wait_event_timeout',
+          executeAt: timeoutAt.toISOString(),
+        },
+        {
+          delay: timeoutSeconds * 1000,
+          jobId: `timeout-${scheduledStep!.id}`,
+        }
+      );
+    } catch (queueError: any) {
+      console.error('[Processor] Queue error:', queueError.message);
     }
 
     await logJourneyEvent(
@@ -1242,9 +1436,9 @@ async function processWaitNode(
       state.id,
       'wait_for_event_started',
       { 
-        event_name: eventName, 
+        event_name: eventName,
         timeout: timeoutAt.toISOString(),
-        scheduled_step_id: scheduledStep.id 
+        scheduled_step_id: scheduledStep!.id 
       },
       node.id
     );
