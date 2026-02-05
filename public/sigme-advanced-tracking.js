@@ -30,14 +30,14 @@
   // ==========================================
   // 1. SPECIFIC PAGE LANDING TRACKING
   // ==========================================
-  
-  function trackPageLanding() {
+    function trackPageLanding() {
     const currentUrl = window.location.href;
     const currentPath = window.location.pathname;
     
-    console.log('[Sigme]  Tracking page landing:', currentPath);
+    console.log('[Sigme] ✓ Tracking page landing:', currentPath);
     
-    window.Sigme.track('page_landing', {
+    //  FIX: Changed from 'page_landing' to 'page_landed' to match backend
+    window.Sigme.track('page_landed', {
       url: currentUrl,
       path: currentPath,
       search: window.location.search,
@@ -46,6 +46,21 @@
       timestamp: new Date().toISOString(),
     });
   }
+  // function trackPageLanding() {
+  //   const currentUrl = window.location.href;
+  //   const currentPath = window.location.pathname;
+    
+  //   console.log('[Sigme]  Tracking page landing:', currentPath);
+    
+  //   window.Sigme.track('page_landing', {
+  //     url: currentUrl,
+  //     path: currentPath,
+  //     search: window.location.search,
+  //     hash: window.location.hash,
+  //     referrer: document.referrer || null,
+  //     timestamp: new Date().toISOString(),
+  //   });
+  // }
 
   // ==========================================
   // 2. SCROLL DEPTH TRACKING
@@ -306,32 +321,59 @@
   // 4. TIME ON PAGE TRACKING
   // ==========================================
   
-  function startTimeTracking() {
-    const milestones = CONFIG.TIME_MILESTONES;
-    let trackedMilestones = new Set();
+  // function startTimeTracking() {
+  //   const milestones = CONFIG.TIME_MILESTONES;
+  //   let trackedMilestones = new Set();
 
-    setInterval(() => {
-      if (!trackingInitialized) return;
+  //   setInterval(() => {
+  //     if (!trackingInitialized) return;
       
-      const timeOnPage = Math.round((Date.now() - pageLoadTime) / 1000);
+  //     const timeOnPage = Math.round((Date.now() - pageLoadTime) / 1000);
       
-      milestones.forEach(milestone => {
-        if (timeOnPage >= milestone && !trackedMilestones.has(milestone)) {
-          trackedMilestones.add(milestone);
+  //     milestones.forEach(milestone => {
+  //       if (timeOnPage >= milestone && !trackedMilestones.has(milestone)) {
+  //         trackedMilestones.add(milestone);
           
-          console.log(`[Sigme]   Time on page: ${milestone}s`);
+  //         console.log(`[Sigme]   Time on page: ${milestone}s`);
           
-          window.Sigme.track('time_on_page', {
-            seconds: milestone,
-            url: window.location.href,
-            path: window.location.pathname,
-            timestamp: new Date().toISOString(),
-          });
-        }
-      });
-    }, 1000);
-  }
+  //         window.Sigme.track('time_on_page', {
+  //           seconds: milestone,
+  //           url: window.location.href,
+  //           path: window.location.pathname,
+  //           timestamp: new Date().toISOString(),
+  //         });
+  //       }
+  //     });
+  //   }, 1000);
+  // }
+function startTimeTracking() {
+  const milestones = CONFIG.TIME_MILESTONES;
+  let trackedMilestones = new Set();
 
+  // ✅ FIX: Store interval ID for cleanup
+  timeTrackingInterval = setInterval(() => {
+    if (!trackingInitialized) return;
+    
+    const timeOnPage = Math.round((Date.now() - pageLoadTime) / 1000);
+    
+    // ✅ FIX: Track all milestones immediately when reached
+    milestones.forEach(milestone => {
+      if (timeOnPage >= milestone && !trackedMilestones.has(milestone)) {
+        trackedMilestones.add(milestone);
+        
+        console.log(`[Sigme] ✓ Time on page: ${milestone}s (reached at ${timeOnPage}s)`);
+        
+        window.Sigme.track('time_on_page', {
+          seconds: milestone,
+          actual_time: timeOnPage, //  Also send actual time
+          url: window.location.href,
+          path: window.location.pathname,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    });
+  }, 1000); //  Check every second for immediate firing
+}
   // ==========================================
   // 5. LINK INTERACTION TRACKING
   // ==========================================
@@ -556,7 +598,19 @@
     isPageAbandoned = false;
     isUserActive = true;
     pageLoadTime = Date.now();
-    
+      // ✅ FIX: Clear and restart time tracking
+  if (timeTrackingInterval) {
+    clearInterval(timeTrackingInterval);
+    timeTrackingInterval = null;
+  }
+  startTimeTracking();
+
+// FIX: Cleanup on unload
+window.addEventListener('unload', () => {
+  if (timeTrackingInterval) {
+    clearInterval(timeTrackingInterval);
+  }
+});
     // Clear any pending abandonment
     if (abandonmentTimeout) {
       clearTimeout(abandonmentTimeout);
