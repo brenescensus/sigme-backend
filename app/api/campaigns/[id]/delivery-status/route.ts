@@ -549,7 +549,6 @@
 
 // ============================================
 // app/api/campaigns/[id]/delivery-status/route.ts
-// Fixed to use campaign counts as single source of truth
 // ============================================
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, getAuthenticatedClient, AuthUser } from '@/lib/auth-middleware';
@@ -627,7 +626,7 @@ export const GET = withAuth(
       // Calculate pending (sent but not yet delivered or failed)
       const pending = Math.max(0, sentCount - deliveredCount - failedCount);
 
-      console.log('[Delivery Status] 📈 Campaign Counts (Source of Truth):');
+      console.log('[Delivery Status]  Campaign Counts (Source of Truth):');
       console.log('  - Sent:', sentCount);
       console.log('  - Delivered:', deliveredCount);
       console.log('  - Failed:', failedCount);

@@ -37,7 +37,7 @@
     
     console.log('[Sigme]  Tracking page landing:', currentPath);
     
-    window.Sigme.track('page_landed', {
+    window.Sigme.track('page_landing', {
       url: currentUrl,
       path: currentPath,
       search: window.location.search,
