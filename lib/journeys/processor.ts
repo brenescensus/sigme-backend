@@ -1719,7 +1719,7 @@
 //     );
 
 //   } else if (waitMode === 'until_event') {
-//     // ✅ ENHANCED EVENT WAITING
+//     //  ENHANCED EVENT WAITING
 //     const eventName = node.data.event?.name || node.data.event_name;
 //     const timeoutSeconds = node.data.timeout_seconds || 604800;
 //     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
@@ -1745,7 +1745,7 @@
 //       })
 //       .eq('id', state.id);
 
-//     // ✅ FIX: Schedule TIMEOUT (not the event itself)
+//     //  FIX: Schedule TIMEOUT (not the event itself)
 //     const { data: scheduledStep } = await supabase
 //       .from('scheduled_journey_steps')
 //       .insert({
@@ -2585,8 +2585,12 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
     }
 
     switch (trigger.type) {
-      case 'page_landing': {
-        const urlPattern = trigger.url_pattern || trigger.url;
+      case 'page_landing':
+      case 'page_landed': {
+        // const urlPattern = trigger.url_pattern || trigger.url;
+          const urlPattern = trigger.event_config?.url_pattern || 
+                          trigger.url_pattern || 
+                          trigger.url;
         if (!urlPattern) {
           console.log('[Processor] ✗ Page landing: no URL pattern specified');
           return false;
@@ -2625,7 +2629,10 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       }
 
       case 'scroll_depth': {
-        const requiredPercentage = trigger.percentage || 0;
+         const requiredPercentage = trigger.event_config?.percentage || 
+                                   trigger.percentage || 
+                                   0;
+        // const requiredPercentage = trigger.percentage || 0;
 
         if (requiredPercentage <= 0 || requiredPercentage > 100) {
           console.log('[Processor] ✗ Invalid scroll depth percentage:', requiredPercentage);
@@ -2656,12 +2663,19 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       }
 
       case 'page_abandonment': {
-        const minTime = trigger.min_time_value ||
-          trigger.min_time_seconds ||
-          trigger.minimum_time ||
-          trigger.time_value ||
-          trigger.min_time ||
-          0;
+         const minTime = trigger.event_config?.min_time_seconds ||
+                       trigger.min_time_value ||
+                       trigger.min_time_seconds ||
+                       trigger.minimum_time ||
+                       trigger.time_value ||
+                       trigger.min_time ||
+                       0;
+        // const minTime = trigger.min_time_value ||
+        //   trigger.min_time_seconds ||
+        //   trigger.minimum_time ||
+        //   trigger.time_value ||
+        //   trigger.min_time ||
+        //   0;
 
         if (minTime <= 0 || minTime > 3600) {
           console.log('[Processor] ✗ Page abandonment: invalid time value:', minTime);
@@ -2692,14 +2706,24 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       }
 
       case 'time_on_page': {
-        const threshold = trigger.threshold_value ||
-          trigger.threshold_seconds ||
-          trigger.minimum_time ||
-          trigger.min_time_seconds ||
-          trigger.time_threshold ||
-          trigger.duration ||
-          trigger.seconds ||
-          0;
+
+        const threshold = trigger.event_config?.threshold_seconds ||
+                         trigger.threshold_value ||
+                         trigger.threshold_seconds ||
+                         trigger.minimum_time ||
+                         trigger.min_time_seconds ||
+                         trigger.time_threshold ||
+                         trigger.duration ||
+                         trigger.seconds ||
+                         0;
+        // const threshold = trigger.threshold_value ||
+        //   trigger.threshold_seconds ||
+        //   trigger.minimum_time ||
+        //   trigger.min_time_seconds ||
+        //   trigger.time_threshold ||
+        //   trigger.duration ||
+        //   trigger.seconds ||
+        //   0;
 
         if (threshold <= 0 || threshold > 3600) {
           console.log('[Processor] ✗ Time on page: invalid threshold:', threshold);
@@ -3189,7 +3213,7 @@ export async function enrollSubscriber(
     }
 
     const entryTrigger = (journey.entry_trigger as any) || {};
-
+    console.log('[Processor]  Entry trigger:', JSON.stringify(entryTrigger, null, 2));
     if (entryTrigger.type && entryTrigger.type !== 'event' && entryTrigger.type !== 'manual') {
       console.log('[Processor] Checking advanced trigger criteria...');
 
@@ -3839,7 +3863,7 @@ async function processWaitNode(
       })
       .eq('id', state.id);
 
-    // ✅ Schedule TIMEOUT job (not the event itself)
+    //  Schedule TIMEOUT job (not the event itself)
     const { data: scheduledStep } = await supabase
       .from('scheduled_journey_steps')
       .insert({
@@ -4212,7 +4236,7 @@ async function moveToNextNode(
   }
 }
 
-// ✅ FIXED: Proper Metrics Recalculation
+//  FIXED: Proper Metrics Recalculation
 export async function recalculateJourneyMetrics(journeyId: string): Promise<void> {
   console.log('[Processor] Recalculating metrics for journey:', journeyId);
 
@@ -4241,13 +4265,13 @@ export async function recalculateJourneyMetrics(journeyId: string): Promise<void
       return;
     }
 
-    // ✅ ACCURATE COUNTING
+    //  ACCURATE COUNTING
     const total_entered = states.length; // All states = all who entered
     const total_active = states.filter(s => s.status === 'active' || s.status === 'waiting').length;
     const total_completed = states.filter(s => s.status === 'completed').length;
     const total_exited = states.filter(s => s.status === 'exited').length;
     
-    // ✅ CORRECT CONVERSION RATE: (completed / entered) * 100
+    //  CORRECT CONVERSION RATE: (completed / entered) * 100
     const conversion_rate = total_entered > 0 
       ? Math.round((total_completed / total_entered) * 100 * 10) / 10 // Round to 1 decimal
       : 0;

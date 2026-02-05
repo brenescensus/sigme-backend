@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
             ? Math.round((estimatedReach / totalActiveSubscribers) * 100)
             : 0;
 
-        console.log('[Journey Reach] ✅ Estimated reach:', estimatedReach);
+        console.log('[Journey Reach]  Estimated reach:', estimatedReach);
         console.log('[Journey Reach] 📊 Percentage:', percentage + '%');
 
         return NextResponse.json({

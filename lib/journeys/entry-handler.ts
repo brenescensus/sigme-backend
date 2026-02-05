@@ -728,7 +728,7 @@ class JourneyEntryHandler {
     }
   }
 
-  // ✅ SIMPLIFIED: Let processor handle ALL validation
+  //  SIMPLIFIED: Let processor handle ALL validation
   private async checkJourneyEntries(event: TrackedEvent): Promise<void> {
     // Get active journeys for this website
     const { data: journeys } = await supabase
@@ -741,7 +741,7 @@ class JourneyEntryHandler {
 
     for (const journey of journeys) {
       try {
-        // ✅ SIMPLIFIED: Let processor handle EVERYTHING
+        //  SIMPLIFIED: Let processor handle EVERYTHING
         // It checks: triggers, re-entry rules, segments, etc.
         await journeyProcessor.enrollSubscriber(
           journey.id,

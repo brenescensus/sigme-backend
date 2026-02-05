@@ -72,7 +72,7 @@
 
 //     // If journey_execution_stats exists and has data, use it
 //     if (!statsError && stats && stats.length > 0) {
-//       console.log('[Journey Analytics] ✅ Found', stats.length, 'daily snapshots');
+//       console.log('[Journey Analytics]  Found', stats.length, 'daily snapshots');
       
 //       return NextResponse.json({
 //         success: true,
@@ -143,7 +143,7 @@
 //       a.date.localeCompare(b.date)
 //     );
 
-//     console.log('[Journey Analytics] ✅ Generated', history.length, 'day snapshots');
+//     console.log('[Journey Analytics]  Generated', history.length, 'day snapshots');
 
 //     return NextResponse.json({
 //       success: true,
@@ -193,7 +193,7 @@ export async function GET(
       );
     }
 
-    // ✅ Await params in Next.js 15+
+    //  Await params in Next.js 15+
     const params = await context.params;
     const journeyId = params.id;
     const { searchParams } = new URL(request.url);
@@ -238,7 +238,7 @@ export async function GET(
 
     // If journey_execution_stats exists and has data, use it
     if (!statsError && stats && stats.length > 0) {
-      console.log('[Journey Analytics] ✅ Found', stats.length, 'daily snapshots');
+      console.log('[Journey Analytics]  Found', stats.length, 'daily snapshots');
       
       return NextResponse.json({
         success: true,
@@ -309,7 +309,7 @@ export async function GET(
       a.date.localeCompare(b.date)
     );
 
-    console.log('[Journey Analytics] ✅ Generated', history.length, 'day snapshots');
+    console.log('[Journey Analytics]  Generated', history.length, 'day snapshots');
 
     return NextResponse.json({
       success: true,

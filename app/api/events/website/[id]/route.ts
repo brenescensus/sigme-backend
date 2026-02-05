@@ -75,7 +75,7 @@
 //     // Get unique event names for the EventSelector
 //     const uniqueEvents = [...new Set(events?.map(e => e.event_name) || [])];
 
-//     console.log('[Events] ✅ Found', events?.length, 'events');
+//     console.log('[Events]  Found', events?.length, 'events');
 //     console.log('[Events] 📊 Unique event types:', uniqueEvents.length);
 
 //     return NextResponse.json({
@@ -127,7 +127,7 @@ export async function GET(
       );
     }
 
-    // ✅ Await params in Next.js 15+
+    //  Await params in Next.js 15+
     const params = await context.params;
     const websiteId = params.id;
 
@@ -176,7 +176,7 @@ export async function GET(
     // Get unique event names for the EventSelector
     const uniqueEvents = [...new Set(events?.map(e => e.event_name) || [])];
 
-    console.log('[Events] ✅ Found', events?.length, 'events');
+    console.log('[Events]  Found', events?.length, 'events');
     console.log('[Events] 📊 Unique event types:', uniqueEvents.length);
 
     return NextResponse.json({

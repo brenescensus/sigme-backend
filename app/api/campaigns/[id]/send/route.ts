@@ -298,7 +298,7 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!
 );
 
-// ✅ HELPER: Better error classification
+//  HELPER: Better error classification
 function classifyPushError(error: any): {
   shouldDeactivate: boolean;
   errorMessage: string;
@@ -309,7 +309,7 @@ function classifyPushError(error: any): {
 
   console.log(`[Error Analysis] Status: ${statusCode}, Message: ${errorMessage}`);
 
-  // ✅ PERMANENT FAILURES - Deactivate subscription
+  //  PERMANENT FAILURES - Deactivate subscription
   if (
     statusCode === 410 || // Gone - subscription expired
     statusCode === 404 || // Not Found - subscription doesn't exist
@@ -325,7 +325,7 @@ function classifyPushError(error: any): {
     };
   }
 
-  // ✅ VAPID KEY MISMATCH
+  //  VAPID KEY MISMATCH
   if (
     statusCode === 401 ||
     statusCode === 403 ||
@@ -340,7 +340,7 @@ function classifyPushError(error: any): {
     };
   }
 
-  // ✅ RATE LIMITING
+  //  RATE LIMITING
   if (statusCode === 429) {
     return {
       shouldDeactivate: false,
@@ -349,7 +349,7 @@ function classifyPushError(error: any): {
     };
   }
 
-  // ✅ NETWORK/TEMPORARY ERRORS
+  //  NETWORK/TEMPORARY ERRORS
   if (
     statusCode >= 500 ||
     errorMessage.includes('timeout') ||
@@ -363,7 +363,7 @@ function classifyPushError(error: any): {
     };
   }
 
-  // ✅ UNEXPECTED RESPONSE CODE (your current error)
+  //  UNEXPECTED RESPONSE CODE (your current error)
   if (errorMessage.includes('unexpected response code')) {
     return {
       shouldDeactivate: true, // Likely invalid subscription
@@ -372,7 +372,7 @@ function classifyPushError(error: any): {
     };
   }
 
-  // ✅ DEFAULT
+  //  DEFAULT
   return {
     shouldDeactivate: false,
     errorMessage: errorMessage,
@@ -425,7 +425,7 @@ export async function POST(
 
     const branding = parseBranding(website.notification_branding);
 
-    // ✅ 3. IMPROVED: Get VALID subscribers with better filtering
+    //  3. IMPROVED: Get VALID subscribers with better filtering
     let query = supabase
       .from('subscribers')
       .select('*')
@@ -485,7 +485,7 @@ export async function POST(
     let failedCount = 0;
     let deactivatedCount = 0;
 
-    // ✅ 4. IMPROVED: Send notifications with better error handling
+    //  4. IMPROVED: Send notifications with better error handling
     for (const subscriber of subscribers) {
       try {
         // Double-check subscription validity
@@ -532,7 +532,7 @@ export async function POST(
           continue;
         }
 
-        // ✅ IMPROVED: Better payload structure
+        //  IMPROVED: Better payload structure
         const payload = {
           title: campaign.title,
           body: campaign.body,
@@ -565,7 +565,7 @@ export async function POST(
 
         console.log(`[Campaign Send] → Sending to ${subscriber.id.substring(0, 8)}...`);
 
-        // ✅ IMPROVED: Send with timeout
+        //  IMPROVED: Send with timeout
         const sendPromise = webpush.sendNotification(
           {
             endpoint: subscriber.endpoint,
@@ -621,7 +621,7 @@ export async function POST(
           .eq('campaign_id', campaign.id)
           .eq('status', 'pending');
 
-        // ✅ IMPROVED: Deactivate subscription if permanent failure
+        //  IMPROVED: Deactivate subscription if permanent failure
         if (errorInfo.shouldDeactivate) {
           console.log(`[Campaign Send] ⚠ Deactivating subscriber ${subscriber.id.substring(0, 8)}...`);
           
@@ -637,7 +637,7 @@ export async function POST(
         }
       }
 
-      // ✅ Add small delay to avoid rate limiting
+      //  Add small delay to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
