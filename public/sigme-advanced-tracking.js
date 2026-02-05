@@ -28,17 +28,33 @@
   let isUserActive = true; 
     let timeTrackingInterval = null; 
     let lastTrackedSecond = 0;
+    let currentPath = window.location.pathname;
 
   // ==========================================
   // 1. SPECIFIC PAGE LANDING TRACKING
   // ==========================================
-    function trackPageLanding() {
+  //   function trackPageLanding() {
+  //   const currentUrl = window.location.href;
+  //   const currentPath = window.location.pathname;
+    
+  //   console.log('[Sigme] ✓ Tracking page landing:', currentPath);
+    
+  //   //  FIX: Changed from 'page_landing' to 'page_landed' to match backend
+  //   window.Sigme.track('page_landed', {
+  //     url: currentUrl,
+  //     path: currentPath,
+  //     search: window.location.search,
+  //     hash: window.location.hash,
+  //     referrer: document.referrer || null,
+  //     timestamp: new Date().toISOString(),
+  //   });
+  // }
+  function trackPageLanding() {
     const currentUrl = window.location.href;
     const currentPath = window.location.pathname;
     
-    console.log('[Sigme] ✓ Tracking page landing:', currentPath);
+    console.log('[Sigme]  Tracking page landing :', currentPath);
     
-    //  FIX: Changed from 'page_landing' to 'page_landed' to match backend
     window.Sigme.track('page_landed', {
       url: currentUrl,
       path: currentPath,
@@ -48,21 +64,34 @@
       timestamp: new Date().toISOString(),
     });
   }
-  // function trackPageLanding() {
-  //   const currentUrl = window.location.href;
-  //   const currentPath = window.location.pathname;
+
+  // NEW: Reset page state when navigating to new page
+  function resetPageState() {
+    console.log('[Sigme]  Resetting page state for new navigation');
     
-  //   console.log('[Sigme]  Tracking page landing:', currentPath);
+    // Reset all tracking state
+    scrollTracked = { '25': false, '50': false, '75': false, '100': false };
+    isPageAbandoned = false;
+    isUserActive = true;
+    pageLoadTime = Date.now();
+    lastTrackedSecond = 0;
     
-  //   window.Sigme.track('page_landing', {
-  //     url: currentUrl,
-  //     path: currentPath,
-  //     search: window.location.search,
-  //     hash: window.location.hash,
-  //     referrer: document.referrer || null,
-  //     timestamp: new Date().toISOString(),
-  //   });
-  // }
+    // Clear and restart time tracking
+    if (timeTrackingInterval) {
+      clearInterval(timeTrackingInterval);
+      timeTrackingInterval = null;
+    }
+    startTimeTracking();
+    
+    // Clear any pending abandonment
+    if (abandonmentTimeout) {
+      clearTimeout(abandonmentTimeout);
+      abandonmentTimeout = null;
+    }
+    
+    // Track the new page landing
+    trackPageLanding();
+  } 
 
   // ==========================================
   // 2. SCROLL DEPTH TRACKING
@@ -360,7 +389,7 @@ function startTimeTracking() {
     if (timeOnPage > lastTrackedSecond) {
         lastTrackedSecond = timeOnPage;
             //  Log every 5 seconds to avoid console spam
-        if (timeOnPage % 5 === 0 || timeOnPage <= 10) {
+        if (timeOnPage % 2 === 0 || timeOnPage <= 10) {
           console.log(`[Sigme]   Time on page: ${timeOnPage}s`);
         }
         
