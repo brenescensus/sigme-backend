@@ -564,7 +564,56 @@ function startTimeTracking() {
 
     return { deviceType, browser, os };
   }
-
+// ==========================================
+  // ✅ NEW: NAVIGATION DETECTION
+  // ==========================================
+  
+  function setupNavigationTracking() {
+    // Method 1: History API (for SPAs using pushState/replaceState)
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    
+    history.pushState = function() {
+      originalPushState.apply(this, arguments);
+      handleNavigation();
+    };
+    
+    history.replaceState = function() {
+      originalReplaceState.apply(this, arguments);
+      handleNavigation();
+    };
+    
+    // Method 2: popstate event (browser back/forward)
+    window.addEventListener('popstate', handleNavigation);
+    
+    // Method 3: Hash change (for #hash navigation)
+    window.addEventListener('hashchange', handleNavigation);
+    
+    // ✅ Method 4: Monitor URL changes via interval (fallback for all cases)
+    let lastUrl = window.location.href;
+    setInterval(() => {
+      const currentUrl = window.location.href;
+      if (currentUrl !== lastUrl) {
+        lastUrl = currentUrl;
+        handleNavigation();
+      }
+    }, 500); // Check every 500ms
+  }
+  
+  function handleNavigation() {
+    const newPath = window.location.pathname;
+    
+    // Only reset if the path actually changed
+    if (newPath !== currentPath) {
+      console.log('[Sigme] 🔄 Navigation detected:', currentPath, '→', newPath);
+      currentPath = newPath;
+      
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        resetPageState();
+      }, 100);
+    }
+  }
   // ==========================================
   // INITIALIZE ALL TRACKING
   // ==========================================
@@ -607,6 +656,7 @@ function startTimeTracking() {
     setupCartTracking();
     setupPurchaseTracking();
     trackFormInteractions();
+    setupNavigationTracking();
 
     // Store device info
     const deviceInfo = getDeviceInfo();
