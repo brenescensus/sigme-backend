@@ -1,7 +1,4 @@
 // app/api/settings/subscription/upgrade/route.ts
-// FIXED: Better coupon validation and error handling
-
-// app/api/settings/subscription/upgrade/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth-middleware';
 import { createClient } from '@supabase/supabase-js';
@@ -320,7 +317,7 @@ export const POST = withAuth(async (req, user) => {
         amount: paystackAmount,
         currency: currency,
         reference: reference,
-        callback_url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/settings?payment=success&reference=${reference}`,
+        callback_url: `${process.env.FRONTEND_URL}/dashboard/settings?payment=success&reference=${reference}`,
         metadata: {
           user_id: user.id,
           plan_id: plan_id,
