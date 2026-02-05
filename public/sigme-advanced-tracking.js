@@ -67,7 +67,7 @@
 
   // NEW: Reset page state when navigating to new page
   function resetPageState() {
-    console.log('[Sigme]  Resetting page state for new navigation');
+    // console.log('[Sigme]  Resetting page state for new navigation');
     
     // Reset all tracking state
     scrollTracked = { '25': false, '50': false, '75': false, '100': false };
@@ -605,7 +605,7 @@ function startTimeTracking() {
     
     // Only reset if the path actually changed
     if (newPath !== currentPath) {
-      console.log('[Sigme] 🔄 Navigation detected:', currentPath, '→', newPath);
+      console.log('[Sigme] Navigating from:', currentPath, 'to', newPath);
       currentPath = newPath;
       
       // Small delay to ensure DOM has updated
