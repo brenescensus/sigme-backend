@@ -25,7 +25,8 @@
   let isPageAbandoned = false;
   let abandonmentTimeout = null;
   let trackingInitialized = false;
-  let isUserActive = true; // Track if user is actively on the page
+  let isUserActive = true; 
+    let timeTrackingInterval = null; 
 
   // ==========================================
   // 1. SPECIFIC PAGE LANDING TRACKING
