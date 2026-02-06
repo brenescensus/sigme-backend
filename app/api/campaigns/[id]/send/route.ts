@@ -506,7 +506,12 @@ export async function POST(
           // Mark subscriber as inactive
           await supabase
             .from('subscribers')
-            .update({ status: 'inactive' })
+            .update({ status: 'inactive',
+              endpoint: null,
+              p256dh_key: null,
+              auth_key: null,
+              updated_at: new Date().toISOString()
+             })
             .eq('id', subscriber.id);
           
           deactivatedCount++;
@@ -629,6 +634,9 @@ export async function POST(
             .from('subscribers')
             .update({
               status: 'inactive',
+              endpoint: null,        // 🔥 ADD THIS!
+              p256dh_key: null,      // 🔥 ADD THIS!
+              auth_key: null,
               updated_at: new Date().toISOString()
             })
             .eq('id', subscriber.id);

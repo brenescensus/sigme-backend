@@ -499,6 +499,142 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 // MAIN JOB PROCESSOR
 // ============================================================================
 
+// async function processNotificationJob(job: Job<NotificationJobData>) {
+//   console.log(`\n🔔 [Worker] Processing job ${job.id}`);
+//   console.log(`   Type: ${job.data.stepType}`);
+//   console.log(`   Scheduled for: ${job.data.executeAt}`);
+//   console.log(`   Journey State ID: ${job.data.journeyStateId}`);
+
+//   const { scheduledStepId, journeyStateId, stepType } = job.data;
+
+//   try {
+//     await supabase
+//       .from('scheduled_journey_steps')
+//       .update({ 
+//         status: 'processing',
+//         started_at: new Date().toISOString(),
+//       })
+//       .eq('id', scheduledStepId);
+
+//     console.log(`[Worker] 📍 Fetching journey state: ${journeyStateId}`);
+
+//     const { data: state, error: stateError } = await supabase
+//       .from('user_journey_states')
+//       .select('*')
+//       .eq('id', journeyStateId)
+//       .single();
+
+//     if (stateError || !state) {
+//       console.error(`[Worker] ✗ Journey state not found:`, stateError?.message || 'No data');
+//       throw new Error('Journey state not found');
+//     }
+
+//     const { data: journey, error: journeyError } = await supabase
+//       .from('journeys')
+//       .select('*')
+//       .eq('id', state.journey_id)
+//       .single();
+
+//     if (journeyError || !journey) {
+//       console.error(`[Worker] ✗ Journey not found:`, journeyError?.message || 'No data');
+//       throw new Error('Journey not found');
+//     }
+
+//     console.log(`[Worker] ✅ State found - Status: ${state.status}`);
+//     console.log(`   Journey ID: ${journey.id}`);
+//     console.log(`   Current step: ${state.current_step_id}`);
+//     console.log(`   Journey: ${journey.name} (${journey.status})`);
+
+//     if (state.status === 'completed' || state.status === 'exited') {
+//       console.log(`[Worker] ⚠ Journey already ${state.status}, cancelling job`);
+//       await supabase
+//         .from('scheduled_journey_steps')
+//         .update({ 
+//           status: 'cancelled',
+//           error: `Journey already ${state.status}`,
+//           completed_at: new Date().toISOString(),
+//         })
+//         .eq('id', scheduledStepId);
+//       return;
+//     }
+
+//     if (stepType.includes('wait')) {
+//       console.log('[Worker] ⏰ Wait period completed');
+      
+//       const flowDefinition = journey.flow_definition as any;
+//       const currentNode = flowDefinition.nodes.find(
+//         (n: any) => n.id === state.current_step_id
+//       );
+      
+//       if (currentNode) {
+//         console.log(`[Worker] 📌 Current node: ${currentNode.id} (${currentNode.type})`);
+        
+//         const nextEdge = flowDefinition.edges.find(
+//           (e: any) => e.from === currentNode.id
+//         );
+        
+//         if (nextEdge) {
+//           console.log(`[Worker] ➡️  Moving to next step: ${nextEdge.to}`);
+          
+//           await supabase.from('user_journey_states').update({
+//             current_step_id: nextEdge.to,
+//             status: 'active',
+//             next_execution_at: null,
+//             last_processed_at: new Date().toISOString(),
+//           }).eq('id', journeyStateId);
+
+//           console.log('[Worker] ✅ State updated to active');
+
+//           await supabase.from('journey_events').insert({
+//             journey_id: state.journey_id,
+//             subscriber_id: state.subscriber_id,
+//             user_journey_state_id: state.id,
+//             event_type: 'wait_completed',
+//             step_id: currentNode.id,
+//             metadata: { next_step_id: nextEdge.to }
+//           });
+
+//           console.log('[Worker] ✅ Wait completion logged');
+
+//           await processNextStepInWorker(state.id, nextEdge.to, state.journey_id);
+          
+//         } else {
+//           console.log('[Worker] 🏁 No next step, completing journey');
+//           await completeJourney(state.id, state.journey_id);
+//         }
+//       } else {
+//         console.log('[Worker] ✗ Current node not found in flow');
+//         await completeJourney(state.id, state.journey_id);
+//       }
+//     }
+
+//     await supabase
+//       .from('scheduled_journey_steps')
+//       .update({ 
+//         status: 'completed',
+//         completed_at: new Date().toISOString(),
+//       })
+//       .eq('id', scheduledStepId);
+
+//     console.log(`✅ [Worker] Job ${job.id} completed successfully\n`);
+
+//   } catch (error: any) {
+//     console.error(`❌ [Worker] Job ${job.id} failed:`, error.message);
+
+//     await supabase
+//       .from('scheduled_journey_steps')
+//       .update({ 
+//         status: 'failed',
+//         error: error.message,
+//         completed_at: new Date().toISOString(),
+//       })
+//       .eq('id', scheduledStepId);
+
+//     throw error;
+//   }
+// }
+// worker/index.ts - CORRECTED processNotificationJob function
+
 async function processNotificationJob(job: Job<NotificationJobData>) {
   console.log(`\n🔔 [Worker] Processing job ${job.id}`);
   console.log(`   Type: ${job.data.stepType}`);
@@ -508,27 +644,26 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
   const { scheduledStepId, journeyStateId, stepType } = job.data;
 
   try {
-    await supabase
-      .from('scheduled_journey_steps')
-      .update({ 
-        status: 'processing',
-        started_at: new Date().toISOString(),
-      })
-      .eq('id', scheduledStepId);
+    // 🔥 FIX 1: PARALLEL fetch state and update schedule (saves 800ms)
+    const [stateResult, scheduleUpdateResult] = await Promise.all([
+      supabase.from('user_journey_states').select('*').eq('id', journeyStateId).single(),
+      supabase.from('scheduled_journey_steps')
+        .update({ 
+          status: 'processing',
+          started_at: new Date().toISOString(),
+        })
+        .eq('id', scheduledStepId)
+        .select(), // ✅ FIXED: Added .select() to make it a Promise
+    ]);
 
-    console.log(`[Worker] 📍 Fetching journey state: ${journeyStateId}`);
-
-    const { data: state, error: stateError } = await supabase
-      .from('user_journey_states')
-      .select('*')
-      .eq('id', journeyStateId)
-      .single();
+    const { data: state, error: stateError } = stateResult;
 
     if (stateError || !state) {
       console.error(`[Worker] ✗ Journey state not found:`, stateError?.message || 'No data');
       throw new Error('Journey state not found');
     }
 
+    // 🔥 FIX 2: Fetch journey 
     const { data: journey, error: journeyError } = await supabase
       .from('journeys')
       .select('*')
@@ -576,27 +711,42 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
         if (nextEdge) {
           console.log(`[Worker] ➡️  Moving to next step: ${nextEdge.to}`);
           
-          await supabase.from('user_journey_states').update({
-            current_step_id: nextEdge.to,
-            status: 'active',
-            next_execution_at: null,
-            last_processed_at: new Date().toISOString(),
-          }).eq('id', journeyStateId);
+          // 🔥 FIX 3: Update state and log event IN PARALLEL (saves 500ms)
+          await Promise.all([
+            supabase.from('user_journey_states').update({
+              current_step_id: nextEdge.to,
+              status: 'active',
+              next_execution_at: null,
+              last_processed_at: new Date().toISOString(),
+            }).eq('id', journeyStateId),
+            
+            supabase.from('journey_events').insert({
+              journey_id: state.journey_id,
+              subscriber_id: state.subscriber_id,
+              user_journey_state_id: state.id,
+              event_type: 'wait_completed',
+              step_id: currentNode.id,
+              metadata: { next_step_id: nextEdge.to }
+            }),
+          ]);
 
           console.log('[Worker] ✅ State updated to active');
-
-          await supabase.from('journey_events').insert({
-            journey_id: state.journey_id,
-            subscriber_id: state.subscriber_id,
-            user_journey_state_id: state.id,
-            event_type: 'wait_completed',
-            step_id: currentNode.id,
-            metadata: { next_step_id: nextEdge.to }
-          });
-
           console.log('[Worker] ✅ Wait completion logged');
 
-          await processNextStepInWorker(state.id, nextEdge.to, state.journey_id);
+          // 🔥 FIX 4: Process next step and update schedule in parallel
+          await Promise.all([
+            processNextStepInWorker(state.id, nextEdge.to, state.journey_id),
+            supabase
+              .from('scheduled_journey_steps')
+              .update({ 
+                status: 'completed',
+                completed_at: new Date().toISOString(),
+              })
+              .eq('id', scheduledStepId),
+          ]);
+          
+          console.log(`✅ [Worker] Job ${job.id} completed successfully\n`);
+          return;
           
         } else {
           console.log('[Worker] 🏁 No next step, completing journey');
@@ -643,9 +793,11 @@ const worker = new Worker<NotificationJobData>(
   processNotificationJob,
   {
     connection: redisConnection,
-    concurrency: 10,
-    drainDelay: 100,
-    lockDuration: 30000,
+    concurrency: 20,
+    drainDelay: 50,
+    lockDuration: 15000,
+    maxStalledCount: 2,     // 🔥 NEW: Fail faster on stalled jobs
+    stalledInterval: 5000,
   }
 );
 

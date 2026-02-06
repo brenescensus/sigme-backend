@@ -16,18 +16,19 @@ export function getNotificationQueue(): Queue<NotificationJobData> {
     notificationQueue = new Queue<NotificationJobData>('journey-notifications', {
       connection: redisConnection,
       defaultJobOptions: {
-        attempts: 3,
+        attempts: 2,
         backoff: {
-          type: 'exponential',
-          delay: 2000,
+          type: 'fixed',
+          delay: 1000,
         },
         removeOnComplete: {
           age: 86400, // 24 hours
           count: 1000,
         },
         removeOnFail: {
-          age: 172800, // 48 hours
+          age: 7200, // 48 hours
         },
+        
       },
     });
   }
