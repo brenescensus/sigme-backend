@@ -4,6 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 import { Worker, Job } from 'bullmq';
 import type { ConnectionOptions } from 'bullmq';
 import webpush from 'web-push';
+import { Queue } from 'bullmq';
+
+
 
 // Redis connection
 const redisConnection: ConnectionOptions = {
@@ -14,7 +17,9 @@ const redisConnection: ConnectionOptions = {
     tls: { rejectUnauthorized: false } 
   })
 };
-
+const notificationQueue = new Queue('journey-notifications', {
+  connection: redisConnection,
+});
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -23,13 +28,13 @@ const supabase = createClient(
 // Configure VAPID for web push
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:noreply@yourdomain.com';
+const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:mushiele01@gmail.com';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
   console.log(' VAPID configured');
 } else {
-  console.warn('⚠️  VAPID keys not configured - web push will not work');
+  console.warn(' VAPID keys not configured - web push will not work');
 }
 
 interface NotificationJobData {
@@ -162,7 +167,7 @@ async function sendNotificationToSubscriber(
 }
 
 async function processNotificationJob(job: Job<NotificationJobData>) {
-  console.log(`\n🔔 [Worker] Processing job ${job.id}`);
+  console.log(`\n [Worker] Processing job ${job.id}`);
   console.log(`   Type: ${job.data.stepType}`);
   console.log(`   Scheduled for: ${job.data.executeAt}`);
 
@@ -202,7 +207,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
 
     // Handle wait completion
     if (stepType.includes('wait')) {
-      console.log('   ⏰ Wait period completed');
+      console.log('   Wait period completed');
       
       const flowDefinition = state.journey.flow_definition as any;
       const currentNode = flowDefinition.nodes.find(
@@ -215,7 +220,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
         );
         
         if (nextEdge) {
-          console.log(`   ➡️  Moving to next step: ${nextEdge.to}`);
+          console.log(`     Moving to next step: ${nextEdge.to}`);
           
           // Update state
           await supabase
@@ -241,7 +246,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
           // Process next step
           await processNextStep(state.id, nextEdge.to, state.journey);
         } else {
-          console.log('   ✓ No next step - completing journey');
+          console.log('    No next step - completing journey');
           await completeJourney(state.id, state.journey_id, state.subscriber_id);
         }
       }
@@ -259,7 +264,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
     console.log(` [Worker] Job ${job.id} completed successfully\n`);
 
   } catch (error: any) {
-    console.error(`❌ [Worker] Job ${job.id} failed:`, error.message);
+    console.error(` [Worker] Job ${job.id} failed:`, error.message);
 
     await supabase
       .from('scheduled_journey_steps')
@@ -326,7 +331,7 @@ async function processNextStep(stateId: string, nextStepId: string, journey: any
 
 // Helper: Send notification
 async function sendNotificationStep(state: any, node: any, flowDefinition: any, journey: any) {
-  console.log(`[Worker] 📧 Sending notification: "${node.data.title}"`);
+  console.log(`[Worker]  Sending notification: "${node.data.title}"`);
 
   const { data: subscriber } = await supabase
     .from('subscribers')
@@ -335,7 +340,7 @@ async function sendNotificationStep(state: any, node: any, flowDefinition: any, 
     .single();
 
   if (!subscriber || !subscriber.endpoint) {
-    console.log('[Worker] ⚠️  Subscriber has no push subscription');
+    console.log('[Worker]   Subscriber has no push subscription');
     
     // Log failure
     await supabase.from('notification_logs').insert({
@@ -430,7 +435,7 @@ async function scheduleWaitStep(state: any, node: any, flowDefinition: any) {
   const durationSeconds = node.data.duration || 86400;
   const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-  console.log(`[Worker] ⏰ Scheduling new wait: ${durationSeconds}s`);
+  console.log(`[Worker] Scheduling new wait: ${durationSeconds}s`);
 
   await supabase.from('user_journey_states').update({
     status: 'waiting',
@@ -450,10 +455,10 @@ async function scheduleWaitStep(state: any, node: any, flowDefinition: any) {
     .single();
 
   // Schedule in queue
-  const { Queue } = await import('bullmq');
-  const queue = new Queue('journey-notifications', { connection: redisConnection });
+  // const { Queue } = await import('bullmq');
+  // const queue = new Queue('journey-notifications', { connection: redisConnection });
   
-  await queue.add(
+  await notificationQueue.add(
     'wait-completion',
     {
       scheduledStepId: scheduledStep!.id,
@@ -542,7 +547,7 @@ async function processConditionStep(state: any, node: any, flowDefinition: any, 
 
 // Helper: Complete journey
 async function completeJourney(stateId: string, journeyId: string, subscriberId: string) {
-  console.log('[Worker] 🏁 Completing journey');
+  console.log('[Worker]  Completing journey');
 
   await supabase.from('user_journey_states').update({
     status: 'completed',
@@ -578,6 +583,8 @@ const worker = new Worker<NotificationJobData>(
   {
     connection: redisConnection,
     concurrency: 10,
+     drainDelay: 100,
+     lockDuration: 30000,
   }
 );
 
@@ -587,26 +594,26 @@ worker.on('completed', (job) => {
 });
 
 worker.on('failed', (job, err) => {
-  console.error(`❌ Job ${job?.id} failed:`, err.message);
+  console.error(` Job ${job?.id} failed:`, err.message);
 });
 
 worker.on('error', (err) => {
-  console.error('❌ Worker error:', err);
+  console.error(' Worker error:', err);
 });
 
 console.log('\n Journey notification worker started');
-console.log(`📡 Redis: ${redisConnection.host}:${redisConnection.port}`);
-console.log(`⚙️  Concurrency: 10 jobs\n`);
+console.log(` Redis: ${redisConnection.host}:${redisConnection.port}`);
+console.log(`  Concurrency: 10 jobs\n`);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('\n👋 Shutting down worker...');
+  console.log('\n Shutting down worker...');
   await worker.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('\n👋 Shutting down worker...');
+  console.log('\n Shutting down worker...');
   await worker.close();
   process.exit(0);
 });

@@ -2638,6 +2638,8 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           console.log('[Processor] ✗ Invalid scroll depth percentage:', requiredPercentage);
           return false;
         }
+ // ✅ FIX: Check for page pattern
+        const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
 
         const { data: events } = await supabase
           .from('subscriber_events')
@@ -2655,10 +2657,30 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         const hasReached = events.some(e => {
           const props = getEventProperties(e.properties);
           const percentage = props.percentage || 0;
+          const eventPath = props.path || props.url || '';
+ // ✅ FIX: Check page pattern if specified
+          if (pagePattern) {
+            if (pagePattern.includes('*')) {
+              const escapedPattern = pagePattern
+                .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+                .replace(/\*/g, '.*');
+              const regex = new RegExp('^' + escapedPattern + '$', 'i');
+              const pathMatches = regex.test(eventPath);
+              
+              if (!pathMatches) {
+                return false; // Wrong page
+              }
+            } else {
+              const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
+              if (!pathMatches) {
+                return false; // Wrong page
+              }
+            }
+          }
           return percentage >= requiredPercentage;
         });
 
-        console.log('[Processor]', hasReached ? '✓' : '✗', 'Scroll depth check:', { requiredPercentage, hasReached });
+        console.log('[Processor]', hasReached ? '*' : 'x', 'Scroll depth check:', { requiredPercentage,pagePattern,hasReached });
         return hasReached;
       }
 
@@ -2681,6 +2703,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           console.log('[Processor] ✗ Page abandonment: invalid time value:', minTime);
           return false;
         }
+        const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
 
         const { data: events } = await supabase
           .from('subscriber_events')
@@ -2698,6 +2721,26 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         const hasAbandoned = events.some(e => {
           const props = getEventProperties(e.properties);
           const timeOnPage = props.time_on_page_seconds || props.time_on_page || props.seconds || 0;
+          const eventPath = props.path || props.url || '';
+// ✅ FIX: Check page pattern if specified
+          if (pagePattern) {
+            if (pagePattern.includes('*')) {
+              const escapedPattern = pagePattern
+                .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+                .replace(/\*/g, '.*');
+              const regex = new RegExp('^' + escapedPattern + '$', 'i');
+              const pathMatches = regex.test(eventPath);
+              
+              if (!pathMatches) {
+                return false; // Wrong page
+              }
+            } else {
+              const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
+              if (!pathMatches) {
+                return false; // Wrong page
+              }
+            }
+          }
           return timeOnPage >= minTime;
         });
 
@@ -2729,6 +2772,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           console.log('[Processor] ✗ Time on page: invalid threshold:', threshold);
           return false;
         }
+        const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
 
         const { data: events } = await supabase
           .from('subscriber_events')
@@ -2746,6 +2790,26 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         const hasReached = events.some(e => {
           const props = getEventProperties(e.properties);
           const seconds = props.seconds || props.duration || props.time_seconds || 0;
+                    const eventPath = props.path || props.url || '';
+ // ✅ FIX: Check page pattern if specified
+          if (pagePattern) {
+            if (pagePattern.includes('*')) {
+              const escapedPattern = pagePattern
+                .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+                .replace(/\*/g, '.*');
+              const regex = new RegExp('^' + escapedPattern + '$', 'i');
+              const pathMatches = regex.test(eventPath);
+              
+              if (!pathMatches) {
+                return false; // Wrong page
+              }
+            } else {
+              const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
+              if (!pathMatches) {
+                return false; // Wrong page
+              }
+            }
+          }
           return seconds >= threshold;
         });
 
@@ -2916,36 +2980,85 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
 
         const normalizedAllowedDevices = allowedDevices.map((d: string) => d.toLowerCase());
         let device = 'desktop';
+        // ✅ FIX: Better device detection from events first
+        const { data: events } = await supabase
+          .from('subscriber_events')
+          .select('*')
+          .eq('subscriber_id', subscriberId)
+          .order('created_at', { ascending: false })
+          .limit(5);
 
-        const customAttrs = subscriber.custom_attributes as any;
-        if (customAttrs?.device) {
-          device = customAttrs.device.toLowerCase();
-        } else {
-          const { data: events } = await supabase
-            .from('subscriber_events')
-            .select('*')
-            .eq('subscriber_id', subscriberId)
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-          if (events && events.length > 0) {
-            const props = getEventProperties(events[0].properties);
-            device = (props.device || props.device_type || props.platform || 'desktop').toLowerCase();
-          }
-
-          if (subscriber.user_agent && device === 'desktop') {
-            const ua = subscriber.user_agent.toLowerCase();
-            if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
-              device = 'mobile';
-            } else if (ua.includes('tablet') || ua.includes('ipad')) {
-              device = 'tablet';
+        if (events && events.length > 0) {
+          for (const event of events) {
+            const props = getEventProperties(event.properties);
+            const eventDevice = (props.device || props.device_type || '').toLowerCase();
+            
+            if (eventDevice && ['mobile', 'tablet', 'desktop'].includes(eventDevice)) {
+              device = eventDevice;
+              console.log('[Processor] ✓ Device from recent event:', device);
+              break;
             }
           }
         }
 
+        // Fallback to custom attributes
+        if (device === 'desktop') {
+          const customAttrs = subscriber.custom_attributes as any;
+          if (customAttrs?.device) {
+            device = customAttrs.device.toLowerCase();
+            console.log('[Processor] ✓ Device from custom attributes:', device);
+          }
+        }
+
+        // Last resort: user agent parsing
+        if (device === 'desktop' && subscriber.user_agent) {
+          const ua = subscriber.user_agent.toLowerCase();
+          if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+            device = 'mobile';
+          } else if (ua.includes('tablet') || ua.includes('ipad')) {
+            device = 'tablet';
+          }
+          console.log('[Processor] ✓ Device from user agent:', device);
+        }
+
         const matches = normalizedAllowedDevices.includes(device);
-        console.log('[Processor]', matches ? '✓' : '✗', 'Device filter check:', { allowedDevices: normalizedAllowedDevices, subscriberDevice: device, matches });
+        console.log('[Processor]', matches ? '✓' : '✗', 'Device filter check:', { 
+          allowedDevices: normalizedAllowedDevices, 
+          subscriberDevice: device, 
+          matches 
+        });
         return matches;
+
+        // const customAttrs = subscriber.custom_attributes as any;
+        // if (customAttrs?.device) {
+        //   device = customAttrs.device.toLowerCase();
+        // } else {
+        //   const { data: events } = await supabase
+        //     .from('subscriber_events')
+        //     .select('*')
+        //     .eq('subscriber_id', subscriberId)
+        //     .order('created_at', { ascending: false })
+        //     .limit(1);
+
+        //   if (events && events.length > 0) {
+        //     const props = getEventProperties(events[0].properties);
+        //     device = (props.device || props.device_type || props.platform || 'desktop').toLowerCase();
+        //   }
+
+        //   if (subscriber.user_agent && device === 'desktop') {
+        //     const ua = subscriber.user_agent.toLowerCase();
+        //     if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+        //       device = 'mobile';
+        //     } else if (ua.includes('tablet') || ua.includes('ipad')) {
+        //       device = 'tablet';
+        //     }
+        //   }
+        // }
+
+        // const matches = normalizedAllowedDevices.includes(device);
+        // console.log('[Processor]', matches ? '✓' : '✗', 'Device filter check:', { allowedDevices: normalizedAllowedDevices, subscriberDevice: device, matches });
+        // return matches;
+
       }
 
       case 'geography_filter': {
@@ -3759,7 +3872,14 @@ async function processWaitNode(
   const waitMode = node.data.mode || 'duration';
 
   if (waitMode === 'duration') {
-    const durationSeconds = node.data.duration || 86400;
+        let durationSeconds = node.data.duration || 86400;
+ // If duration_seconds is specified, use it directly
+    if (node.data.duration_seconds !== undefined) {
+      durationSeconds = node.data.duration_seconds;
+    }
+
+    console.log(`[Processor] Scheduling wait: ${durationSeconds}s`);
+    // const durationSeconds = node.data.duration || 86400;
     const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
     console.log(`[Processor] Scheduling wait: ${durationSeconds}s`);

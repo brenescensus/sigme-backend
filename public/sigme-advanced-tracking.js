@@ -20,8 +20,8 @@
   // ==========================================
   // STATE MANAGEMENT
   // ==========================================
-  
-  let pageLoadTime = Date.now();
+  let pageLoadTime = null;
+  // let pageLoadTime = Date.now();
   let isPageAbandoned = false;
   let abandonmentTimeout = null;
   let trackingInitialized = false;
@@ -378,7 +378,15 @@
   //   }, 1000);
   // }
 function startTimeTracking() {
-  const milestones = CONFIG.TIME_MILESTONES;
+
+  if (timeTrackingInterval) {
+      clearInterval(timeTrackingInterval);
+      timeTrackingInterval = null;
+    }
+    lastTrackedSecond = 0;
+    console.log('[Sigme]  Starting time tracking...');
+
+  // const milestones = CONFIG.TIME_MILESTONES;
   // let trackedMilestones = new Set();
 
   //  FIX: Store interval ID for cleanup
@@ -388,10 +396,12 @@ function startTimeTracking() {
     const timeOnPage = Math.round((Date.now() - pageLoadTime) / 1000);
     if (timeOnPage > lastTrackedSecond) {
         lastTrackedSecond = timeOnPage;
+                console.log(`[Sigme] Time on page: ${timeOnPage}s`);
+
             //  Log every 5 seconds to avoid console spam
-        if (timeOnPage % 2 === 0 || timeOnPage <= 10) {
-          console.log(`[Sigme]   Time on page: ${timeOnPage}s`);
-        }
+        // if (timeOnPage % 2 === 0 || timeOnPage <= 10) {
+        //   console.log(`[Sigme]   Time on page: ${timeOnPage}s`);
+        // }
         
         window.Sigme.track('time_on_page', {
           seconds: timeOnPage,
@@ -543,10 +553,14 @@ function startTimeTracking() {
     const ua = navigator.userAgent;
     
     let deviceType = 'desktop';
-    if (/Mobile|Android|iP(hone|od)|BlackBerry|IEMobile/.test(ua)) {
+    if (/Mobile|Android|iP(hone|od)|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
       deviceType = 'mobile';
     } else if (/Tablet|iPad/.test(ua)) {
       deviceType = 'tablet';
+    }
+    // Special case: iPad can be tricky
+    else if (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) {
+      deviceType = 'tablet'; 
     }
 
     let browser = 'Unknown';
@@ -589,7 +603,7 @@ function startTimeTracking() {
     // Method 3: Hash change (for #hash navigation)
     window.addEventListener('hashchange', handleNavigation);
     
-    // ✅ Method 4: Monitor URL changes via interval (fallback for all cases)
+    //Method 4: Monitor URL changes via interval (fallback for all cases)
     let lastUrl = window.location.href;
     setInterval(() => {
       const currentUrl = window.location.href;
@@ -643,12 +657,13 @@ function startTimeTracking() {
     }
 
     console.log('[Sigme]  Subscriber found, initializing advanced tracking...');
+    pageLoadTime = Date.now();
 
     // Mark as initialized
     trackingInitialized = true;
     isUserActive = true;
-    isPageAbandoned = false; // Reset state
-
+    isPageAbandoned = false; 
+ lastTrackedSecond = 0;
     // Initialize all tracking features
     trackPageLanding();
     startTimeTracking();
