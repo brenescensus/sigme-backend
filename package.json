@@ -5,7 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "worker": "tsx watch worker/index.ts",
+    "worker:dev": "nodemon --exec tsx worker/index.ts",
+    "worker:prod": "node --loader tsx worker/index.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run worker\""
   },
   "dependencies": {
     "@huggingface/inference": "^4.13.10",
@@ -14,9 +18,10 @@
     "@supabase/supabase-js": "^2.90.1",
     "axios": "^1.13.3",
     "bcryptjs": "^3.0.3",
-    "bullmq": "^5.67.2",
+    "bullmq": "^5.67.3",
     "cloudinary": "^2.9.0",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.4",
     "ioredis": "^5.9.2",
     "jsonwebtoken": "^9.0.3",
     "next": "16.1.2",
@@ -35,6 +40,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.11",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

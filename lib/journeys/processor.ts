@@ -1,4 +1,4 @@
-// // lib/journeys/processor.ts
+// // lib/journeys/processor.ts - 
 
 // import { createClient } from '@supabase/supabase-js';
 // import type { Database } from '@/types/database';
@@ -16,7 +16,7 @@
 
 // interface JourneyNode {
 //   id: string;
-//   type: 'send_notification' | 'wait' | 'condition' | 'ab_split' | 'entry' | 'exit';
+//   type: 'send_notification' | 'wait' | 'condition' | 'ab_split' | 'entry' | 'exit' | 'update_contact';
 //   position: { x: number; y: number };
 //   data: any;
 // }
@@ -177,7 +177,7 @@
 // // ============================================================================
 
 // async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise<boolean> {
-//   console.log('[Processor]  Checking advanced trigger:', trigger.type);
+//   console.log('[Processor] ✓ Checking advanced trigger:', trigger.type);
 
 //   try {
 //     const { data: subscriber } = await supabase
@@ -187,18 +187,19 @@
 //       .single();
 
 //     if (!subscriber) {
-//       console.log('[Processor]  Subscriber not found');
+//       console.log('[Processor] ✗ Subscriber not found');
 //       return false;
 //     }
 
 //     switch (trigger.type) {
-//       // ... (keep all your existing trigger cases - page_landing, scroll_depth, etc.)
-//       // I'll include them but they remain unchanged
-
-//       case 'page_landing': {
-//         const urlPattern = trigger.url_pattern || trigger.url;
+//       case 'page_landing':
+//       case 'page_landed': {
+//         // const urlPattern = trigger.url_pattern || trigger.url;
+//         const urlPattern = trigger.event_config?.url_pattern ||
+//           trigger.url_pattern ||
+//           trigger.url;
 //         if (!urlPattern) {
-//           console.log('[Processor]  Page landing: no URL pattern specified');
+//           console.log('[Processor] ✗ Page landing: no URL pattern specified');
 //           return false;
 //         }
 
@@ -211,7 +212,7 @@
 //           .limit(10);
 
 //         if (!events || events.length === 0) {
-//           console.log('[Processor]  No page_landed events found');
+//           console.log('[Processor] ✗ No page_landed events found');
 //           return false;
 //         }
 
@@ -230,17 +231,22 @@
 //           return eventUrl.toLowerCase().includes(urlPattern.toLowerCase());
 //         });
 
-//         console.log('[Processor] Page landing check:', { urlPattern, hasLanded, eventsChecked: events.length });
+//         console.log('[Processor]', hasLanded ? '✓' : '✗', 'Page landing check:', { urlPattern, hasLanded });
 //         return hasLanded;
 //       }
 
 //       case 'scroll_depth': {
-//         const requiredPercentage = trigger.percentage || 0;
+//         const requiredPercentage = trigger.event_config?.percentage ||
+//           trigger.percentage ||
+//           0;
+//         // const requiredPercentage = trigger.percentage || 0;
 
 //         if (requiredPercentage <= 0 || requiredPercentage > 100) {
-//           console.log('[Processor]  Invalid scroll depth percentage:', requiredPercentage);
+//           console.log('[Processor] ✗ Invalid scroll depth percentage:', requiredPercentage);
 //           return false;
 //         }
+//         // ✅ FIX: Check for page pattern
+//         const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
 
 //         const { data: events } = await supabase
 //           .from('subscriber_events')
@@ -251,42 +257,60 @@
 //           .limit(10);
 
 //         if (!events || events.length === 0) {
-//           console.log('[Processor]  No scroll_depth events found');
+//           console.log('[Processor] ✗ No scroll_depth events found');
 //           return false;
 //         }
 
 //         const hasReached = events.some(e => {
 //           const props = getEventProperties(e.properties);
 //           const percentage = props.percentage || 0;
+//           const eventPath = props.path || props.url || '';
+//           // ✅ FIX: Check page pattern if specified
+//           if (pagePattern) {
+//             if (pagePattern.includes('*')) {
+//               const escapedPattern = pagePattern
+//                 .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+//                 .replace(/\*/g, '.*');
+//               const regex = new RegExp('^' + escapedPattern + '$', 'i');
+//               const pathMatches = regex.test(eventPath);
+
+//               if (!pathMatches) {
+//                 return false; // Wrong page
+//               }
+//             } else {
+//               const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
+//               if (!pathMatches) {
+//                 return false; // Wrong page
+//               }
+//             }
+//           }
 //           return percentage >= requiredPercentage;
 //         });
 
-//         console.log('[Processor]  Scroll depth check:', {
-//           requiredPercentage,
-//           maxScrollFound: Math.max(...events.map(e => getEventProperties(e.properties).percentage || 0)),
-//           hasReached
-//         });
-
+//         console.log('[Processor]', hasReached ? '*' : 'x', 'Scroll depth check:', { requiredPercentage, pagePattern, hasReached });
 //         return hasReached;
 //       }
 
 //       case 'page_abandonment': {
-//         const minTime = trigger.min_time_value ||
+//         const minTime = trigger.event_config?.min_time_seconds ||
+//           trigger.min_time_value ||
 //           trigger.min_time_seconds ||
 //           trigger.minimum_time ||
 //           trigger.time_value ||
 //           trigger.min_time ||
 //           0;
+//         // const minTime = trigger.min_time_value ||
+//         //   trigger.min_time_seconds ||
+//         //   trigger.minimum_time ||
+//         //   trigger.time_value ||
+//         //   trigger.min_time ||
+//         //   0;
 
-//         if (minTime <= 0) {
-//           console.log('[Processor] Page abandonment: no minimum time set');
+//         if (minTime <= 0 || minTime > 3600) {
+//           console.log('[Processor] ✗ Page abandonment: invalid time value:', minTime);
 //           return false;
 //         }
-
-//         if (minTime < 1 || minTime > 3600) {
-//           console.log('[Processor] Page abandonment: unreasonable time value:', minTime);
-//           return false;
-//         }
+//         const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
 
 //         const { data: events } = await supabase
 //           .from('subscriber_events')
@@ -297,39 +321,44 @@
 //           .limit(10);
 
 //         if (!events || events.length === 0) {
-//           console.log('[Processor] No page_abandoned events found for subscriber');
+//           console.log('[Processor] ✗ No page_abandoned events found');
 //           return false;
 //         }
 
 //         const hasAbandoned = events.some(e => {
 //           const props = getEventProperties(e.properties);
-//           const timeOnPage = props.time_on_page_seconds ||
-//             props.time_on_page ||
-//             props.seconds ||
-//             0;
-//           const meetsRequirement = timeOnPage >= minTime;
+//           const timeOnPage = props.time_on_page_seconds || props.time_on_page || props.seconds || 0;
+//           const eventPath = props.path || props.url || '';
+//           // ✅ FIX: Check page pattern if specified
+//           if (pagePattern) {
+//             if (pagePattern.includes('*')) {
+//               const escapedPattern = pagePattern
+//                 .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+//                 .replace(/\*/g, '.*');
+//               const regex = new RegExp('^' + escapedPattern + '$', 'i');
+//               const pathMatches = regex.test(eventPath);
 
-//           console.log('[Processor]  Checking abandonment event:', {
-//             timeOnPage,
-//             minTime,
-//             meetsRequirement,
-//             eventId: e.id
-//           });
-
-//           return meetsRequirement;
+//               if (!pathMatches) {
+//                 return false; // Wrong page
+//               }
+//             } else {
+//               const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
+//               if (!pathMatches) {
+//                 return false; // Wrong page
+//               }
+//             }
+//           }
+//           return timeOnPage >= minTime;
 //         });
 
-//         console.log('[Processor]  Page abandonment check:', {
-//           minTime,
-//           eventsChecked: events.length,
-//           hasAbandoned
-//         });
-
+//         console.log('[Processor]', hasAbandoned ? '✓' : '✗', 'Page abandonment check:', { minTime, hasAbandoned });
 //         return hasAbandoned;
 //       }
 
 //       case 'time_on_page': {
-//         const threshold = trigger.threshold_value ||
+
+//         const threshold = trigger.event_config?.threshold_seconds ||
+//           trigger.threshold_value ||
 //           trigger.threshold_seconds ||
 //           trigger.minimum_time ||
 //           trigger.min_time_seconds ||
@@ -337,16 +366,20 @@
 //           trigger.duration ||
 //           trigger.seconds ||
 //           0;
+//         // const threshold = trigger.threshold_value ||
+//         //   trigger.threshold_seconds ||
+//         //   trigger.minimum_time ||
+//         //   trigger.min_time_seconds ||
+//         //   trigger.time_threshold ||
+//         //   trigger.duration ||
+//         //   trigger.seconds ||
+//         //   0;
 
-//         if (threshold <= 0) {
-//           console.log('[Processor]  Time on page: no threshold set');
+//         if (threshold <= 0 || threshold > 3600) {
+//           console.log('[Processor] ✗ Time on page: invalid threshold:', threshold);
 //           return false;
 //         }
-
-//         if (threshold > 3600) {
-//           console.log('[Processor]  Time on page: unreasonable threshold:', threshold);
-//           return false;
-//         }
+//         const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
 
 //         const { data: events } = await supabase
 //           .from('subscriber_events')
@@ -357,36 +390,42 @@
 //           .limit(10);
 
 //         if (!events || events.length === 0) {
-//           console.log('[Processor]  No time_on_page events found');
+//           console.log('[Processor] ✗ No time_on_page events found');
 //           return false;
 //         }
 
 //         const hasReached = events.some(e => {
 //           const props = getEventProperties(e.properties);
-//           const seconds = props.seconds ||
-//             props.duration ||
-//             props.time_seconds ||
-//             0;
+//           const seconds = props.seconds || props.duration || props.time_seconds || 0;
+//           const eventPath = props.path || props.url || '';
+//           // ✅ FIX: Check page pattern if specified
+//           if (pagePattern) {
+//             if (pagePattern.includes('*')) {
+//               const escapedPattern = pagePattern
+//                 .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+//                 .replace(/\*/g, '.*');
+//               const regex = new RegExp('^' + escapedPattern + '$', 'i');
+//               const pathMatches = regex.test(eventPath);
+
+//               if (!pathMatches) {
+//                 return false; // Wrong page
+//               }
+//             } else {
+//               const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
+//               if (!pathMatches) {
+//                 return false; // Wrong page
+//               }
+//             }
+//           }
 //           return seconds >= threshold;
 //         });
 
-//         console.log('[Processor]  Time on page check:', {
-//           threshold,
-//           maxTimeFound: Math.max(...events.map(e => {
-//             const p = getEventProperties(e.properties);
-//             return p.seconds || p.duration || 0;
-//           })),
-//           hasReached
-//         });
-
+//         console.log('[Processor]', hasReached ? '✓' : '✗', 'Time on page check:', { threshold, hasReached });
 //         return hasReached;
 //       }
 
 //       case 'link_interaction': {
-//         const targetUrl = trigger.url ||
-//           trigger.link_url ||
-//           trigger.target_url ||
-//           trigger.href;
+//         const targetUrl = trigger.url || trigger.link_url || trigger.target_url || trigger.href;
 
 //         const { data: events } = await supabase
 //           .from('subscriber_events')
@@ -397,43 +436,31 @@
 //           .limit(20);
 
 //         if (!events || events.length === 0) {
-//           console.log('[Processor]  No link_clicked events found');
+//           console.log('[Processor] ✗ No link_clicked events found');
 //           return false;
 //         }
 
 //         if (targetUrl) {
 //           const matches = events.some(e => {
 //             const eventProps = getEventProperties(e.properties);
-//             const clickedUrl = (eventProps.url ||
-//               eventProps.href ||
-//               eventProps.link ||
-//               '').toLowerCase();
-
+//             const clickedUrl = (eventProps.url || eventProps.href || eventProps.link || '').toLowerCase();
 //             return clickedUrl.includes(targetUrl.toLowerCase());
 //           });
 
-//           console.log('[Processor]  Link interaction check:', {
-//             targetUrl,
-//             matches,
-//             eventsChecked: events.length
-//           });
-
+//           console.log('[Processor]', matches ? '✓' : '✗', 'Link interaction check:', { targetUrl, matches });
 //           return matches;
 //         }
 
-//         console.log('[Processor]  Link interaction check: any link clicked');
+//         console.log('[Processor] ✓ Link interaction check: any link clicked');
 //         return true;
 //       }
 
 //       case 'cart_abandoned': {
-//         const delayValue = trigger.delay_value ||
-//           trigger.delay_minutes ||
-//           trigger.delay ||
-//           30;
+//         const delayValue = trigger.delay_value || trigger.delay_minutes || trigger.delay || 30;
 //         const delayUnit = trigger.delay_unit || 'minutes';
 
 //         if (delayValue <= 0) {
-//           console.log('[Processor]  Cart abandoned: invalid delay value');
+//           console.log('[Processor] ✗ Cart abandoned: invalid delay value');
 //           return false;
 //         }
 
@@ -449,12 +476,11 @@
 //             delayMs = delayValue * 24 * 60 * 60 * 1000;
 //             break;
 //           default:
-//             console.log('[Processor]  Cart abandoned: unknown delay unit:', delayUnit);
 //             delayMs = delayValue * 60 * 1000;
 //         }
 
 //         if (delayMs > 30 * 24 * 60 * 60 * 1000) {
-//           console.log('[Processor] Cart abandoned: delay too long (max 30 days)');
+//           console.log('[Processor] ✗ Cart abandoned: delay too long (max 30 days)');
 //           return false;
 //         }
 
@@ -470,7 +496,7 @@
 //           .limit(1);
 
 //         if (!events || events.length === 0) {
-//           console.log('[Processor]  No cart_abandoned events found before cutoff');
+//           console.log('[Processor] ✗ No cart_abandoned events found before cutoff');
 //           return false;
 //         }
 
@@ -484,14 +510,7 @@
 
 //         const hasAbandonedCart = !purchases || purchases.length === 0;
 
-//         console.log('[Processor] Cart abandoned check:', {
-//           delayValue,
-//           delayUnit,
-//           cutoffTime,
-//           hasAbandonedCart,
-//           abandonedAt: events[0].created_at
-//         });
-
+//         console.log('[Processor]', hasAbandonedCart ? '✓' : '✗', 'Cart abandoned check:', { delayValue, delayUnit, hasAbandonedCart });
 //         return hasAbandonedCart;
 //       }
 
@@ -511,7 +530,7 @@
 //           .limit(10);
 
 //         if (!events || events.length === 0) {
-//           console.log('[Processor]  No product_purchased events found');
+//           console.log('[Processor] ✗ No product_purchased events found');
 //           return false;
 //         }
 
@@ -526,10 +545,7 @@
 //             );
 //           });
 
-//           console.log('[Processor]  Product purchased check (by ID):', {
-//             productIds,
-//             hasPurchased
-//           });
+//           console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by ID):', { productIds, hasPurchased });
 //           return hasPurchased;
 //         }
 
@@ -540,16 +556,12 @@
 //             return items.some((item: any) => item.sku === sku);
 //           });
 
-//           console.log('[Processor]  Product purchased check (by SKU):', {
-//             sku,
-//             hasPurchased
-//           });
+//           console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by SKU):', { sku, hasPurchased });
 //           return hasPurchased;
 //         }
 
 //         if (categories.length > 0) {
 //           const lowerCategories = categories.map((c: string) => c.toLowerCase());
-
 //           const hasPurchased = events.some(e => {
 //             const props = getEventProperties(e.properties);
 //             const items = props.items || [];
@@ -558,66 +570,102 @@
 //             );
 //           });
 
-//           console.log('[Processor]  Product purchased check (by category):', {
-//             categories,
-//             hasPurchased
-//           });
+//           console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by category):', { categories, hasPurchased });
 //           return hasPurchased;
 //         }
 
-//         console.log('[Processor] Product purchased check: any product');
+//         console.log('[Processor] ✓ Product purchased check: any product');
 //         return true;
 //       }
 
 //       case 'device_filter': {
 //         const allowedDevices = trigger.devices || [];
 //         if (allowedDevices.length === 0) {
-//           console.log('[Processor]  Device filter: no restrictions');
+//           console.log('[Processor] ✓ Device filter: no restrictions');
 //           return true;
 //         }
 
 //         const normalizedAllowedDevices = allowedDevices.map((d: string) => d.toLowerCase());
-
 //         let device = 'desktop';
+//         // ✅ FIX: Better device detection from events first
+//         const { data: events } = await supabase
+//           .from('subscriber_events')
+//           .select('*')
+//           .eq('subscriber_id', subscriberId)
+//           .order('created_at', { ascending: false })
+//           .limit(5);
 
-//         const customAttrs = subscriber.custom_attributes as any;
-//         if (customAttrs?.device) {
-//           device = customAttrs.device.toLowerCase();
-//         } else {
-//           const { data: events } = await supabase
-//             .from('subscriber_events')
-//             .select('*')
-//             .eq('subscriber_id', subscriberId)
-//             .order('created_at', { ascending: false })
-//             .limit(1);
+//         if (events && events.length > 0) {
+//           for (const event of events) {
+//             const props = getEventProperties(event.properties);
+//             const eventDevice = (props.device || props.device_type || '').toLowerCase();
 
-//           if (events && events.length > 0) {
-//             const props = getEventProperties(events[0].properties);
-//             device = (props.device ||
-//               props.device_type ||
-//               props.platform ||
-//               'desktop').toLowerCase();
-//           }
-
-//           if (subscriber.user_agent && device === 'desktop') {
-//             const ua = subscriber.user_agent.toLowerCase();
-//             if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
-//               device = 'mobile';
-//             } else if (ua.includes('tablet') || ua.includes('ipad')) {
-//               device = 'tablet';
+//             if (eventDevice && ['mobile', 'tablet', 'desktop'].includes(eventDevice)) {
+//               device = eventDevice;
+//               console.log('[Processor] ✓ Device from recent event:', device);
+//               break;
 //             }
 //           }
 //         }
 
-//         const matches = normalizedAllowedDevices.includes(device);
+//         // Fallback to custom attributes
+//         if (device === 'desktop') {
+//           const customAttrs = subscriber.custom_attributes as any;
+//           if (customAttrs?.device) {
+//             device = customAttrs.device.toLowerCase();
+//             console.log('[Processor] ✓ Device from custom attributes:', device);
+//           }
+//         }
 
-//         console.log('[Processor] Device filter check:', {
+//         // Last resort: user agent parsing
+//         if (device === 'desktop' && subscriber.user_agent) {
+//           const ua = subscriber.user_agent.toLowerCase();
+//           if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+//             device = 'mobile';
+//           } else if (ua.includes('tablet') || ua.includes('ipad')) {
+//             device = 'tablet';
+//           }
+//           console.log('[Processor] ✓ Device from user agent:', device);
+//         }
+
+//         const matches = normalizedAllowedDevices.includes(device);
+//         console.log('[Processor]', matches ? '✓' : '✗', 'Device filter check:', {
 //           allowedDevices: normalizedAllowedDevices,
 //           subscriberDevice: device,
 //           matches
 //         });
-
 //         return matches;
+
+//         // const customAttrs = subscriber.custom_attributes as any;
+//         // if (customAttrs?.device) {
+//         //   device = customAttrs.device.toLowerCase();
+//         // } else {
+//         //   const { data: events } = await supabase
+//         //     .from('subscriber_events')
+//         //     .select('*')
+//         //     .eq('subscriber_id', subscriberId)
+//         //     .order('created_at', { ascending: false })
+//         //     .limit(1);
+
+//         //   if (events && events.length > 0) {
+//         //     const props = getEventProperties(events[0].properties);
+//         //     device = (props.device || props.device_type || props.platform || 'desktop').toLowerCase();
+//         //   }
+
+//         //   if (subscriber.user_agent && device === 'desktop') {
+//         //     const ua = subscriber.user_agent.toLowerCase();
+//         //     if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+//         //       device = 'mobile';
+//         //     } else if (ua.includes('tablet') || ua.includes('ipad')) {
+//         //       device = 'tablet';
+//         //     }
+//         //   }
+//         // }
+
+//         // const matches = normalizedAllowedDevices.includes(device);
+//         // console.log('[Processor]', matches ? '✓' : '✗', 'Device filter check:', { allowedDevices: normalizedAllowedDevices, subscriberDevice: device, matches });
+//         // return matches;
+
 //       }
 
 //       case 'geography_filter': {
@@ -625,10 +673,8 @@
 //         const allowedRegions = trigger.regions || [];
 //         const allowedCities = trigger.cities || [];
 
-//         if (allowedCountries.length === 0 &&
-//           allowedRegions.length === 0 &&
-//           allowedCities.length === 0) {
-//           console.log('[Processor]  Geography filter: no restrictions');
+//         if (allowedCountries.length === 0 && allowedRegions.length === 0 && allowedCities.length === 0) {
+//           console.log('[Processor] ✓ Geography filter: no restrictions');
 //           return true;
 //         }
 
@@ -644,8 +690,7 @@
 
 //         let countryMatch = allowedCountries.length === 0;
 //         if (!countryMatch) {
-//           countryMatch = normalizedCountries.includes(country) ||
-//             normalizedCountries.includes(countryCode);
+//           countryMatch = normalizedCountries.includes(country) || normalizedCountries.includes(countryCode);
 //         }
 
 //         let regionMatch = allowedRegions.length === 0;
@@ -659,26 +704,16 @@
 //         }
 
 //         const matches = countryMatch && regionMatch && cityMatch;
-
-//         console.log('[Processor]  Geography filter check:', {
-//           subscriberCountry: country,
-//           subscriberRegion: region,
-//           subscriberCity: city,
-//           countryMatch,
-//           regionMatch,
-//           cityMatch,
-//           finalMatch: matches
-//         });
-
+//         console.log('[Processor]', matches ? '✓' : '✗', 'Geography filter check:', { countryMatch, regionMatch, cityMatch, finalMatch: matches });
 //         return matches;
 //       }
 
 //       default:
-//         console.log('[Processor]  Unknown trigger type:', trigger.type);
+//         console.log('[Processor] ✗ Unknown trigger type:', trigger.type);
 //         return false;
 //     }
 //   } catch (error: any) {
-//     console.error('[Processor]  Advanced trigger check failed:', error.message);
+//     console.error('[Processor] ✗ Advanced trigger check failed:', error.message);
 //     return false;
 //   }
 // }
@@ -688,7 +723,6 @@
 // // ============================================================================
 
 // export async function processDueSteps(): Promise<ProcessingResult> {
-//   // ... (keep existing implementation)
 //   console.log('[Processor] Starting scheduled step processing...');
 //   const startTime = Date.now();
 
@@ -704,16 +738,16 @@
 //       .limit(100);
 
 //     if (error) {
-//       console.error(' [Processor] Error fetching due steps:', error);
+//       console.error('[Processor] ✗ Error fetching due steps:', error);
 //       throw error;
 //     }
 
 //     if (!dueSteps || dueSteps.length === 0) {
-//       console.log(' [Processor] No due steps found');
+//       console.log('[Processor] ✓ No due steps found');
 //       return { processed: 0, failed: 0, skipped: 0, total: 0 };
 //     }
 
-//     console.log(` [Processor] Found ${dueSteps.length} due steps to process`);
+//     console.log(`[Processor] ℹ Found ${dueSteps.length} due steps to process`);
 
 //     let processed = 0;
 //     let failed = 0;
@@ -723,8 +757,13 @@
 //     for (const step of dueSteps) {
 //       try {
 //         const stepPayload = step.payload as Record<string, any> | null;
-//         console.log(`\n [Processor] Processing step ${step.id} (type: ${stepPayload?.step_type || 'unknown'})`);
+//         console.log(`\n[Processor] Processing step ${step.id} (type: ${stepPayload?.step_type || 'unknown'})`);
 
+//         if (stepPayload?.step_type === 'wait_duration') {
+//           console.log('[Processor] ⏭️ Skipping wait_duration step - handled by worker');
+//           skipped++;
+//           continue;
+//         }
 //         await supabase
 //           .from('scheduled_journey_steps')
 //           .update({
@@ -740,7 +779,7 @@
 //           .single();
 
 //         if (stateError || !stateData) {
-//           console.warn(` [Processor] Journey state ${step.user_journey_state_id} not found, cancelling step`);
+//           console.warn(`[Processor] ⚠ Journey state ${step.user_journey_state_id} not found, cancelling step`);
 //           await supabase
 //             .from('scheduled_journey_steps')
 //             .update({
@@ -756,7 +795,7 @@
 //         const state = toJourneyState(stateData);
 
 //         if (stepPayload?.step_type?.includes('wait')) {
-//           console.log(' [Processor] Wait step completed, advancing journey...');
+//           console.log('[Processor] ✓ Wait step completed, advancing journey...');
 
 //           const { data: journey } = await supabase
 //             .from('journeys')
@@ -772,7 +811,7 @@
 //               const nextNodeId = getNextNodeId(flowDefinition, currentNode.id);
 
 //               if (nextNodeId) {
-//                 console.log(` [Processor] Moving from wait node ${currentNode.id} to ${nextNodeId}`);
+//                 console.log(`[Processor] Moving from wait node ${currentNode.id} to ${nextNodeId}`);
 
 //                 await supabase
 //                   .from('user_journey_states')
@@ -804,11 +843,11 @@
 //                   currentNode.id
 //                 );
 
-//                 console.log(` [Processor] Processing next node: ${nextNodeId}`);
+//                 console.log(`[Processor] Processing next node: ${nextNodeId}`);
 //                 await processJourneyStep(state.id);
 
 //                 processed++;
-//                 console.log(` [Processor] Wait step ${step.id} completed successfully`);
+//                 console.log(`[Processor] ✓ Wait step ${step.id} completed successfully`);
 //                 continue;
 //               } else {
 //                 console.log('[Processor] No next node after wait, completing journey');
@@ -840,10 +879,10 @@
 //           .eq('id', step.id);
 
 //         processed++;
-//         console.log(` [Processor] Step ${step.id} completed successfully`);
+//         console.log(`[Processor] ✓ Step ${step.id} completed successfully`);
 
 //       } catch (stepError: any) {
-//         console.error(` [Processor] Step ${step.id} failed:`, stepError.message);
+//         console.error(`[Processor] ✗ Step ${step.id} failed:`, stepError.message);
 
 //         await supabase
 //           .from('scheduled_journey_steps')
@@ -862,27 +901,256 @@
 //     const duration = Date.now() - startTime;
 //     const total = processed + failed + skipped;
 
-//     console.log(`\n [Processor] Completed in ${duration}ms`);
+//     console.log(`\n[Processor] ✓ Completed in ${duration}ms`);
 //     console.log(`    Processed: ${processed}`);
 //     console.log(`    Failed: ${failed}`);
 //     console.log(`    Skipped: ${skipped}`);
-//     console.log(`   Total: ${total}`);
+//     console.log(`    Total: ${total}`);
 
 //     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
 
 //   } catch (error: any) {
-//     console.error(' [Processor] Fatal error in processDueSteps:', error.message);
+//     console.error('[Processor] ✗ Fatal error in processDueSteps:', error.message);
 //     throw error;
 //   }
 // }
 
-// //  enrollSubscriber with proper duplicate handling
+// // export async function enrollSubscriber(
+// //   journeyId: string,
+// //   subscriberId: string,
+// //   initialContext: any = {}
+// // ): Promise<any> {
+// //   console.log('[Processor] Enrolling subscriber:', { journeyId, subscriberId });
+
+// //   try {
+// //     const { data: journey, error: journeyError } = await supabase
+// //       .from('journeys')
+// //       .select('*')
+// //       .eq('id', journeyId)
+// //       .single();
+
+// //     if (journeyError || !journey) {
+// //       throw new Error('Journey not found');
+// //     }
+
+// //     if (journey.status !== 'active') {
+// //       throw new Error(`Journey is not active (status: ${journey.status})`);
+// //     }
+
+// //     const entryTrigger = (journey.entry_trigger as any) || {};
+// //     console.log('[Processor]  Entry trigger:', JSON.stringify(entryTrigger, null, 2));
+// //     if (entryTrigger.type && entryTrigger.type !== 'event' && entryTrigger.type !== 'manual') {
+// //       console.log('[Processor] Checking advanced trigger criteria...');
+
+// //       const triggerMet = await checkAdvancedTrigger(subscriberId, entryTrigger);
+
+// //       if (!triggerMet) {
+// //         console.log('[Processor] ✗ Advanced trigger criteria not met');
+// //         throw new Error('Subscriber does not meet entry trigger criteria');
+// //       }
+
+// //       console.log('[Processor] ✓ Advanced trigger criteria met');
+// //     }
+
+// //     const flowDefinition = parseFlowDefinition(journey.flow_definition);
+
+// //     if (!flowDefinition.nodes || flowDefinition.nodes.length === 0) {
+// //       throw new Error('Journey has no steps defined');
+// //     }
+
+// //     const entryNode = flowDefinition.nodes.find(n => n.type === 'entry');
+// //     const startNode = entryNode || flowDefinition.nodes[0];
+
+// //     console.log(`[Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
+
+// //     // Check re-entry rules BEFORE database insert
+// //     const canEnter = await checkReEntryRules(subscriberId, journey);
+// //     if (!canEnter) {
+// //       console.log('[Processor] ✗ Re-entry rules prevent enrollment');
+// //       throw new Error('Subscriber cannot re-enter this journey at this time');
+// //     }
+
+// //     // Try to insert - database unique index will prevent duplicates
+// //     const { data: journeyState, error: stateError } = await supabase
+// //       .from('user_journey_states')
+// //       .insert({
+// //         journey_id: journeyId,
+// //         subscriber_id: subscriberId,
+// //         current_step_id: startNode.id,
+// //         status: 'active',
+// //         context: {
+// //           ...initialContext,
+// //           entry_timestamp: new Date().toISOString(),
+// //         },
+// //         node_history: [startNode.id],
+// //         entered_at: new Date().toISOString(),
+// //         last_processed_at: new Date().toISOString(),
+// //       })
+// //       .select()
+// //       .single();
+
+// //     if (stateError) {
+// //       // Handle unique constraint violation (23505)
+// //       if (stateError.code === '23505') {
+// //         console.log('[Processor] ⚠ Already enrolled (duplicate prevented by database)');
+// //         throw new Error('Subscriber cannot re-enter this journey at this time');
+// //       }
+
+// //       // Handle CHECK constraint violation (23514 - invalid status)
+// //       if (stateError.code === '23514') {
+// //         console.error('[Processor] ✗ Invalid status value');
+// //         throw new Error('Invalid journey state status');
+// //       }
+
+// //       console.error('[Processor] ✗ Failed to create journey state:', stateError);
+// //       throw stateError;
+// //     }
+
+// //     // Only increment counters if insert succeeded
+// //     await logJourneyEvent(
+// //       journeyId,
+// //       subscriberId,
+// //       journeyState.id,
+// //       'journey_entered',
+// //       { context: initialContext }
+// //     );
+
+// //     await recalculateJourneyMetrics(journeyId);
+
+// //     if (startNode.type === 'entry') {
+// //       const nextNodeId = getNextNodeId(flowDefinition, startNode.id);
+// //       if (nextNodeId) {
+// //         await supabase
+// //           .from('user_journey_states')
+// //           .update({ current_step_id: nextNodeId })
+// //           .eq('id', journeyState.id);
+// //       }
+// //     }
+
+// //     await processJourneyStep(journeyState.id);
+
+// //     console.log('[Processor] ✓ Subscriber enrolled successfully');
+// //     return journeyState;
+
+// //   } catch (error: any) {
+// //     console.error('[Processor] ✗ Enrollment error:', error.message);
+// //     throw error;
+// //   }
+// // }
+
+// // async function checkReEntryRules(subscriberId: string, journey: any): Promise<boolean> {
+// //   const reEntrySettings = (journey.re_entry_settings as any) || {};
+// //   const allowReEntry = reEntrySettings.allow_re_entry || false;
+
+// //   const { data: states, error } = await supabase
+// //     .from('user_journey_states')
+// //     .select('*')
+// //     .eq('subscriber_id', subscriberId)
+// //     .eq('journey_id', journey.id)
+// //     .order('entered_at', { ascending: false });
+
+// //   if (error) {
+// //     console.error('[Processor] ✗ Error checking re-entry rules:', error);
+// //     throw error;
+// //   }
+
+// //   if (!states || states.length === 0) {
+// //     return true;
+// //   }
+
+// //   // Check for active or waiting states
+// // //   const activeState = states.find(s => s.status === 'active' || s.status === 'waiting');
+// // //   if (activeState) {
+// // //     console.log('[Processor] ⚠ Already active in journey');
+// // //     return false;
+// // //   }
+
+// // //   if (!allowReEntry) {
+// // //     console.log('[Processor] ✗ Re-entry not allowed');
+// // //     return false;
+// // //   }
+
+// // //   const maxEntries = reEntrySettings.max_entries || 0;
+// // //   if (maxEntries > 0 && states.length >= maxEntries) {
+// // //     console.log(`[Processor] ✗ Max entries (${maxEntries}) reached`);
+// // //     return false;
+// // //   }
+
+// // //   const cooldownDays = reEntrySettings.cooldown_days || 0;
+// // //   if (cooldownDays > 0 && states.length > 0 && states[0].entered_at) {
+// // //     const lastEntry = new Date(states[0].entered_at);
+// // //     const daysSince = (Date.now() - lastEntry.getTime()) / (1000 * 60 * 60 * 24);
+
+// // //     if (daysSince < cooldownDays) {
+// // //       console.log(`[Processor] ✗ Cooldown period (${cooldownDays} days) not met. ${daysSince.toFixed(1)} days since last entry`);
+// // //       return false;
+// // //     }
+// // //   }
+
+// // //   return true;
+// // // }
+
+// //  // ✅ CRITICAL FIX: Check for ACTIVE or WAITING states
+// //   const activeOrWaitingState = states.find(
+// //     s => s.status === 'active' || s.status === 'waiting'
+// //   );
+
+// //   if (activeOrWaitingState) {
+// //     console.log('[Processor] ⚠ Already in journey (status:', activeOrWaitingState.status + ')');
+// //     // ✅ ALWAYS block if user is currently in the journey
+// //     // This prevents duplicate enrollments while journey is running
+// //     return false;
+// //   }
+
+// //   // ✅ Check completed/exited states for re-entry rules
+// //   const completedStates = states.filter(
+// //     s => s.status === 'completed' || s.status === 'exited'
+// //   );
+
+// //   if (completedStates.length === 0) {
+// //     return true; // No completed journeys yet - allow entry
+// //   }
+
+// //   // If re-entry not allowed and journey was completed before
+// //   if (!allowReEntry) {
+// //     console.log('[Processor] ✗ Re-entry not allowed');
+// //     return false;
+// //   }
+
+// //   // Check max entries
+// //   const maxEntries = reEntrySettings.max_entries || 0;
+// //   if (maxEntries > 0 && states.length >= maxEntries) {
+// //     console.log(`[Processor] ✗ Max entries (${maxEntries}) reached`);
+// //     return false;
+// //   }
+
+// //   // Check cooldown period
+// //   const cooldownDays = reEntrySettings.cooldown_days || 0;
+// //   if (cooldownDays > 0 && states.length > 0 && states[0].entered_at) {
+// //     const lastEntry = new Date(states[0].entered_at);
+// //     const daysSince = (Date.now() - lastEntry.getTime()) / (1000 * 60 * 60 * 24);
+
+// //     if (daysSince < cooldownDays) {
+// //       console.log(
+// //         `[Processor] ✗ Cooldown period (${cooldownDays} days) not met. ${daysSince.toFixed(1)} days since last entry`
+// //       );
+// //       return false;
+// //     }
+// //   }
+
+// //   console.log('[Processor] ✓ Re-entry allowed');
+// //   return true;
+// // }
+// // lib/journeys/processor.ts - FIXED RE-ENTRY FUNCTION
+
+// // ✅ CRITICAL FIX: Only block if ACTIVELY in journey
+
 // export async function enrollSubscriber(
 //   journeyId: string,
 //   subscriberId: string,
 //   initialContext: any = {}
 // ): Promise<any> {
-//   console.log(' [Processor] Enrolling subscriber:', { journeyId, subscriberId });
+//   console.log('[Processor] Enrolling subscriber:', { journeyId, subscriberId });
 
 //   try {
 //     const { data: journey, error: journeyError } = await supabase
@@ -900,18 +1168,19 @@
 //     }
 
 //     const entryTrigger = (journey.entry_trigger as any) || {};
+//     console.log('[Processor] 📍 Entry trigger:', JSON.stringify(entryTrigger, null, 2));
 
 //     if (entryTrigger.type && entryTrigger.type !== 'event' && entryTrigger.type !== 'manual') {
-//       console.log(' [Processor] Checking advanced trigger criteria...');
+//       console.log('[Processor] Checking advanced trigger criteria...');
 
 //       const triggerMet = await checkAdvancedTrigger(subscriberId, entryTrigger);
 
 //       if (!triggerMet) {
-//         console.log(' [Processor] Advanced trigger criteria not met');
+//         console.log('[Processor] ✗ Advanced trigger criteria not met');
 //         throw new Error('Subscriber does not meet entry trigger criteria');
 //       }
 
-//       console.log(' [Processor] Advanced trigger criteria met');
+//       console.log('[Processor] ✓ Advanced trigger criteria met');
 //     }
 
 //     const flowDefinition = parseFlowDefinition(journey.flow_definition);
@@ -923,23 +1192,24 @@
 //     const entryNode = flowDefinition.nodes.find(n => n.type === 'entry');
 //     const startNode = entryNode || flowDefinition.nodes[0];
 
-//     console.log(` [Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
+//     console.log(`[Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
 
-//     // Check re-entry rules BEFORE database insert
+//     // 🔥 CRITICAL FIX: Check re-entry rules BEFORE database insert
 //     const canEnter = await checkReEntryRules(subscriberId, journey);
 //     if (!canEnter) {
-//       console.log(' [Processor] Re-entry rules prevent enrollment');
+//       console.log('[Processor] ✗ Re-entry rules prevent enrollment');
 //       throw new Error('Subscriber cannot re-enter this journey at this time');
 //     }
 
-//     // Try to insert - database unique index will prevent duplicates
+//     // 🔥 CRITICAL FIX: Use upsert to prevent race conditions
+//     // The database will handle duplicate prevention via unique constraint
 //     const { data: journeyState, error: stateError } = await supabase
 //       .from('user_journey_states')
 //       .insert({
 //         journey_id: journeyId,
 //         subscriber_id: subscriberId,
 //         current_step_id: startNode.id,
-//         status: 'active', // Valid status
+//         status: 'active',
 //         context: {
 //           ...initialContext,
 //           entry_timestamp: new Date().toISOString(),
@@ -954,19 +1224,21 @@
 //     if (stateError) {
 //       // Handle unique constraint violation (23505)
 //       if (stateError.code === '23505') {
-//         console.log(' [Processor] Already enrolled (duplicate prevented by database)');
-//         throw new Error('Subscriber cannot re-enter this journey at this time');
+//         console.log('[Processor] ⚠ Already enrolled (duplicate prevented by database)');
+//         throw new Error('Subscriber already enrolled in this journey');
 //       }
 
 //       // Handle CHECK constraint violation (23514 - invalid status)
 //       if (stateError.code === '23514') {
-//         console.error(' [Processor] Invalid status value');
+//         console.error('[Processor] ✗ Invalid status value');
 //         throw new Error('Invalid journey state status');
 //       }
 
-//       console.error(' [Processor] Failed to create journey state:', stateError);
+//       console.error('[Processor] ✗ Failed to create journey state:', stateError);
 //       throw stateError;
 //     }
+
+//     console.log('[Processor] ✅ Journey state created:', journeyState.id);
 
 //     // Only increment counters if insert succeeded
 //     await logJourneyEvent(
@@ -977,18 +1249,8 @@
 //       { context: initialContext }
 //     );
 
-//     // await supabase.rpc('increment', {
-//     //   table_name: 'journeys',
-//     //   column_name: 'total_entered',
-//     //   row_id: journeyId,
-//     // });
-
-//     // await supabase.rpc('increment', {
-//     //   table_name: 'journeys',
-//     //   column_name: 'total_active',
-//     //   row_id: journeyId,
-//     // });
 //     await recalculateJourneyMetrics(journeyId);
+
 //     if (startNode.type === 'entry') {
 //       const nextNodeId = getNextNodeId(flowDefinition, startNode.id);
 //       if (nextNodeId) {
@@ -999,18 +1261,20 @@
 //       }
 //     }
 
+//     // 🔥 CRITICAL: Process journey step AFTER enrollment succeeds
 //     await processJourneyStep(journeyState.id);
 
-//     console.log(' [Processor] Subscriber enrolled successfully');
+//     console.log('[Processor] ✓ Subscriber enrolled successfully');
 //     return journeyState;
 
 //   } catch (error: any) {
-//     console.error(' [Processor] Enrollment error:', error.message);
+//     console.error('[Processor] ✗ Enrollment error:', error.message);
 //     throw error;
 //   }
 // }
 
-// //  checkReEntryRules with better error handling
+
+
 // async function checkReEntryRules(subscriberId: string, journey: any): Promise<boolean> {
 //   const reEntrySettings = (journey.re_entry_settings as any) || {};
 //   const allowReEntry = reEntrySettings.allow_re_entry || false;
@@ -1023,46 +1287,66 @@
 //     .order('entered_at', { ascending: false });
 
 //   if (error) {
-//     console.error(' [Processor] Error checking re-entry rules:', error);
+//     console.error('[Processor] ✗ Error checking re-entry rules:', error);
 //     throw error;
 //   }
 
 //   if (!states || states.length === 0) {
-//     // No previous enrollment
-//     return true;
+//     return true; // First time entering - ALLOW
 //   }
 
-//   // Check for active or waiting states
-//   const activeState = states.find(s => s.status === 'active' || s.status === 'waiting');
-//   if (activeState) {
-//     console.log(' [Processor] Already active in journey');
+//   // ✅ CRITICAL FIX: Check for ACTIVE or WAITING states
+//   const activeOrWaitingState = states.find(
+//     s => s.status === 'active' || s.status === 'waiting'
+//   );
+
+//   if (activeOrWaitingState) {
+//     console.log('[Processor] ⚠ Already in journey (status:', activeOrWaitingState.status + ')');
+//     // ✅ ALWAYS block if user is currently in the journey
+//     // This prevents duplicate enrollments while journey is running
 //     return false;
 //   }
 
+//   // ✅ Check completed/exited states for re-entry rules
+//   const completedStates = states.filter(
+//     s => s.status === 'completed' || s.status === 'exited'
+//   );
+
+//   if (completedStates.length === 0) {
+//     return true; // No completed journeys yet - allow entry
+//   }
+
+//   // If re-entry not allowed and journey was completed before
 //   if (!allowReEntry) {
-//     console.log(' [Processor] Re-entry not allowed');
+//     console.log('[Processor] ✗ Re-entry not allowed');
 //     return false;
 //   }
 
+//   // Check max entries
 //   const maxEntries = reEntrySettings.max_entries || 0;
 //   if (maxEntries > 0 && states.length >= maxEntries) {
-//     console.log(` [Processor] Max entries (${maxEntries}) reached`);
+//     console.log(`[Processor] ✗ Max entries (${maxEntries}) reached`);
 //     return false;
 //   }
 
+//   // Check cooldown period
 //   const cooldownDays = reEntrySettings.cooldown_days || 0;
 //   if (cooldownDays > 0 && states.length > 0 && states[0].entered_at) {
 //     const lastEntry = new Date(states[0].entered_at);
 //     const daysSince = (Date.now() - lastEntry.getTime()) / (1000 * 60 * 60 * 24);
 
 //     if (daysSince < cooldownDays) {
-//       console.log(` [Processor] Cooldown period (${cooldownDays} days) not met. ${daysSince.toFixed(1)} days since last entry`);
+//       console.log(
+//         `[Processor] ✗ Cooldown period (${cooldownDays} days) not met. ${daysSince.toFixed(1)} days since last entry`
+//       );
 //       return false;
 //     }
 //   }
 
+//   console.log('[Processor] ✓ Re-entry allowed');
 //   return true;
 // }
+
 // async function processExitNode(
 //   state: JourneyState,
 //   node: JourneyNode,
@@ -1073,7 +1357,6 @@
 //   const exitType = node.data.exit_type || 'goal_achieved';
 //   const sendNotification = node.data.send_notification || false;
 
-//   // Send exit notification if configured
 //   if (sendNotification && node.data.notification) {
 //     try {
 //       const { data: subscriber } = await supabase
@@ -1091,15 +1374,13 @@
 //         };
 
 //         await sendNotificationToSubscriber(subscriber, notificationPayload);
-
-//         console.log('[Processor] Exit notification sent');
+//         console.log('[Processor] ✓ Exit notification sent');
 //       }
 //     } catch (error: any) {
-//       console.error('[Processor] Failed to send exit notification:', error);
+//       console.error('[Processor] ✗ Failed to send exit notification:', error);
 //     }
 //   }
 
-//   // Handle different exit types
 //   switch (exitType) {
 //     case 'goal_achieved':
 //       await exitJourney(state.id, 'goal_achieved');
@@ -1110,7 +1391,6 @@
 //       break;
 
 //     case 'unsubscribe':
-//       // Mark subscriber as inactive
 //       await supabase
 //         .from('subscribers')
 //         .update({ status: 'inactive' })
@@ -1123,8 +1403,9 @@
 //       await exitJourney(state.id, 'reached_exit_node');
 //   }
 // }
+
 // export async function processJourneyStep(journeyStateId: string): Promise<void> {
-//   console.log('\n [Processor] Processing journey step:', journeyStateId);
+//   console.log('\n[Processor] Processing journey step:', journeyStateId);
 
 //   try {
 //     const { data: stateData, error: stateError } = await supabase
@@ -1140,7 +1421,7 @@
 //     const state = toJourneyState(stateData);
 
 //     if (state.status !== 'active' && state.status !== 'waiting') {
-//       console.log(`  [Processor] Journey state is ${state.status}, cannot process`);
+//       console.log(`[Processor] Journey state is ${state.status}, cannot process`);
 //       return;
 //     }
 
@@ -1163,7 +1444,7 @@
 //       return;
 //     }
 
-//     console.log(` [Processor] Current node: ${currentNode.id} (type: ${currentNode.type})`);
+//     console.log(`[Processor] Current node: ${currentNode.id} (type: ${currentNode.type})`);
 
 //     const nodeHistory = Array.isArray(state.node_history) ? state.node_history : [];
 //     if (!nodeHistory.includes(currentNode.id)) {
@@ -1193,9 +1474,6 @@
 //       case 'exit':
 //         await processExitNode(state, currentNode, flowDefinition);
 //         break;
-//       case 'exit':
-//         await exitJourney(journeyStateId, 'reached_exit_node');
-//         break;
 //       case 'entry':
 //         await moveToNextNode(state, flowDefinition, currentNode.id);
 //         break;
@@ -1203,12 +1481,12 @@
 //         await processUpdateContactNode(state, currentNode, flowDefinition);
 //         break;
 //       default:
-//         console.warn(` [Processor] Unknown node type: ${currentNode.type}, moving to next`);
+//         console.warn(`[Processor] Unknown node type: ${currentNode.type}, moving to next`);
 //         await moveToNextNode(state, flowDefinition, currentNode.id);
 //     }
 
 //   } catch (error: any) {
-//     console.error(' [Processor] Step processing error:', error.message);
+//     console.error('[Processor] ✗ Step processing error:', error.message);
 
 //     const { data: stateData } = await supabase
 //       .from('user_journey_states')
@@ -1263,7 +1541,7 @@
 //     }
 
 //     if (!subscriber.endpoint || !subscriber.p256dh_key || !subscriber.auth_key) {
-//       console.error(' [Processor] Subscriber has no valid push subscription');
+//       console.error('[Processor] ✗ Subscriber has no valid push subscription');
 
 //       await supabase.from('notification_logs').insert({
 //         website_id: subscriber.website_id,
@@ -1343,12 +1621,12 @@
 //       },
 //     };
 
-//     console.log(' [Processor] Sending notification...');
+//     console.log('[Processor] Sending notification...');
 
 //     const result = await sendNotificationToSubscriber(subscriber, notificationPayload);
 
 //     if (result.success) {
-//       console.log(' [Processor] Notification sent successfully!');
+//       console.log('[Processor] ✓ Notification sent successfully!');
 
 //       await supabase
 //         .from('notification_logs')
@@ -1370,7 +1648,7 @@
 //         node.id
 //       );
 //     } else {
-//       console.error(' [Processor] Notification failed:', result.error);
+//       console.error('[Processor] ✗ Notification failed:', result.error);
 
 //       await supabase
 //         .from('notification_logs')
@@ -1389,24 +1667,34 @@
 //         node.id
 //       );
 
-//       if (result.error?.includes('410') ||
-//         result.error?.includes('404') ||
-//         result.error?.includes('SUBSCRIPTION_EXPIRED') ||
-//         result.error?.includes('Invalid subscription keys')) {
-//         await supabase
-//           .from('subscribers')
-//           .update({
-//             status: 'inactive',
-//             updated_at: new Date().toISOString(),
-//           })
-//           .eq('id', subscriber.id);
-//       }
+//     if (result.error?.includes('410') ||
+//   result.error?.includes('404') ||
+//   result.error?.includes('SUBSCRIPTION_EXPIRED') ||
+//   result.error?.includes('Invalid subscription keys')) {
+  
+//   console.log('[Processor] ⚠ Push subscription expired, but subscriber remains active');
+//   console.log('[Processor] 💡 User needs to re-subscribe to push notifications');
+  
+//   // Log it for tracking
+//   await logJourneyEvent(
+//     state.journey_id,
+//     state.subscriber_id,
+//     state.id,
+//     'subscription_expired',
+//     { error: result.error },
+//     node.id
+//   );
+  
+ 
+// }
+//       console.log('[Processor]  Notification failed but subscriber remains active for future journeys');
+
 //     }
 
 //     await moveToNextNode(state, flowDefinition, node.id);
 
 //   } catch (error: any) {
-//     console.error(' [Processor] Notification error:', error.message);
+//     console.error('[Processor] ✗ Notification error:', error.message);
 
 //     await logJourneyEvent(
 //       state.journey_id,
@@ -1426,7 +1714,7 @@
 // //   node: JourneyNode,
 // //   flowDefinition: FlowDefinition
 // // ): Promise<void> {
-// //   console.log(' [Processor] Processing wait node');
+// //   console.log('[Processor] Processing wait node');
 
 // //   const { data: freshState } = await supabase
 // //     .from('user_journey_states')
@@ -1439,13 +1727,12 @@
 // //     const now = new Date();
 
 // //     if (now >= waitUntil) {
-// //       console.log('[Processor] Wait period completed');
+// //       console.log('[Processor] ✓ Wait period completed');
 // //       await moveToNextNode(state, flowDefinition, node.id);
 // //       return;
 // //     }
 // //   }
 
-// //   // Check if already scheduled
 // //   const { data: existingSchedule } = await supabase
 // //     .from('scheduled_journey_steps')
 // //     .select('id')
@@ -1455,19 +1742,21 @@
 // //     .single();
 
 // //   if (existingSchedule) {
-// //     console.log('  [Processor] Wait already scheduled');
+// //     console.log('[Processor] ⚠ Wait already scheduled');
 // //     return;
 // //   }
 
 // //   const waitMode = node.data.mode || 'duration';
 
 // //   if (waitMode === 'duration') {
-// //     const durationSeconds = node.data.duration || 86400;
+// //         let durationSeconds = node.data.duration || 86400;
+// //     if (node.data.duration_seconds !== undefined) {
+// //       durationSeconds = node.data.duration_seconds;
+// //     }
 // //     const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-// //     console.log(` [Processor] Scheduling wait: ${durationSeconds}s`);
+// //     console.log(`[Processor] Scheduling wait: ${durationSeconds}s`);
 
-// //     // Update journey state
 // //     await supabase
 // //       .from('user_journey_states')
 // //       .update({
@@ -1476,7 +1765,6 @@
 // //       })
 // //       .eq('id', state.id);
 
-// //     // Create database record
 // //     const { data: scheduledStep, error: scheduleError } = await supabase
 // //       .from('scheduled_journey_steps')
 // //       .insert({
@@ -1496,7 +1784,6 @@
 // //       throw scheduleError;
 // //     }
 
-// //     //  Schedule in BullMQ
 // //     try {
 // //       const queue = getNotificationQueue();
 
@@ -1514,10 +1801,9 @@
 // //         }
 // //       );
 
-// //       console.log(` [Processor] Job queued: wait-${scheduledStep.id}`);
+// //       console.log(`[Processor]  Job queued: wait-${scheduledStep.id}`);
 // //     } catch (queueError: any) {
-// //       console.error('[Processor] Queue error:', queueError.message);
-// //       // Fallback: mark for manual processing
+// //       console.error('[Processor]  Queue error:', queueError.message);
 // //       await supabase
 // //         .from('scheduled_journey_steps')
 // //         .update({
@@ -1539,14 +1825,25 @@
 // //       },
 // //       node.id
 // //     );
+// //  // CRITICAL FIX: STOP HERE - Don't call moveToNextNode()!
+// //     console.log('[Processor] ⏸️  Journey paused - waiting for timer');
+// //     return;
 
-// //   } else if (waitMode === 'until_event') {
+// //   } 
+// //   else if (waitMode === 'until_event') {
+// //     //  PROPER EVENT WAITING IMPLEMENTATION
 // //     const eventName = node.data.event?.name || node.data.event_name;
-// //     const timeoutSeconds = node.data.timeout_seconds || 604800;
+// //     const timeoutSeconds = node.data.timeout_seconds || 604800; // 7 days default
 // //     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
+// //     const eventConfig = node.data.event_config || {};
 
-// //     console.log(`[Processor] Waiting for event: ${eventName}`);
+// //     if (!eventName) {
+// //       throw new Error('Event name is required for wait-until-event mode');
+// //     }
 
+// //     console.log(`[Processor]  Waiting for event: "${eventName}" (timeout: ${timeoutSeconds}s)`);
+
+// //     // Update state to waiting with event context
 // //     await supabase
 // //       .from('user_journey_states')
 // //       .update({
@@ -1555,10 +1852,15 @@
 // //         context: {
 // //           ...state.context,
 // //           waiting_for_event: eventName,
+// //           event_config: eventConfig, 
+
+// //           wait_mode: 'until_event',
+// //           wait_started_at: new Date().toISOString(),
 // //         },
 // //       })
 // //       .eq('id', state.id);
 
+// //     //  Schedule TIMEOUT job (not the event itself)
 // //     const { data: scheduledStep } = await supabase
 // //       .from('scheduled_journey_steps')
 // //       .insert({
@@ -1568,17 +1870,17 @@
 // //         status: 'pending',
 // //         payload: {
 // //           mode: 'event_timeout',
-// //           event_name: eventName,
-// //           step_type: 'wait_event_timeout'
+// //           event_name: eventName, // Store event name in payload
+// //           step_type: 'wait_event_timeout',
+// //           is_timeout: true,
 // //         },
 // //       })
 // //       .select()
 // //       .single();
 
-// //     // Schedule timeout in queue
+// //     // Queue the timeout job (not the event)
 // //     try {
 // //       const queue = getNotificationQueue();
-
 // //       await queue.add(
 // //         'event-timeout',
 // //         {
@@ -1586,14 +1888,19 @@
 // //           journeyStateId: state.id,
 // //           stepType: 'wait_event_timeout',
 // //           executeAt: timeoutAt.toISOString(),
+// //           // metadata: {
+// //           //   eventName: eventName,
+// //           //   timeoutSeconds: timeoutSeconds,
+// //           // }
 // //         },
 // //         {
 // //           delay: timeoutSeconds * 1000,
 // //           jobId: `timeout-${scheduledStep!.id}`,
 // //         }
 // //       );
+// //       console.log(`[Processor] ✓ Timeout job queued: timeout-${scheduledStep!.id}`);
 // //     } catch (queueError: any) {
-// //       console.error('[Processor] Queue error:', queueError.message);
+// //       console.error('[Processor] ✗ Queue error:', queueError.message);
 // //     }
 
 // //     await logJourneyEvent(
@@ -1604,68 +1911,67 @@
 // //       {
 // //         event_name: eventName,
 // //         timeout: timeoutAt.toISOString(),
+// //         timeout_seconds: timeoutSeconds,
 // //         scheduled_step_id: scheduledStep!.id
 // //       },
 // //       node.id
 // //     );
+// //       //  CRITICAL FIX: STOP HERE - Don't advance!
+// //     console.log('[Processor]   Journey paused - waiting for event or timeout');
+// //     return; 
 // //   }
 // // }
 
-// // REPLACE processWaitNode() with this enhanced version:
 
 // async function processWaitNode(
 //   state: JourneyState,
 //   node: JourneyNode,
 //   flowDefinition: FlowDefinition
 // ): Promise<void> {
-//   console.log(' [Processor] Processing wait node');
-
-//   const { data: freshState } = await supabase
-//     .from('user_journey_states')
-//     .select('status, next_execution_at')
-//     .eq('id', state.id)
-//     .single();
-
-//   if (freshState?.next_execution_at) {
-//     const waitUntil = new Date(freshState.next_execution_at);
-//     const now = new Date();
-
-//     if (now >= waitUntil) {
-//       console.log('[Processor] Wait period completed');
-//       await moveToNextNode(state, flowDefinition, node.id);
-//       return;
-//     }
-//   }
+//   console.log('[Processor]  Processing wait node');
 
 //   const { data: existingSchedule } = await supabase
 //     .from('scheduled_journey_steps')
-//     .select('id')
+//     .select('id, status, execute_at')
 //     .eq('user_journey_state_id', state.id)
 //     .eq('step_id', node.id)
-//     .eq('status', 'pending')
+//     .in('status', ['pending', 'processing'])
 //     .single();
 
 //   if (existingSchedule) {
-//     console.log('  [Processor] Wait already scheduled');
-//     return;
+//     console.log('[Processor] ⚠ Wait already scheduled:', existingSchedule.id);
+//     console.log('[Processor] ⚠ Execute at:', existingSchedule.execute_at);
+//     return; // Don't re-schedule
 //   }
 
 //   const waitMode = node.data.mode || 'duration';
 
 //   if (waitMode === 'duration') {
-//     const durationSeconds = node.data.duration || 86400;
+//     let durationSeconds = node.data.duration || 86400;
+//     if (node.data.duration_seconds !== undefined) {
+//       durationSeconds = node.data.duration_seconds;
+//     }
 //     const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-//     console.log(` [Processor] Scheduling wait: ${durationSeconds}s`);
+//     console.log(`[Processor] ⏰ Scheduling wait: ${durationSeconds}s until ${executeAt.toISOString()}`);
 
-//     await supabase
+//     const { error: updateError } = await supabase
 //       .from('user_journey_states')
 //       .update({
 //         status: 'waiting',
 //         next_execution_at: executeAt.toISOString(),
+//         last_processed_at: new Date().toISOString(),
 //       })
 //       .eq('id', state.id);
 
+//     if (updateError) {
+//       console.error('[Processor] ✗ Failed to update state:', updateError);
+//       throw updateError;
+//     }
+
+//     console.log('[Processor] ✅ State updated to waiting');
+
+//     // Create scheduled step with CORRECT payload
 //     const { data: scheduledStep, error: scheduleError } = await supabase
 //       .from('scheduled_journey_steps')
 //       .insert({
@@ -1675,18 +1981,26 @@
 //         status: 'pending',
 //         payload: {
 //           mode: 'duration',
-//           step_type: 'wait_duration'
+//           step_type: 'wait_duration',
+//           journey_id: state.journey_id, // 🔥 ADD THIS
+//           subscriber_id: state.subscriber_id, // 🔥 ADD THIS
+//           current_node_id: node.id,
 //         },
 //       })
 //       .select()
 //       .single();
 
 //     if (scheduleError) {
+//       console.error('[Processor] ✗ Failed to create scheduled step:', scheduleError);
 //       throw scheduleError;
 //     }
 
+//     console.log('[Processor] ✅ Scheduled step created:', scheduledStep.id);
+
+//     // Queue job
 //     try {
 //       const queue = getNotificationQueue();
+
 //       await queue.add(
 //         'wait-completion',
 //         {
@@ -1698,11 +2012,21 @@
 //         {
 //           delay: durationSeconds * 1000,
 //           jobId: `wait-${scheduledStep.id}`,
+//           priority:1,
 //         }
 //       );
-//       console.log(` [Processor] Job queued: wait-${scheduledStep.id}`);
+
+//       console.log(`[Processor] ✅ Job queued: wait-${scheduledStep.id}`);
 //     } catch (queueError: any) {
-//       console.error('[Processor] Queue error:', queueError.message);
+//       console.error('[Processor] ✗ Queue error:', queueError.message);
+//       await supabase
+//         .from('scheduled_journey_steps')
+//         .update({
+//           status: 'failed',
+//           error: `Queue failed: ${queueError.message}`
+//         })
+//         .eq('id', scheduledStep.id);
+//       throw queueError;
 //     }
 
 //     await logJourneyEvent(
@@ -1718,19 +2042,25 @@
 //       node.id
 //     );
 
-//   } else if (waitMode === 'until_event') {
-//     //  ENHANCED EVENT WAITING
+//     // 🔥 CRITICAL: STOP HERE - Don't call moveToNextNode()!
+//     console.log('[Processor] ⏸️  Journey paused - waiting for timer');
+//     return;
+
+//   }
+//   else if (waitMode === 'until_event') {
+//     // Event waiting logic (keep your existing code)
 //     const eventName = node.data.event?.name || node.data.event_name;
 //     const timeoutSeconds = node.data.timeout_seconds || 604800;
 //     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
+//     const eventConfig = node.data.event_config || {};
 
 //     if (!eventName) {
 //       throw new Error('Event name is required for wait-until-event mode');
 //     }
 
-//     console.log(`[Processor] ⏳ Waiting for event: ${eventName}`);
+//     console.log(`[Processor] ⏰ Waiting for event: "${eventName}" (timeout: ${timeoutSeconds}s)`);
 
-//     // Update state to waiting with event context
+//     // Update state to waiting
 //     await supabase
 //       .from('user_journey_states')
 //       .update({
@@ -1739,13 +2069,15 @@
 //         context: {
 //           ...state.context,
 //           waiting_for_event: eventName,
+//           event_config: eventConfig,
 //           wait_mode: 'until_event',
 //           wait_started_at: new Date().toISOString(),
 //         },
+//         last_processed_at: new Date().toISOString(),
 //       })
 //       .eq('id', state.id);
 
-//     //  FIX: Schedule TIMEOUT (not the event itself)
+//     // Schedule timeout job
 //     const { data: scheduledStep } = await supabase
 //       .from('scheduled_journey_steps')
 //       .insert({
@@ -1757,13 +2089,15 @@
 //           mode: 'event_timeout',
 //           event_name: eventName,
 //           step_type: 'wait_event_timeout',
-//           is_timeout: true, // Mark this as timeout handler
+//           is_timeout: true,
+//           journey_id: state.journey_id,
+//           subscriber_id: state.subscriber_id,
 //         },
 //       })
 //       .select()
 //       .single();
 
-//     // Queue the timeout job
+//     // Queue timeout job
 //     try {
 //       const queue = getNotificationQueue();
 //       await queue.add(
@@ -1772,7 +2106,6 @@
 //           scheduledStepId: scheduledStep!.id,
 //           journeyStateId: state.id,
 //           stepType: 'wait_event_timeout',
-//           eventName: eventName,
 //           executeAt: timeoutAt.toISOString(),
 //         },
 //         {
@@ -1780,8 +2113,9 @@
 //           jobId: `timeout-${scheduledStep!.id}`,
 //         }
 //       );
+//       console.log(`[Processor] ✓ Timeout job queued: timeout-${scheduledStep!.id}`);
 //     } catch (queueError: any) {
-//       console.error('[Processor] Queue error:', queueError.message);
+//       console.error('[Processor] ✗ Queue error:', queueError.message);
 //     }
 
 //     await logJourneyEvent(
@@ -1792,19 +2126,26 @@
 //       {
 //         event_name: eventName,
 //         timeout: timeoutAt.toISOString(),
+//         timeout_seconds: timeoutSeconds,
 //         scheduled_step_id: scheduledStep!.id
 //       },
 //       node.id
 //     );
+
+//     // 🔥 CRITICAL: STOP HERE
+//     console.log('[Processor] ⏸️  Journey paused - waiting for event or timeout');
+//     return;
 //   }
 // }
+
+
 
 // async function processConditionNode(
 //   state: JourneyState,
 //   node: JourneyNode,
 //   flowDefinition: FlowDefinition
 // ): Promise<void> {
-//   console.log(' [Processor] Processing condition');
+//   console.log('[Processor] Processing condition');
 
 //   const conditionType = node.data.check || node.data.condition_type;
 //   const lookbackSeconds = node.data.lookback || node.data.lookback_seconds || 86400;
@@ -1887,7 +2228,7 @@
 //         break;
 
 //       default:
-//         console.warn(` [Processor] Unknown condition type: ${conditionType}`);
+//         console.warn(`[Processor] ⚠ Unknown condition type: ${conditionType}`);
 //         conditionMet = false;
 //     }
 
@@ -1921,7 +2262,7 @@
 //     }
 
 //   } catch (error: any) {
-//     console.error(' [Processor] Condition error:', error.message);
+//     console.error('[Processor] ✗ Condition error:', error.message);
 
 //     const noEdge = flowDefinition.edges.find(e => e.from === node.id && (e.type === 'no' || e.condition === 'no'));
 //     if (noEdge) {
@@ -1943,7 +2284,7 @@
 //   const branches = node.data.branches || [];
 
 //   if (!branches || branches.length === 0) {
-//     console.warn(' [Processor] No branches defined, completing journey');
+//     console.warn('[Processor] ⚠ No branches defined, completing journey');
 //     await completeJourney(state.id);
 //     return;
 //   }
@@ -1960,7 +2301,7 @@
 //     }
 //   }
 
-//   console.log(` [Processor] Selected branch: ${selectedBranch.id} (${selectedBranch.name})`);
+//   console.log(`[Processor] Selected branch: ${selectedBranch.id} (${selectedBranch.name})`);
 
 //   const nextEdge = flowDefinition.edges.find(
 //     e => e.from === node.id && e.type === 'branch' && e.branchId === selectedBranch.id
@@ -1991,10 +2332,11 @@
 
 //     await processJourneyStep(state.id);
 //   } else {
-//     console.warn(' [Processor] No edge found for selected branch');
+//     console.warn('[Processor] ⚠ No edge found for selected branch');
 //     await completeJourney(state.id);
 //   }
 // }
+
 // async function processUpdateContactNode(
 //   state: JourneyState,
 //   node: JourneyNode,
@@ -2007,7 +2349,7 @@
 //   const attributeValue = node.data.attribute_value;
 
 //   if (!attributeKey) {
-//     console.error('[Processor] No attribute key specified');
+//     console.error('[Processor] ✗ No attribute key specified');
 //     await moveToNextNode(state, flowDefinition, node.id);
 //     return;
 //   }
@@ -2021,7 +2363,6 @@
 
 //     let customAttributes = (subscriber?.custom_attributes || {}) as Record<string, any>;
 
-//     // Perform operation
 //     switch (operation) {
 //       case 'set':
 //         customAttributes[attributeKey] = attributeValue;
@@ -2045,7 +2386,6 @@
 //         break;
 //     }
 
-//     // Update subscriber
 //     await supabase
 //       .from('subscribers')
 //       .update({
@@ -2067,14 +2407,15 @@
 //       node.id
 //     );
 
-//     console.log('[Processor] Contact updated successfully');
+//     console.log('[Processor] ✓ Contact updated successfully');
 
 //   } catch (error: any) {
-//     console.error('[Processor] Failed to update contact:', error.message);
+//     console.error('[Processor] ✗ Failed to update contact:', error.message);
 //   }
 
 //   await moveToNextNode(state, flowDefinition, node.id);
 // }
+
 // // ============================================================================
 // // JOURNEY STATE MANAGEMENT
 // // ============================================================================
@@ -2095,7 +2436,17 @@
 //   );
 
 //   if (nextNodeId) {
-//     console.log(`  [Processor] Moving to next node: ${nextNodeId}`);
+//     console.log(`[Processor] Moving to next node: ${nextNodeId}`);
+//     const nextNode = flowDefinition.nodes.find(n => n.id === nextNodeId);
+
+//     if (!nextNode) {
+//       console.error(`[Processor] ✗ Next node ${nextNodeId} not found in flow definition!`);
+//       console.error(`[Processor] Available nodes:`, flowDefinition.nodes.map(n => n.id));
+//       await completeJourney(state.id);
+//       return;
+//     }
+
+//     console.log(`[Processor] ➡️ Moving to next node: ${nextNodeId} (type: ${nextNode.type})`);
 
 //     await supabase
 //       .from('user_journey_states')
@@ -2112,38 +2463,73 @@
 //     await completeJourney(state.id);
 //   }
 // }
+
+// //  FIXED: Proper Metrics Recalculation
 // export async function recalculateJourneyMetrics(journeyId: string): Promise<void> {
 //   console.log('[Processor] Recalculating metrics for journey:', journeyId);
 
 //   try {
-//     const { data, error } = await supabase
-//       .rpc('calculate_journey_metrics', { journey_id_param: journeyId });
+//     // Count all states by status
+//     const { data: states, error } = await supabase
+//       .from('user_journey_states')
+//       .select('status')
+//       .eq('journey_id', journeyId);
 
 //     if (error) throw error;
 
-//     if (data && data.length > 0) {
-//       const metrics = data[0];
-
+//     if (!states || states.length === 0) {
+//       // No states yet, set all to 0
 //       await supabase
 //         .from('journeys')
 //         .update({
-//           total_entered: metrics.total_entered,
-//           total_active: metrics.total_active,
-//           total_completed: metrics.total_completed,
-//           total_exited: metrics.total_exited,
-//           conversion_rate: metrics.conversion_rate,
+//           total_entered: 0,
+//           total_active: 0,
+//           total_completed: 0,
+//           total_exited: 0,
+//           conversion_rate: 0,
 //           updated_at: new Date().toISOString(),
 //         })
 //         .eq('id', journeyId);
-
-//       console.log('[Processor] Metrics updated:', metrics);
+//       return;
 //     }
+
+//     //  ACCURATE COUNTING
+//     const total_entered = states.length; // All states = all who entered
+//     const total_active = states.filter(s => s.status === 'active' || s.status === 'waiting').length;
+//     const total_completed = states.filter(s => s.status === 'completed').length;
+//     const total_exited = states.filter(s => s.status === 'exited').length;
+
+//     //  CORRECT CONVERSION RATE: (completed / entered) * 100
+//     const conversion_rate = total_entered > 0
+//       ? Math.round((total_completed / total_entered) * 100 * 10) / 10 // Round to 1 decimal
+//       : 0;
+
+//     await supabase
+//       .from('journeys')
+//       .update({
+//         total_entered,
+//         total_active,
+//         total_completed,
+//         total_exited,
+//         conversion_rate,
+//         updated_at: new Date().toISOString(),
+//       })
+//       .eq('id', journeyId);
+
+//     console.log('[Processor] ✓ Metrics updated:', {
+//       total_entered,
+//       total_active,
+//       total_completed,
+//       total_exited,
+//       conversion_rate: `${conversion_rate}%`
+//     });
 //   } catch (error: any) {
-//     console.error('[Processor] Failed to recalculate metrics:', error);
+//     console.error('[Processor] ✗ Failed to recalculate metrics:', error);
 //   }
 // }
+
 // async function completeJourney(journeyStateId: string): Promise<void> {
-//   console.log(' [Processor] Completing journey:', journeyStateId);
+//   console.log('[Processor] Completing journey:', journeyStateId);
 
 //   try {
 //     const { data: stateData } = await supabase
@@ -2171,29 +2557,18 @@
 //       journeyStateId,
 //       'journey_completed'
 //     );
+
 //     await recalculateJourneyMetrics(state.journey_id);
 
-//     // await supabase.rpc('increment', {
-//     //   table_name: 'journeys',
-//     //   column_name: 'total_completed',
-//     //   row_id: state.journey_id,
-//     // });
-
-//     // await supabase.rpc('decrement', {
-//     //   table_name: 'journeys',
-//     //   column_name: 'total_active',
-//     //   row_id: state.journey_id,
-//     // });
-
-//     console.log(' [Processor] Journey completed successfully');
+//     console.log('[Processor] ✓ Journey completed successfully');
 
 //   } catch (error: any) {
-//     console.error(' [Processor] Error completing journey:', error.message);
+//     console.error('[Processor] ✗ Error completing journey:', error.message);
 //   }
 // }
 
 // async function exitJourney(journeyStateId: string, reason: string): Promise<void> {
-//   console.log(' [Processor] Exiting journey:', journeyStateId, 'Reason:', reason);
+//   console.log('[Processor] Exiting journey:', journeyStateId, 'Reason:', reason);
 
 //   try {
 //     const { data: stateData } = await supabase
@@ -2226,114 +2601,188 @@
 //       'journey_exited',
 //       { reason }
 //     );
+
 //     await recalculateJourneyMetrics(state.journey_id);
 
-//     // await supabase.rpc('increment', {
-//     //   table_name: 'journeys',
-//     //   column_name: 'total_exited',
-//     //   row_id: state.journey_id,
-//     // });
-
-//     // await supabase.rpc('decrement', {
-//     //   table_name: 'journeys',
-//     //   column_name: 'total_active',
-//     //   row_id: state.journey_id,
-//     // });
-
-//     console.log(' [Processor] Journey exited successfully');
+//     console.log('[Processor] ✓ Journey exited successfully');
 
 //   } catch (error: any) {
-//     console.error(' [Processor] Error exiting journey:', error.message);
+//     console.error('[Processor] ✗ Error exiting journey:', error.message);
 //   }
 // }
 
-
-
-
-// // ============================================================================
-// // HELPER FUNCTIONS
-// // ============================================================================
-
-
-
-// // async function checkReEntryRules(subscriberId: string, journey: any): Promise<boolean> {
-// //   //  FIX: Properly type the re_entry_settings JSON field
-// //   const reEntrySettings = (journey.re_entry_settings as any) || {};
-// //   const allowReEntry = reEntrySettings.allow_re_entry || false;
-
-// //   const { data: states } = await supabase
-// //     .from('user_journey_states')
-// //     .select('*')
-// //     .eq('subscriber_id', subscriberId)
-// //     .eq('journey_id', journey.id)
-// //     .order('entered_at', { ascending: false });
-
-// //   if (!states || states.length === 0) {
-// //     return true;
-// //   }
-
-// //   const activeState = states.find(s => s.status === 'active' || s.status === 'waiting');
-// //   if (activeState) {
-// //     console.log(' [Processor] Already active in journey');
-// //     return false;
-// //   }
-
-// //   if (!allowReEntry) {
-// //     console.log(' [Processor] Re-entry not allowed');
-// //     return false;
-// //   }
-
-// //   const maxEntries = reEntrySettings.max_entries || 0;
-// //   if (maxEntries > 0 && states.length >= maxEntries) {
-// //     console.log(` [Processor] Max entries (${maxEntries}) reached`);
-// //     return false;
-// //   }
-
-// //   const cooldownDays = reEntrySettings.cooldown_days || 0;
-// //   if (cooldownDays > 0 && states.length > 0 && states[0].entered_at) {
-// //     const lastEntry = new Date(states[0].entered_at);
-// //     const daysSince = (Date.now() - lastEntry.getTime()) / (1000 * 60 * 60 * 24);
-
-// //     if (daysSince < cooldownDays) {
-// //       console.log(` [Processor] Cooldown period (${cooldownDays} days) not met`);
-// //       return false;
-// //     }
-// //   }
-
-// //   return true;
-// // }
-
+// //  ENHANCED: Handle Subscriber Events (for advancing waiting journeys)
 // export async function handleSubscriberEvent(
 //   subscriberId: string,
 //   eventName: string,
 //   eventData: any = {}
 // ): Promise<void> {
-//   console.log(' [Processor] Handling subscriber event:', { subscriberId, eventName });
+//   console.log('[Processor] Handling subscriber event:', { subscriberId, eventName });
 
 //   try {
+//     // Find ALL waiting states for this subscriber
 //     const { data: waitingStates } = await supabase
 //       .from('user_journey_states')
 //       .select('*')
 //       .eq('subscriber_id', subscriberId)
-//       .eq('status', 'waiting')
-//       .contains('context', { waiting_for_event: eventName });
+//       .eq('status', 'waiting');
 
 //     if (!waitingStates || waitingStates.length === 0) {
-//       console.log('[Processor] No waiting states for this event');
+//       console.log('[Processor] ℹ No waiting states for this event');
 //       return;
 //     }
 
-//     console.log(` [Processor] Found ${waitingStates.length} waiting state(s)`);
+//     console.log(`[Processor] Found ${waitingStates.length} waiting state(s)`);
 
 //     for (const stateData of waitingStates) {
 //       const state = toJourneyState(stateData);
 
+//       // Check if this state is waiting for THIS specific event
+//       const waitingForEvent = state.context?.waiting_for_event;
+
+//       if (waitingForEvent !== eventName) {
+//         console.log(`[Processor] State ${state.id} waiting for "${waitingForEvent}", not "${eventName}"`);
+//         continue;
+//       }
+//       const eventConfig = state.context?.event_config || {};
+//       if (Object.keys(eventConfig).length > 0) {
+//         console.log(`[Processor] Checking event configuration:`, eventConfig);
+
+//         let configMatches = true;
+
+//         // Check scroll_depth percentage
+//         if (eventName === 'scroll_depth' && eventConfig.percentage) {
+//           const requiredPercentage = parseInt(eventConfig.percentage);
+//           const actualPercentage = eventData.percentage || 0;
+
+//           if (actualPercentage < requiredPercentage) {
+//             console.log(`[Processor] ✗ Scroll depth ${actualPercentage}% < required ${requiredPercentage}%`);
+//             configMatches = false;
+//           }
+//         }
+
+//         // Check page_landed URL pattern
+//         if (eventName === 'page_landed' && eventConfig.url_pattern) {
+//           const urlPattern = eventConfig.url_pattern;
+//           const actualUrl = eventData.url || eventData.path || '';
+
+//           if (urlPattern.includes('*')) {
+//             const escapedPattern = urlPattern
+//               .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+//               .replace(/\*/g, '.*');
+//             const regex = new RegExp('^' + escapedPattern + '$', 'i');
+//             configMatches = regex.test(actualUrl);
+//           } else {
+//             configMatches = actualUrl.toLowerCase().includes(urlPattern.toLowerCase());
+//           }
+
+//           if (!configMatches) {
+//             console.log(`[Processor] ✗ URL "${actualUrl}" doesn't match pattern "${urlPattern}"`);
+//           }
+//         }
+
+//         // Check page_abandoned minimum time
+//         if (eventName === 'page_abandoned' && eventConfig.min_time_seconds) {
+//           const requiredTime = parseInt(eventConfig.min_time_seconds);
+//           const actualTime = eventData.time_on_page_seconds || eventData.seconds || 0;
+
+//           if (actualTime < requiredTime) {
+//             console.log(`[Processor] ✗ Time on page ${actualTime}s < required ${requiredTime}s`);
+//             configMatches = false;
+//           }
+//         }
+
+//         // Check time_on_page threshold
+//         if (eventName === 'time_on_page' && eventConfig.threshold_seconds) {
+//           const threshold = parseInt(eventConfig.threshold_seconds);
+//           const actualTime = eventData.seconds || eventData.duration || 0;
+
+//           if (actualTime < threshold) {
+//             console.log(`[Processor] ✗ Time ${actualTime}s < threshold ${threshold}s`);
+//             configMatches = false;
+//           }
+//         }
+
+//         // Check link_clicked URL
+//         if (eventName === 'link_clicked' && eventConfig.url) {
+//           const targetUrl = eventConfig.url.toLowerCase();
+//           const clickedUrl = (eventData.url || eventData.href || '').toLowerCase();
+
+//           configMatches = clickedUrl.includes(targetUrl);
+
+//           if (!configMatches) {
+//             console.log(`[Processor] ✗ Clicked URL "${clickedUrl}" doesn't match "${targetUrl}"`);
+//           }
+//         }
+
+//         // Check cart_abandoned minimum value
+//         if (eventName === 'cart_abandoned' && eventConfig.min_value) {
+//           const minValue = parseFloat(eventConfig.min_value);
+//           const cartValue = eventData.total_value || eventData.value || 0;
+
+//           if (cartValue < minValue) {
+//             console.log(`[Processor] ✗ Cart value ${cartValue} < minimum ${minValue}`);
+//             configMatches = false;
+//           }
+//         }
+
+//         // Check product_purchased filters
+//         if (eventName === 'product_purchased') {
+//           if (eventConfig.product_id) {
+//             const items = eventData.items || [];
+//             configMatches = items.some((item: any) =>
+//               item.id === eventConfig.product_id || item.product_id === eventConfig.product_id
+//             );
+
+//             if (!configMatches) {
+//               console.log(`[Processor] ✗ Product ID "${eventConfig.product_id}" not in purchase`);
+//             }
+//           }
+
+//           if (eventConfig.category) {
+//             const items = eventData.items || [];
+//             configMatches = items.some((item: any) =>
+//               (item.category || '').toLowerCase() === eventConfig.category.toLowerCase()
+//             );
+
+//             if (!configMatches) {
+//               console.log(`[Processor] ✗ Category "${eventConfig.category}" not in purchase`);
+//             }
+//           }
+//         }
+
+//         // Check form events
+//         if ((eventName === 'form_started' || eventName === 'form_submitted') && eventConfig.form_id) {
+//           const actualFormId = eventData.form_id || eventData.id || '';
+//           configMatches = actualFormId === eventConfig.form_id;
+
+//           if (!configMatches) {
+//             console.log(`[Processor] ✗ Form ID "${actualFormId}" doesn't match "${eventConfig.form_id}"`);
+//           }
+//         }
+
+//         // If config doesn't match, skip this state
+//         if (!configMatches) {
+//           console.log(`[Processor] Event configuration doesn't match, continuing to wait...`);
+//           continue;
+//         }
+//       }
+
+//       console.log(`[Processor]  Event "${eventName}" received for waiting journey ${state.journey_id}`);
+
+//       console.log(`[Processor]  Event "${eventName}" received for waiting journey ${state.journey_id}`);
+
+//       // Cancel the timeout job
 //       await supabase
 //         .from('scheduled_journey_steps')
-//         .update({ status: 'cancelled' })
+//         .update({
+//           status: 'cancelled',
+//           error: 'Event received before timeout'
+//         })
 //         .eq('user_journey_state_id', state.id)
 //         .eq('status', 'pending');
 
+//       // Update state to active
 //       await supabase
 //         .from('user_journey_states')
 //         .update({
@@ -2343,20 +2792,28 @@
 //             ...state.context,
 //             waiting_for_event: null,
 //             received_event: eventName,
-//             received_event_data: eventData
+//             received_event_data: eventData,
+//             event_received_at: new Date().toISOString(),
 //           }
 //         })
 //         .eq('id', state.id);
 
+
+
+//       // Log the event receipt
 //       await logJourneyEvent(
 //         state.journey_id,
 //         state.subscriber_id,
 //         state.id,
 //         'event_received',
-//         { event_name: eventName, event_data: eventData },
+//         {
+//           event_name: eventName,
+//           event_data: eventData
+//         },
 //         state.current_step_id || undefined
 //       );
 
+//       // Get the flow definition and move to next node
 //       const { data: journey } = await supabase
 //         .from('journeys')
 //         .select('flow_definition')
@@ -2368,13 +2825,14 @@
 //         const currentNode = flowDefinition.nodes.find(n => n.id === state.current_step_id);
 
 //         if (currentNode) {
+//           console.log(`[Processor] Moving from wait node ${currentNode.id}`);
 //           await moveToNextNode(state, flowDefinition, currentNode.id);
 //         }
 //       }
 //     }
 
 //   } catch (error: any) {
-//     console.error(' [Processor] Error handling event:', error.message);
+//     console.error('[Processor] ✗ Error handling event:', error.message);
 //   }
 // }
 
@@ -2391,7 +2849,70 @@
 
 // export default journeyProcessor;
 
-// lib/journeys/processor.ts - FIXED VERSION
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// lib/journeys/processor.ts 
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
@@ -2587,10 +3108,9 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
     switch (trigger.type) {
       case 'page_landing':
       case 'page_landed': {
-        // const urlPattern = trigger.url_pattern || trigger.url;
-          const urlPattern = trigger.event_config?.url_pattern || 
-                          trigger.url_pattern || 
-                          trigger.url;
+        const urlPattern = trigger.event_config?.url_pattern ||
+          trigger.url_pattern ||
+          trigger.url;
         if (!urlPattern) {
           console.log('[Processor] ✗ Page landing: no URL pattern specified');
           return false;
@@ -2629,16 +3149,15 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       }
 
       case 'scroll_depth': {
-         const requiredPercentage = trigger.event_config?.percentage || 
-                                   trigger.percentage || 
-                                   0;
-        // const requiredPercentage = trigger.percentage || 0;
+        const requiredPercentage = trigger.event_config?.percentage ||
+          trigger.percentage ||
+          0;
 
         if (requiredPercentage <= 0 || requiredPercentage > 100) {
           console.log('[Processor] ✗ Invalid scroll depth percentage:', requiredPercentage);
           return false;
         }
- // ✅ FIX: Check for page pattern
+
         const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
 
         const { data: events } = await supabase
@@ -2658,7 +3177,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           const props = getEventProperties(e.properties);
           const percentage = props.percentage || 0;
           const eventPath = props.path || props.url || '';
- // ✅ FIX: Check page pattern if specified
+
           if (pagePattern) {
             if (pagePattern.includes('*')) {
               const escapedPattern = pagePattern
@@ -2666,38 +3185,32 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
                 .replace(/\*/g, '.*');
               const regex = new RegExp('^' + escapedPattern + '$', 'i');
               const pathMatches = regex.test(eventPath);
-              
+
               if (!pathMatches) {
-                return false; // Wrong page
+                return false;
               }
             } else {
               const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
               if (!pathMatches) {
-                return false; // Wrong page
+                return false;
               }
             }
           }
           return percentage >= requiredPercentage;
         });
 
-        console.log('[Processor]', hasReached ? '*' : 'x', 'Scroll depth check:', { requiredPercentage,pagePattern,hasReached });
+        console.log('[Processor]', hasReached ? '✓' : '✗', 'Scroll depth check:', { requiredPercentage, pagePattern, hasReached });
         return hasReached;
       }
 
       case 'page_abandonment': {
-         const minTime = trigger.event_config?.min_time_seconds ||
-                       trigger.min_time_value ||
-                       trigger.min_time_seconds ||
-                       trigger.minimum_time ||
-                       trigger.time_value ||
-                       trigger.min_time ||
-                       0;
-        // const minTime = trigger.min_time_value ||
-        //   trigger.min_time_seconds ||
-        //   trigger.minimum_time ||
-        //   trigger.time_value ||
-        //   trigger.min_time ||
-        //   0;
+        const minTime = trigger.event_config?.min_time_seconds ||
+          trigger.min_time_value ||
+          trigger.min_time_seconds ||
+          trigger.minimum_time ||
+          trigger.time_value ||
+          trigger.min_time ||
+          0;
 
         if (minTime <= 0 || minTime > 3600) {
           console.log('[Processor] ✗ Page abandonment: invalid time value:', minTime);
@@ -2722,7 +3235,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           const props = getEventProperties(e.properties);
           const timeOnPage = props.time_on_page_seconds || props.time_on_page || props.seconds || 0;
           const eventPath = props.path || props.url || '';
-// ✅ FIX: Check page pattern if specified
+
           if (pagePattern) {
             if (pagePattern.includes('*')) {
               const escapedPattern = pagePattern
@@ -2730,14 +3243,14 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
                 .replace(/\*/g, '.*');
               const regex = new RegExp('^' + escapedPattern + '$', 'i');
               const pathMatches = regex.test(eventPath);
-              
+
               if (!pathMatches) {
-                return false; // Wrong page
+                return false;
               }
             } else {
               const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
               if (!pathMatches) {
-                return false; // Wrong page
+                return false;
               }
             }
           }
@@ -2749,24 +3262,15 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       }
 
       case 'time_on_page': {
-
         const threshold = trigger.event_config?.threshold_seconds ||
-                         trigger.threshold_value ||
-                         trigger.threshold_seconds ||
-                         trigger.minimum_time ||
-                         trigger.min_time_seconds ||
-                         trigger.time_threshold ||
-                         trigger.duration ||
-                         trigger.seconds ||
-                         0;
-        // const threshold = trigger.threshold_value ||
-        //   trigger.threshold_seconds ||
-        //   trigger.minimum_time ||
-        //   trigger.min_time_seconds ||
-        //   trigger.time_threshold ||
-        //   trigger.duration ||
-        //   trigger.seconds ||
-        //   0;
+          trigger.threshold_value ||
+          trigger.threshold_seconds ||
+          trigger.minimum_time ||
+          trigger.min_time_seconds ||
+          trigger.time_threshold ||
+          trigger.duration ||
+          trigger.seconds ||
+          0;
 
         if (threshold <= 0 || threshold > 3600) {
           console.log('[Processor] ✗ Time on page: invalid threshold:', threshold);
@@ -2790,8 +3294,8 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         const hasReached = events.some(e => {
           const props = getEventProperties(e.properties);
           const seconds = props.seconds || props.duration || props.time_seconds || 0;
-                    const eventPath = props.path || props.url || '';
- // ✅ FIX: Check page pattern if specified
+          const eventPath = props.path || props.url || '';
+
           if (pagePattern) {
             if (pagePattern.includes('*')) {
               const escapedPattern = pagePattern
@@ -2799,21 +3303,21 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
                 .replace(/\*/g, '.*');
               const regex = new RegExp('^' + escapedPattern + '$', 'i');
               const pathMatches = regex.test(eventPath);
-              
+
               if (!pathMatches) {
-                return false; // Wrong page
+                return false;
               }
             } else {
               const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
               if (!pathMatches) {
-                return false; // Wrong page
+                return false;
               }
             }
           }
           return seconds >= threshold;
         });
 
-        console.log('[Processor]', hasReached ? '✓' : '✗', 'Time on page check:', { threshold, hasReached });
+        console.log('[Processor]', hasReached ? '✓' : '✗', 'Time on page check:', { threshold, pagePattern, hasReached });
         return hasReached;
       }
 
@@ -2980,7 +3484,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
 
         const normalizedAllowedDevices = allowedDevices.map((d: string) => d.toLowerCase());
         let device = 'desktop';
-        // ✅ FIX: Better device detection from events first
+
         const { data: events } = await supabase
           .from('subscriber_events')
           .select('*')
@@ -2992,7 +3496,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           for (const event of events) {
             const props = getEventProperties(event.properties);
             const eventDevice = (props.device || props.device_type || '').toLowerCase();
-            
+
             if (eventDevice && ['mobile', 'tablet', 'desktop'].includes(eventDevice)) {
               device = eventDevice;
               console.log('[Processor] ✓ Device from recent event:', device);
@@ -3001,7 +3505,6 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           }
         }
 
-        // Fallback to custom attributes
         if (device === 'desktop') {
           const customAttrs = subscriber.custom_attributes as any;
           if (customAttrs?.device) {
@@ -3010,7 +3513,6 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           }
         }
 
-        // Last resort: user agent parsing
         if (device === 'desktop' && subscriber.user_agent) {
           const ua = subscriber.user_agent.toLowerCase();
           if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
@@ -3022,43 +3524,12 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         }
 
         const matches = normalizedAllowedDevices.includes(device);
-        console.log('[Processor]', matches ? '✓' : '✗', 'Device filter check:', { 
-          allowedDevices: normalizedAllowedDevices, 
-          subscriberDevice: device, 
-          matches 
+        console.log('[Processor]', matches ? '✓' : '✗', 'Device filter check:', {
+          allowedDevices: normalizedAllowedDevices,
+          subscriberDevice: device,
+          matches
         });
         return matches;
-
-        // const customAttrs = subscriber.custom_attributes as any;
-        // if (customAttrs?.device) {
-        //   device = customAttrs.device.toLowerCase();
-        // } else {
-        //   const { data: events } = await supabase
-        //     .from('subscriber_events')
-        //     .select('*')
-        //     .eq('subscriber_id', subscriberId)
-        //     .order('created_at', { ascending: false })
-        //     .limit(1);
-
-        //   if (events && events.length > 0) {
-        //     const props = getEventProperties(events[0].properties);
-        //     device = (props.device || props.device_type || props.platform || 'desktop').toLowerCase();
-        //   }
-
-        //   if (subscriber.user_agent && device === 'desktop') {
-        //     const ua = subscriber.user_agent.toLowerCase();
-        //     if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
-        //       device = 'mobile';
-        //     } else if (ua.includes('tablet') || ua.includes('ipad')) {
-        //       device = 'tablet';
-        //     }
-        //   }
-        // }
-
-        // const matches = normalizedAllowedDevices.includes(device);
-        // console.log('[Processor]', matches ? '✓' : '✗', 'Device filter check:', { allowedDevices: normalizedAllowedDevices, subscriberDevice: device, matches });
-        // return matches;
-
       }
 
       case 'geography_filter': {
@@ -3151,6 +3622,12 @@ export async function processDueSteps(): Promise<ProcessingResult> {
       try {
         const stepPayload = step.payload as Record<string, any> | null;
         console.log(`\n[Processor] Processing step ${step.id} (type: ${stepPayload?.step_type || 'unknown'})`);
+
+        if (stepPayload?.step_type === 'wait_duration') {
+          console.log('[Processor] ⏭️ Skipping wait_duration step - handled by worker');
+          skipped++;
+          continue;
+        }
 
         await supabase
           .from('scheduled_journey_steps')
@@ -3326,7 +3803,8 @@ export async function enrollSubscriber(
     }
 
     const entryTrigger = (journey.entry_trigger as any) || {};
-    console.log('[Processor]  Entry trigger:', JSON.stringify(entryTrigger, null, 2));
+    console.log('[Processor] 📍 Entry trigger:', JSON.stringify(entryTrigger, null, 2));
+
     if (entryTrigger.type && entryTrigger.type !== 'event' && entryTrigger.type !== 'manual') {
       console.log('[Processor] Checking advanced trigger criteria...');
 
@@ -3351,14 +3829,12 @@ export async function enrollSubscriber(
 
     console.log(`[Processor] Starting at node: ${startNode.id} (type: ${startNode.type})`);
 
-    // Check re-entry rules BEFORE database insert
     const canEnter = await checkReEntryRules(subscriberId, journey);
     if (!canEnter) {
       console.log('[Processor] ✗ Re-entry rules prevent enrollment');
       throw new Error('Subscriber cannot re-enter this journey at this time');
     }
 
-    // Try to insert - database unique index will prevent duplicates
     const { data: journeyState, error: stateError } = await supabase
       .from('user_journey_states')
       .insert({
@@ -3378,13 +3854,11 @@ export async function enrollSubscriber(
       .single();
 
     if (stateError) {
-      // Handle unique constraint violation (23505)
       if (stateError.code === '23505') {
         console.log('[Processor] ⚠ Already enrolled (duplicate prevented by database)');
-        throw new Error('Subscriber cannot re-enter this journey at this time');
+        throw new Error('Subscriber already enrolled in this journey');
       }
 
-      // Handle CHECK constraint violation (23514 - invalid status)
       if (stateError.code === '23514') {
         console.error('[Processor] ✗ Invalid status value');
         throw new Error('Invalid journey state status');
@@ -3394,7 +3868,8 @@ export async function enrollSubscriber(
       throw stateError;
     }
 
-    // Only increment counters if insert succeeded
+    console.log('[Processor] ✅ Journey state created:', journeyState.id);
+
     await logJourneyEvent(
       journeyId,
       subscriberId,
@@ -3446,11 +3921,22 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
     return true;
   }
 
-  // Check for active or waiting states
-  const activeState = states.find(s => s.status === 'active' || s.status === 'waiting');
-  if (activeState) {
-    console.log('[Processor] ⚠ Already active in journey');
+  // 🔥 CRITICAL FIX: Check for ACTIVE or WAITING states
+  const activeOrWaitingState = states.find(
+    s => s.status === 'active' || s.status === 'waiting'
+  );
+
+  if (activeOrWaitingState) {
+    console.log('[Processor] ⚠ Already in journey (status:', activeOrWaitingState.status + ')');
     return false;
+  }
+
+  const completedStates = states.filter(
+    s => s.status === 'completed' || s.status === 'exited'
+  );
+
+  if (completedStates.length === 0) {
+    return true;
   }
 
   if (!allowReEntry) {
@@ -3470,11 +3956,14 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
     const daysSince = (Date.now() - lastEntry.getTime()) / (1000 * 60 * 60 * 24);
 
     if (daysSince < cooldownDays) {
-      console.log(`[Processor] ✗ Cooldown period (${cooldownDays} days) not met. ${daysSince.toFixed(1)} days since last entry`);
+      console.log(
+        `[Processor] ✗ Cooldown period (${cooldownDays} days) not met. ${daysSince.toFixed(1)} days since last entry`
+      );
       return false;
     }
   }
 
+  console.log('[Processor] ✓ Re-entry allowed');
   return true;
 }
 
@@ -3671,8 +4160,9 @@ async function processSendNotification(
       throw new Error('Subscriber not found');
     }
 
+    // 🔥 FIX: Check if subscription is missing or expired
     if (!subscriber.endpoint || !subscriber.p256dh_key || !subscriber.auth_key) {
-      console.error('[Processor] ✗ Subscriber has no valid push subscription');
+      console.log('[Processor] ⚠ No valid push subscription');
 
       await supabase.from('notification_logs').insert({
         website_id: subscriber.website_id,
@@ -3683,18 +4173,19 @@ async function processSendNotification(
         status: 'failed',
         platform: 'web',
         sent_at: new Date().toISOString(),
-        error_message: 'Subscriber not subscribed to push notifications',
+        error_message: 'No valid push subscription - user needs to re-subscribe',
       });
 
       await logJourneyEvent(
         state.journey_id,
         state.subscriber_id,
         state.id,
-        'notification_error',
-        { error: 'No push subscription' },
+        'notification_skipped',
+        { reason: 'No push subscription' },
         node.id
       );
 
+      // 🔥 CRITICAL: Move to next node anyway (don't block journey)
       await moveToNextNode(state, flowDefinition, node.id);
       return;
     }
@@ -3798,22 +4289,39 @@ async function processSendNotification(
         node.id
       );
 
-      // if (result.error?.includes('410') ||
-      //   result.error?.includes('404') ||
-      //   result.error?.includes('SUBSCRIPTION_EXPIRED') ||
-      //   result.error?.includes('Invalid subscription keys')) {
-      //   await supabase
-      //     .from('subscribers')
-      //     .update({
-      //       status: 'inactive',
-      //       updated_at: new Date().toISOString(),
-      //     })
-      //     .eq('id', subscriber.id);
-      // }
-            console.log('[Processor]  Notification failed but subscriber remains active for future journeys');
+      // 🔥 FIX: Handle expired subscriptions
+      if (result.error?.includes('410') ||
+          result.error?.includes('404') ||
+          result.error?.includes('SUBSCRIPTION_EXPIRED') ||
+          result.error?.includes('Invalid subscription keys')) {
+        
+        console.log('[Processor] ⚠ Push subscription expired - clearing invalid subscription');
+        
+        // Clear the expired subscription (but keep subscriber active)
+        await supabase.from('subscribers')
+          .update({
+            endpoint: null,
+            p256dh_key: null,
+            auth_key: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', subscriber.id);
 
+        await logJourneyEvent(
+          state.journey_id,
+          state.subscriber_id,
+          state.id,
+          'subscription_expired',
+          { 
+            error: result.error,
+            note: 'User can re-subscribe to receive future notifications'
+          },
+          node.id
+        );
+      }
     }
 
+    // 🔥 CRITICAL: ALWAYS move to next node (don't block journey on notification failure)
     await moveToNextNode(state, flowDefinition, node.id);
 
   } catch (error: any) {
@@ -3828,6 +4336,7 @@ async function processSendNotification(
       node.id
     );
 
+    // Move to next step anyway
     await moveToNextNode(state, flowDefinition, node.id);
   }
 }
@@ -3837,60 +4346,48 @@ async function processWaitNode(
   node: JourneyNode,
   flowDefinition: FlowDefinition
 ): Promise<void> {
-  console.log('[Processor] Processing wait node');
-
-  const { data: freshState } = await supabase
-    .from('user_journey_states')
-    .select('status, next_execution_at')
-    .eq('id', state.id)
-    .single();
-
-  if (freshState?.next_execution_at) {
-    const waitUntil = new Date(freshState.next_execution_at);
-    const now = new Date();
-
-    if (now >= waitUntil) {
-      console.log('[Processor] ✓ Wait period completed');
-      await moveToNextNode(state, flowDefinition, node.id);
-      return;
-    }
-  }
+  console.log('[Processor] 📍 Processing wait node');
 
   const { data: existingSchedule } = await supabase
     .from('scheduled_journey_steps')
-    .select('id')
+    .select('id, status, execute_at')
     .eq('user_journey_state_id', state.id)
     .eq('step_id', node.id)
-    .eq('status', 'pending')
+    .in('status', ['pending', 'processing'])
     .single();
 
   if (existingSchedule) {
-    console.log('[Processor] ⚠ Wait already scheduled');
+    console.log('[Processor] ⚠ Wait already scheduled:', existingSchedule.id);
+    console.log('[Processor] ⚠ Execute at:', existingSchedule.execute_at);
     return;
   }
 
   const waitMode = node.data.mode || 'duration';
 
   if (waitMode === 'duration') {
-        let durationSeconds = node.data.duration || 86400;
- // If duration_seconds is specified, use it directly
+    let durationSeconds = node.data.duration || 86400;
     if (node.data.duration_seconds !== undefined) {
       durationSeconds = node.data.duration_seconds;
     }
-
-    console.log(`[Processor] Scheduling wait: ${durationSeconds}s`);
-    // const durationSeconds = node.data.duration || 86400;
     const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-    console.log(`[Processor] Scheduling wait: ${durationSeconds}s`);
+    console.log(`[Processor] ⏰ Scheduling wait: ${durationSeconds}s until ${executeAt.toISOString()}`);
 
-    await supabase
+    const { error: updateError } = await supabase
       .from('user_journey_states')
       .update({
         status: 'waiting',
         next_execution_at: executeAt.toISOString(),
+        last_processed_at: new Date().toISOString(),
       })
       .eq('id', state.id);
+
+    if (updateError) {
+      console.error('[Processor] ✗ Failed to update state:', updateError);
+      throw updateError;
+    }
+
+    console.log('[Processor] ✅ State updated to waiting');
 
     const { data: scheduledStep, error: scheduleError } = await supabase
       .from('scheduled_journey_steps')
@@ -3901,15 +4398,21 @@ async function processWaitNode(
         status: 'pending',
         payload: {
           mode: 'duration',
-          step_type: 'wait_duration'
+          step_type: 'wait_duration',
+          journey_id: state.journey_id,
+          subscriber_id: state.subscriber_id,
+          current_node_id: node.id,
         },
       })
       .select()
       .single();
 
     if (scheduleError) {
+      console.error('[Processor] ✗ Failed to create scheduled step:', scheduleError);
       throw scheduleError;
     }
+
+    console.log('[Processor] ✅ Scheduled step created:', scheduledStep.id);
 
     try {
       const queue = getNotificationQueue();
@@ -3925,19 +4428,21 @@ async function processWaitNode(
         {
           delay: durationSeconds * 1000,
           jobId: `wait-${scheduledStep.id}`,
+          priority: 1,
         }
       );
 
-      console.log(`[Processor] ✓ Job queued: wait-${scheduledStep.id}`);
+      console.log(`[Processor] ✅ Job queued: wait-${scheduledStep.id}`);
     } catch (queueError: any) {
       console.error('[Processor] ✗ Queue error:', queueError.message);
       await supabase
         .from('scheduled_journey_steps')
         .update({
-          status: 'pending',
+          status: 'failed',
           error: `Queue failed: ${queueError.message}`
         })
         .eq('id', scheduledStep.id);
+      throw queueError;
     }
 
     await logJourneyEvent(
@@ -3953,37 +4458,66 @@ async function processWaitNode(
       node.id
     );
 
-  } else if (waitMode === 'until_event') {
-    //  PROPER EVENT WAITING IMPLEMENTATION
-    const eventName = node.data.event?.name || node.data.event_name;
-    const timeoutSeconds = node.data.timeout_seconds || 604800; // 7 days default
+    // 🔥 CRITICAL: STOP HERE
+    console.log('[Processor] ⏸️  Journey paused - waiting for timer');
+    return;
+
+  }
+  else if (waitMode === 'until_event') {
+    // 🔥 FIX: Better event name extraction
+    const eventName = 
+      node.data.event?.name ||
+      node.data.event?.event_name ||
+      node.data.event_name ||
+      node.data.waiting_for_event;
+    
+    const timeoutSeconds = 
+      node.data.timeout_seconds || 
+      node.data.event?.timeout_seconds || 
+      604800;
+    
     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
-    const eventConfig = node.data.event_config || {};
+    
+    const eventConfig = 
+      node.data.event_config || 
+      node.data.event?.config || 
+      {};
 
     if (!eventName) {
+      console.error('[Processor] ✗ Event name missing!');
+      console.error('[Processor] 📋 Node data:', JSON.stringify(node.data, null, 2));
       throw new Error('Event name is required for wait-until-event mode');
     }
 
-    console.log(`[Processor]  Waiting for event: "${eventName}" (timeout: ${timeoutSeconds}s)`);
+    console.log(`[Processor] ⏰ Waiting for event: "${eventName}"`);
+    console.log(`[Processor] 📋 Event config:`, JSON.stringify(eventConfig, null, 2));
+    console.log(`[Processor] ⏱️  Timeout: ${timeoutSeconds}s`);
 
-    // Update state to waiting with event context
-    await supabase
+    // 🔥 CRITICAL: Update state with proper event name
+    const { error: updateError } = await supabase
       .from('user_journey_states')
       .update({
         status: 'waiting',
         next_execution_at: timeoutAt.toISOString(),
         context: {
           ...state.context,
-          waiting_for_event: eventName,
-          event_config: eventConfig, 
-
+          waiting_for_event: eventName,  // 🔥 Must be set correctly!
+          event_config: eventConfig,
           wait_mode: 'until_event',
           wait_started_at: new Date().toISOString(),
+          wait_node_id: node.id,
         },
+        last_processed_at: new Date().toISOString(),
       })
       .eq('id', state.id);
 
-    //  Schedule TIMEOUT job (not the event itself)
+    if (updateError) {
+      console.error('[Processor] ✗ Failed to update state:', updateError);
+      throw updateError;
+    }
+
+    console.log('[Processor] ✅ State updated to waiting for event');
+
     const { data: scheduledStep } = await supabase
       .from('scheduled_journey_steps')
       .insert({
@@ -3993,15 +4527,16 @@ async function processWaitNode(
         status: 'pending',
         payload: {
           mode: 'event_timeout',
-          event_name: eventName, // Store event name in payload
+          event_name: eventName,
           step_type: 'wait_event_timeout',
           is_timeout: true,
+          journey_id: state.journey_id,
+          subscriber_id: state.subscriber_id,
         },
       })
       .select()
       .single();
 
-    // Queue the timeout job (not the event)
     try {
       const queue = getNotificationQueue();
       await queue.add(
@@ -4011,10 +4546,6 @@ async function processWaitNode(
           journeyStateId: state.id,
           stepType: 'wait_event_timeout',
           executeAt: timeoutAt.toISOString(),
-          // metadata: {
-          //   eventName: eventName,
-          //   timeoutSeconds: timeoutSeconds,
-          // }
         },
         {
           delay: timeoutSeconds * 1000,
@@ -4039,6 +4570,10 @@ async function processWaitNode(
       },
       node.id
     );
+
+    // 🔥 CRITICAL: STOP HERE
+    console.log('[Processor] ⏸️  Journey paused - waiting for event or timeout');
+    return;
   }
 }
 
@@ -4339,6 +4874,16 @@ async function moveToNextNode(
 
   if (nextNodeId) {
     console.log(`[Processor] Moving to next node: ${nextNodeId}`);
+    const nextNode = flowDefinition.nodes.find(n => n.id === nextNodeId);
+
+    if (!nextNode) {
+      console.error(`[Processor] ✗ Next node ${nextNodeId} not found in flow definition!`);
+      console.error(`[Processor] Available nodes:`, flowDefinition.nodes.map(n => n.id));
+      await completeJourney(state.id);
+      return;
+    }
+
+    console.log(`[Processor] ➡️ Moving to next node: ${nextNodeId} (type: ${nextNode.type})`);
 
     await supabase
       .from('user_journey_states')
@@ -4356,12 +4901,10 @@ async function moveToNextNode(
   }
 }
 
-//  FIXED: Proper Metrics Recalculation
 export async function recalculateJourneyMetrics(journeyId: string): Promise<void> {
   console.log('[Processor] Recalculating metrics for journey:', journeyId);
 
   try {
-    // Count all states by status
     const { data: states, error } = await supabase
       .from('user_journey_states')
       .select('status')
@@ -4370,7 +4913,6 @@ export async function recalculateJourneyMetrics(journeyId: string): Promise<void
     if (error) throw error;
 
     if (!states || states.length === 0) {
-      // No states yet, set all to 0
       await supabase
         .from('journeys')
         .update({
@@ -4378,23 +4920,16 @@ export async function recalculateJourneyMetrics(journeyId: string): Promise<void
           total_active: 0,
           total_completed: 0,
           total_exited: 0,
-          conversion_rate: 0,
           updated_at: new Date().toISOString(),
         })
         .eq('id', journeyId);
       return;
     }
 
-    //  ACCURATE COUNTING
-    const total_entered = states.length; // All states = all who entered
+    const total_entered = states.length;
     const total_active = states.filter(s => s.status === 'active' || s.status === 'waiting').length;
     const total_completed = states.filter(s => s.status === 'completed').length;
     const total_exited = states.filter(s => s.status === 'exited').length;
-    
-    //  CORRECT CONVERSION RATE: (completed / entered) * 100
-    const conversion_rate = total_entered > 0 
-      ? Math.round((total_completed / total_entered) * 100 * 10) / 10 // Round to 1 decimal
-      : 0;
 
     await supabase
       .from('journeys')
@@ -4403,7 +4938,6 @@ export async function recalculateJourneyMetrics(journeyId: string): Promise<void
         total_active,
         total_completed,
         total_exited,
-        conversion_rate,
         updated_at: new Date().toISOString(),
       })
       .eq('id', journeyId);
@@ -4413,7 +4947,6 @@ export async function recalculateJourneyMetrics(journeyId: string): Promise<void
       total_active,
       total_completed,
       total_exited,
-      conversion_rate: `${conversion_rate}%`
     });
   } catch (error: any) {
     console.error('[Processor] ✗ Failed to recalculate metrics:', error);
@@ -4503,7 +5036,6 @@ async function exitJourney(journeyStateId: string, reason: string): Promise<void
   }
 }
 
-//  ENHANCED: Handle Subscriber Events (for advancing waiting journeys)
 export async function handleSubscriberEvent(
   subscriberId: string,
   eventName: string,
@@ -4512,7 +5044,6 @@ export async function handleSubscriberEvent(
   console.log('[Processor] Handling subscriber event:', { subscriberId, eventName });
 
   try {
-    // Find ALL waiting states for this subscriber
     const { data: waitingStates } = await supabase
       .from('user_journey_states')
       .select('*')
@@ -4529,35 +5060,33 @@ export async function handleSubscriberEvent(
     for (const stateData of waitingStates) {
       const state = toJourneyState(stateData);
 
-      // Check if this state is waiting for THIS specific event
       const waitingForEvent = state.context?.waiting_for_event;
 
       if (waitingForEvent !== eventName) {
         console.log(`[Processor] State ${state.id} waiting for "${waitingForEvent}", not "${eventName}"`);
         continue;
       }
+
       const eventConfig = state.context?.event_config || {};
-if (Object.keys(eventConfig).length > 0) {
+      if (Object.keys(eventConfig).length > 0) {
         console.log(`[Processor] Checking event configuration:`, eventConfig);
-        
+
         let configMatches = true;
 
-        // Check scroll_depth percentage
         if (eventName === 'scroll_depth' && eventConfig.percentage) {
           const requiredPercentage = parseInt(eventConfig.percentage);
           const actualPercentage = eventData.percentage || 0;
-          
+
           if (actualPercentage < requiredPercentage) {
             console.log(`[Processor] ✗ Scroll depth ${actualPercentage}% < required ${requiredPercentage}%`);
             configMatches = false;
           }
         }
 
-        // Check page_landed URL pattern
         if (eventName === 'page_landed' && eventConfig.url_pattern) {
           const urlPattern = eventConfig.url_pattern;
           const actualUrl = eventData.url || eventData.path || '';
-          
+
           if (urlPattern.includes('*')) {
             const escapedPattern = urlPattern
               .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
@@ -4567,104 +5096,94 @@ if (Object.keys(eventConfig).length > 0) {
           } else {
             configMatches = actualUrl.toLowerCase().includes(urlPattern.toLowerCase());
           }
-          
+
           if (!configMatches) {
             console.log(`[Processor] ✗ URL "${actualUrl}" doesn't match pattern "${urlPattern}"`);
           }
         }
 
-        // Check page_abandoned minimum time
         if (eventName === 'page_abandoned' && eventConfig.min_time_seconds) {
           const requiredTime = parseInt(eventConfig.min_time_seconds);
           const actualTime = eventData.time_on_page_seconds || eventData.seconds || 0;
-          
+
           if (actualTime < requiredTime) {
             console.log(`[Processor] ✗ Time on page ${actualTime}s < required ${requiredTime}s`);
             configMatches = false;
           }
         }
 
-        // Check time_on_page threshold
         if (eventName === 'time_on_page' && eventConfig.threshold_seconds) {
           const threshold = parseInt(eventConfig.threshold_seconds);
           const actualTime = eventData.seconds || eventData.duration || 0;
-          
+
           if (actualTime < threshold) {
             console.log(`[Processor] ✗ Time ${actualTime}s < threshold ${threshold}s`);
             configMatches = false;
           }
         }
 
-        // Check link_clicked URL
         if (eventName === 'link_clicked' && eventConfig.url) {
           const targetUrl = eventConfig.url.toLowerCase();
           const clickedUrl = (eventData.url || eventData.href || '').toLowerCase();
-          
+
           configMatches = clickedUrl.includes(targetUrl);
-          
+
           if (!configMatches) {
             console.log(`[Processor] ✗ Clicked URL "${clickedUrl}" doesn't match "${targetUrl}"`);
           }
         }
 
-        // Check cart_abandoned minimum value
         if (eventName === 'cart_abandoned' && eventConfig.min_value) {
           const minValue = parseFloat(eventConfig.min_value);
           const cartValue = eventData.total_value || eventData.value || 0;
-          
+
           if (cartValue < minValue) {
             console.log(`[Processor] ✗ Cart value ${cartValue} < minimum ${minValue}`);
             configMatches = false;
           }
         }
 
-        // Check product_purchased filters
         if (eventName === 'product_purchased') {
           if (eventConfig.product_id) {
             const items = eventData.items || [];
-            configMatches = items.some((item: any) => 
+            configMatches = items.some((item: any) =>
               item.id === eventConfig.product_id || item.product_id === eventConfig.product_id
             );
-            
+
             if (!configMatches) {
               console.log(`[Processor] ✗ Product ID "${eventConfig.product_id}" not in purchase`);
             }
           }
-          
+
           if (eventConfig.category) {
             const items = eventData.items || [];
-            configMatches = items.some((item: any) => 
+            configMatches = items.some((item: any) =>
               (item.category || '').toLowerCase() === eventConfig.category.toLowerCase()
             );
-            
+
             if (!configMatches) {
               console.log(`[Processor] ✗ Category "${eventConfig.category}" not in purchase`);
             }
           }
         }
 
-        // Check form events
         if ((eventName === 'form_started' || eventName === 'form_submitted') && eventConfig.form_id) {
           const actualFormId = eventData.form_id || eventData.id || '';
           configMatches = actualFormId === eventConfig.form_id;
-          
+
           if (!configMatches) {
             console.log(`[Processor] ✗ Form ID "${actualFormId}" doesn't match "${eventConfig.form_id}"`);
           }
         }
 
-        // If config doesn't match, skip this state
         if (!configMatches) {
           console.log(`[Processor] Event configuration doesn't match, continuing to wait...`);
           continue;
         }
       }
 
-      console.log(`[Processor]  Event "${eventName}" received for waiting journey ${state.journey_id}`);
+      console.log(`[Processor] ✓ Event "${eventName}" received for waiting journey ${state.journey_id}`);
 
-      console.log(`[Processor]  Event "${eventName}" received for waiting journey ${state.journey_id}`);
-
-      // Cancel the timeout job
       await supabase
         .from('scheduled_journey_steps')
         .update({
@@ -4674,7 +5193,6 @@ if (Object.keys(eventConfig).length > 0) {
         .eq('user_journey_state_id', state.id)
         .eq('status', 'pending');
 
-      // Update state to active
       await supabase
         .from('user_journey_states')
         .update({
@@ -4690,9 +5208,6 @@ if (Object.keys(eventConfig).length > 0) {
         })
         .eq('id', state.id);
 
-        
-
-      // Log the event receipt
       await logJourneyEvent(
         state.journey_id,
         state.subscriber_id,
@@ -4705,7 +5220,6 @@ if (Object.keys(eventConfig).length > 0) {
         state.current_step_id || undefined
       );
 
-      // Get the flow definition and move to next node
       const { data: journey } = await supabase
         .from('journeys')
         .select('flow_definition')
