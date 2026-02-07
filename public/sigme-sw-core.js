@@ -277,16 +277,52 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const data = event.data.json();
-      console.log('[Sigme SW Core] Push data:', data);
+      // console.log('[Sigme SW Core] Push data:', data);
       
-      if (data.data) {
-        console.log('[Sigme SW Core] Subscriber exists.....');
-        // console.log('[Sigme SW Core]   - subscriber_id:', data.data.subscriber_id);
-        // console.log('[Sigme SW Core]   - campaign_id:', data.data.campaign_id);
-        // console.log('[Sigme SW Core]   - notification_id:', data.data.notification_id);
-      } else {
-        console.error('[Sigme SW Core] NO DATA IN PUSH!');
-      }
+      // if (data.data) {
+      //   console.log('[Sigme SW Core] Subscriber exists.....');
+      //   // console.log('[Sigme SW Core]   - subscriber_id:', data.data.subscriber_id);
+      //   // console.log('[Sigme SW Core]   - campaign_id:', data.data.campaign_id);
+      //   // console.log('[Sigme SW Core]   - notification_id:', data.data.notification_id);
+      // } else {
+      //   console.error('[Sigme SW Core] NO DATA IN PUSH!');
+      // }
+      
+      // notification = {
+      //   title: data.title || notification.title,
+      //   body: data.body || notification.body,
+      //   icon: data.icon || notification.icon,
+      //   badge: data.badge || notification.badge,
+      //   image: data.image,
+      //   tag: data.tag,
+      //   data: data.data || {},
+      // };
+      
+
+ console.log('[Sigme SW Core] Push data received:', {
+        hasTitle: !!data.title,
+        hasBody: !!data.body,
+        hasUrl: !!(data.url || data.click_url),
+        hasTag: !!data.tag
+      });
+      
+      // ✅ FIX: Build data object from ALL possible sources
+      const notificationData = {
+        url: data.url || data.click_url || '/',
+        click_url: data.click_url || data.url || '/',
+        subscriber_id: data.subscriber_id || data.data?.subscriber_id,
+        campaign_id: data.campaign_id || data.data?.campaign_id,
+        journey_id: data.journey_id || data.data?.journey_id,
+        notification_id: data.notification_id || data.tag || data.data?.notification_id,
+      };
+      
+      // Log what we extracted (helpful for debugging)
+      console.log('[Sigme SW Core]  Extracted data:', {
+        subscriber_id: notificationData.subscriber_id ? 'present' : 'missing',
+        campaign_id: notificationData.campaign_id ? 'present' : 'missing',
+        journey_id: notificationData.journey_id ? 'present' : 'missing',
+        notification_id: notificationData.notification_id ? 'present' : 'missing',
+      });
       
       notification = {
         title: data.title || notification.title,
@@ -294,10 +330,11 @@ self.addEventListener('push', (event) => {
         icon: data.icon || notification.icon,
         badge: data.badge || notification.badge,
         image: data.image,
-        tag: data.tag,
-        data: data.data || {},
+        tag: data.tag || `notif-${Date.now()}`,
+        data: notificationData, //  Use properly built object
       };
       
+
       // console.log('[Sigme SW Core] Notification data:', notification.data);
     } catch (e) {
       console.error('[Sigme SW Core] Failed to parse push data:', e);
