@@ -31,9 +31,9 @@ const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:mushiele01@gmail.com';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-  console.log('✓ VAPID configured');
+  console.log('VAPID configured');
 } else {
-  console.warn('⚠ VAPID keys not configured');
+  console.warn('VAPID keys not configured');
 }
 
 interface NotificationJobData {
@@ -145,7 +145,7 @@ async function processNextStepInWorker(
   nextStepId: string, 
   journeyId: string
 ): Promise<void> {
-  console.log(`[Worker] 📍 Processing next step: ${nextStepId}`);
+  console.log(`[Worker]  Processing next step: ${nextStepId}`);
 
   try {
     const { data: journey } = await supabase
@@ -163,12 +163,12 @@ async function processNextStepInWorker(
     const nextNode = flowDefinition.nodes.find((n: any) => n.id === nextStepId);
 
     if (!nextNode) {
-      console.log('[Worker] ✗ Next node not found, completing journey');
+      console.log('[Worker] Next node not found, completing journey');
       await completeJourney(stateId, journeyId);
       return;
     }
 
-    console.log(`[Worker] 📌 Next node type: ${nextNode.type}`);
+    console.log(`[Worker]  Next node type: ${nextNode.type}`);
 
     switch (nextNode.type) {
       case 'send_notification':
@@ -180,7 +180,7 @@ async function processNextStepInWorker(
         break;
       
       case 'condition':
-        console.log('[Worker] ⏩ Delegating condition to processor');
+        console.log('[Worker] Delegating condition to processor');
         await triggerProcessorForState(stateId);
         break;
       
@@ -213,7 +213,7 @@ async function sendNotificationFromWorker(
   flowDefinition: any,
   journeyId: string
 ): Promise<void> {
-  console.log(`[Worker] 📧 Sending notification: "${node.data.title}"`);
+  console.log(`[Worker]  Sending notification: "${node.data.title}"`);
 
   try {
     const { data: state } = await supabase
@@ -234,7 +234,7 @@ async function sendNotificationFromWorker(
       .single();
 
     if (!subscriber || !subscriber.endpoint) {
-      console.log('[Worker] ⚠ Subscriber has no push subscription');
+      console.log('[Worker] Subscriber has no push subscription');
       
       await supabase.from('notification_logs').insert({
         website_id: subscriber?.website_id || null,
@@ -325,7 +325,7 @@ async function scheduleWaitFromWorker(
   node: any,
   flowDefinition: any
 ): Promise<void> {
-  console.log('[Worker] ⏰ Scheduling nested wait node');
+  console.log('[Worker]  Scheduling nested wait node');
 
   try {
     let durationSeconds = node.data.duration || 86400;
@@ -336,7 +336,7 @@ async function scheduleWaitFromWorker(
 
     const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-    console.log(`[Worker] ⏰ Scheduling wait: ${durationSeconds}s`);
+    console.log(`[Worker]  Scheduling wait: ${durationSeconds}s`);
 
     const { data: state } = await supabase
       .from('user_journey_states')
@@ -399,7 +399,7 @@ async function moveToNextNodeInWorker(
   const nextEdge = flowDefinition.edges.find((e: any) => e.from === currentNodeId);
 
   if (nextEdge) {
-    console.log(`[Worker] ➡️ Moving from ${currentNodeId} to ${nextEdge.to}`);
+    console.log(`[Worker] Moving from ${currentNodeId} to ${nextEdge.to}`);
     
     await supabase.from('user_journey_states').update({
       current_step_id: nextEdge.to,
@@ -411,14 +411,14 @@ async function moveToNextNodeInWorker(
     return;
     
   } else {
-    console.log('[Worker] 🏁 No next step, completing journey');
+    console.log('[Worker]  No next step, completing journey');
     await completeJourney(stateId, journeyId);
     return;
   }
 }
 
 async function completeJourney(stateId: string, journeyId: string): Promise<void> {
-  console.log('[Worker] ✅ Completing journey');
+  console.log('[Worker] Completing journey');
 
   try {
     const { data: currentState } = await supabase
@@ -487,7 +487,7 @@ async function completeJourney(stateId: string, journeyId: string): Promise<void
 }
 
 async function triggerProcessorForState(stateId: string): Promise<void> {
-  console.log('[Worker] 🔄 Triggering processor for state:', stateId);
+  console.log('[Worker]  Triggering processor for state:', stateId);
   
   await supabase.from('user_journey_states').update({
     status: 'active',
@@ -653,7 +653,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
           started_at: new Date().toISOString(),
         })
         .eq('id', scheduledStepId)
-        .select(), // ✅ FIXED: Added .select() to make it a Promise
+         // ✅ FIXED: Added .select() to make it a Promise
     ]);
 
     const { data: state, error: stateError } = stateResult;
@@ -694,7 +694,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
     }
 
     if (stepType.includes('wait')) {
-      console.log('[Worker] ⏰ Wait period completed');
+      console.log('[Worker]  Wait period completed');
       
       const flowDefinition = journey.flow_definition as any;
       const currentNode = flowDefinition.nodes.find(
@@ -702,14 +702,14 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
       );
       
       if (currentNode) {
-        console.log(`[Worker] 📌 Current node: ${currentNode.id} (${currentNode.type})`);
+        console.log(`[Worker]  Current node: ${currentNode.id} (${currentNode.type})`);
         
         const nextEdge = flowDefinition.edges.find(
           (e: any) => e.from === currentNode.id
         );
         
         if (nextEdge) {
-          console.log(`[Worker] ➡️  Moving to next step: ${nextEdge.to}`);
+          console.log(`[Worker]   Moving to next step: ${nextEdge.to}`);
           
           // 🔥 FIX 3: Update state and log event IN PARALLEL (saves 500ms)
           await Promise.all([
@@ -730,8 +730,8 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
             }),
           ]);
 
-          console.log('[Worker] ✅ State updated to active');
-          console.log('[Worker] ✅ Wait completion logged');
+          console.log('[Worker] State updated to active');
+          console.log('[Worker] Wait completion logged');
 
           // 🔥 FIX 4: Process next step and update schedule in parallel
           await Promise.all([
@@ -745,11 +745,11 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
               .eq('id', scheduledStepId),
           ]);
           
-          console.log(`✅ [Worker] Job ${job.id} completed successfully\n`);
+          console.log(`[Worker] Job ${job.id} completed successfully\n`);
           return;
           
         } else {
-          console.log('[Worker] 🏁 No next step, completing journey');
+          console.log('[Worker] No next step, completing journey');
           await completeJourney(state.id, state.journey_id);
         }
       } else {
@@ -766,10 +766,10 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
       })
       .eq('id', scheduledStepId);
 
-    console.log(`✅ [Worker] Job ${job.id} completed successfully\n`);
+    console.log(` [Worker] Job ${job.id} completed successfully\n`);
 
   } catch (error: any) {
-    console.error(`❌ [Worker] Job ${job.id} failed:`, error.message);
+    console.error(` [Worker] Job ${job.id} failed:`, error.message);
 
     await supabase
       .from('scheduled_journey_steps')
@@ -802,30 +802,30 @@ const worker = new Worker<NotificationJobData>(
 );
 
 worker.on('completed', (job) => {
-  console.log(`✅ Job ${job.id} completed`);
+  console.log(` Job ${job.id} completed`);
 });
 
 worker.on('failed', (job, err) => {
-  console.error(`❌ Job ${job?.id} failed:`, err.message);
+  console.error(` Job ${job?.id} failed:`, err.message);
 });
 
 worker.on('error', (err) => {
-  console.error('⚠️ Worker error:', err);
+  console.error(' Worker error:', err);
 });
 
-console.log('\n🚀 Journey notification worker started');
-console.log(`📡 Redis: ${redisConnection.host}:${redisConnection.port}`);
-console.log(`⚙️  Concurrency: 10 jobs\n`);
+console.log('\n Journey notification worker started');
+console.log(` Redis: ${redisConnection.host}:${redisConnection.port}`);
+console.log(`  Concurrency: 20 jobs\n`);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('\n🛑 Shutting down worker...');
+  console.log('\n Shutting down worker...');
   await worker.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Shutting down worker...');
+  console.log('\n Shutting down worker...');
   await worker.close();
   process.exit(0);
 });

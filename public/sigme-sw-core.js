@@ -317,12 +317,12 @@ self.addEventListener('push', (event) => {
       };
       
       // Log what we extracted (helpful for debugging)
-      console.log('[Sigme SW Core]  Extracted data:', {
-        subscriber_id: notificationData.subscriber_id ? 'present' : 'missing',
-        campaign_id: notificationData.campaign_id ? 'present' : 'missing',
-        journey_id: notificationData.journey_id ? 'present' : 'missing',
-        notification_id: notificationData.notification_id ? 'present' : 'missing',
-      });
+      // console.log('[Sigme SW Core]  Extracted data:', {
+      //   subscriber_id: notificationData.subscriber_id ? 'present' : 'missing',
+      //   campaign_id: notificationData.campaign_id ? 'present' : 'missing',
+      //   journey_id: notificationData.journey_id ? 'present' : 'missing',
+      //   notification_id: notificationData.notification_id ? 'present' : 'missing',
+      // });
       
       notification = {
         title: data.title || notification.title,

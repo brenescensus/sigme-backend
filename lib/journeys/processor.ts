@@ -5,9 +5,32 @@ import type { Database } from '@/types/database';
 import { sendNotificationToSubscriber } from '@/lib/push/sender';
 import { getNotificationQueue } from '../queue/notification-queue';
 
+// const supabase = createClient<Database>(
+//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//   process.env.SUPABASE_SERVICE_ROLE_KEY!
+// );
+
 const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+    // 🔥 ADD THIS:
+    global: {
+      fetch: (...args) => fetch(...args).then(res => {
+        if (!res.ok && res.status >= 500) {
+          console.error('[Supabase] Server error:', res.status);
+        }
+        return res;
+      }),
+    },
+    db: {
+      schema: 'public',
+    },
+  }
 );
 
 // ============================================================================
@@ -888,8 +911,19 @@ export async function enrollSubscriber(
       throw new Error(`Journey is not active (status: ${journey.status})`);
     }
 
+     // 🔥 NEW: Log current active journeys for debugging
+    const { data: activeJourneys } = await supabase
+      .from('user_journey_states')
+      .select('journey_id, status')
+      .eq('subscriber_id', subscriberId)
+      .in('status', ['active', 'waiting']);
+
+    if (activeJourneys && activeJourneys.length > 0) {
+      console.log(`[Processor]   Subscriber has ${activeJourneys.length} other active journey(s)`);
+    }
+
     const entryTrigger = (journey.entry_trigger as any) || {};
-    console.log('[Processor] 📍 Entry trigger:', JSON.stringify(entryTrigger, null, 2));
+    console.log('[Processor]  Entry trigger:', JSON.stringify(entryTrigger, null, 2));
 
     if (entryTrigger.type && entryTrigger.type !== 'event' && entryTrigger.type !== 'manual') {
       console.log('[Processor] Checking advanced trigger criteria...');
@@ -1013,7 +1047,9 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
   );
 
   if (activeOrWaitingState) {
-    console.log('[Processor] ⚠ Already in journey (status:', activeOrWaitingState.status + ')');
+  console.log(`[Processor] ⚠️  Already in journey ${journey.name} (status: ${activeOrWaitingState.status})`);
+
+    console.log('[Processor]  Already in journey (status:', activeOrWaitingState.status + ')');
     return false;
   }
 
@@ -1498,7 +1534,35 @@ async function processSendNotification(
     }
 
     const branding = website.notification_branding as any || {};
+// const { data: notificationLog } = await supabase
+//   .from('notification_logs')
+//   .insert({
+//           website_id: subscriber.website_id,
+//             subscriber_id: subscriber.id,
+//             journey_id: state.journey_id,
+//             journey_step_id: node.id,
+//             user_journey_state_id: state.id,
+//             platform: 'web',
+//             sent_at: new Date().toISOString(),
+            
+//   })
+//   .select()
+//   .single();
 
+ const { data: notificationLog } = await supabase
+          .from('notification_logs')
+          .insert({
+          website_id: subscriber.website_id,
+    subscriber_id: subscriber.id,
+    journey_id: state.journey_id,
+    journey_step_id: node.id,
+    // user_journey_state_id: stateId,
+    status: 'sent',
+    platform: 'web',
+    sent_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
     // 🔥 FIX 3: Prepare notification payload
     const notificationPayload = {
       title: node.data.title || 'Notification',
@@ -1509,19 +1573,28 @@ async function processSendNotification(
       url: node.data.url || node.data.click_url || '/',
       tag: `notif-${state.id}-${Date.now()}`,
       requireInteraction: false,
+      campaign_id: null,
+        subscriber_id: subscriber.id,
+  notification_id: notificationLog?.id || null,        
+  journey_id: state.journey_id,
       branding: {
         primary_color: branding?.primary_color || '#667eea',
         secondary_color: branding?.secondary_color || '#764ba2',
         logo_url: branding?.logo_url,
         font_family: branding?.font_family || 'Inter',
         button_style: branding?.button_style || 'rounded',
-        notification_position: branding?.notification_position || 'top-right',
+        notification_position: branding?.notification_position || 'top -right',
         animation_style: branding?.animation_style || 'slide',
         show_logo: branding?.show_logo ?? true,
         show_branding: branding?.show_branding ?? true,
       },
     };
-
+console.log('[Processor] 📦 Notification payload:', {
+  title: notificationPayload.title,
+  subscriber_id: notificationPayload.subscriber_id,
+  journey_id: notificationPayload.journey_id,
+  has_branding: !!notificationPayload.branding,
+});
     console.log('[Processor] Sending notification...');
 
     // 🔥 FIX 4: Send notification FIRST, then log (saves 700ms)
@@ -1530,22 +1603,22 @@ async function processSendNotification(
     // Fire-and-forget logging (don't block on database writes)
     (async () => {
       try {
-        const { data: notificationLog } = await supabase
-          .from('notification_logs')
-          .insert({
-            website_id: subscriber.website_id,
-            subscriber_id: subscriber.id,
-            journey_id: state.journey_id,
-            journey_step_id: node.id,
-            user_journey_state_id: state.id,
-            status: result.success ? 'delivered' : 'failed',
-            platform: 'web',
-            sent_at: new Date().toISOString(),
-            delivered_at: result.success ? new Date().toISOString() : null,
-            error_message: result.success ? null : result.error,
-          })
-          .select()
-          .single();
+        // const { data: notificationLog } = await supabase
+        //   .from('notification_logs')
+        //   .insert({
+        //     website_id: subscriber.website_id,
+        //     subscriber_id: subscriber.id,
+        //     journey_id: state.journey_id,
+        //     journey_step_id: node.id,
+        //     user_journey_state_id: state.id,
+        //     status: result.success ? 'delivered' : 'failed',
+        //     platform: 'web',
+        //     sent_at: new Date().toISOString(),
+        //     delivered_at: result.success ? new Date().toISOString() : null,
+        //     error_message: result.success ? null : result.error,
+        //   })
+        //   .select()
+        //   .single();
 
         await logJourneyEvent(
           state.journey_id,
@@ -1670,7 +1743,7 @@ async function processWaitNode(
   node: JourneyNode,
   flowDefinition: FlowDefinition
 ): Promise<void> {
-  console.log('[Processor] 📍 Processing wait node');
+  console.log('[Processor]Processing wait node');
 
   const { data: existingSchedule } = await supabase
     .from('scheduled_journey_steps')
@@ -1689,13 +1762,24 @@ async function processWaitNode(
   const waitMode = node.data.mode || 'duration';
 
   if (waitMode === 'duration') {
-    let durationSeconds = node.data.duration || 86400;
-    if (node.data.duration_seconds !== undefined) {
-      durationSeconds = node.data.duration_seconds;
-    }
+    // let durationSeconds = node.data.duration || 86400;
+
+let durationSeconds = node.data.duration_seconds || node.data.duration || 86400;
+    
+    // ✅ ADD DEBUG LOGGING
+    console.log('[Processor] 📊 Wait node data:', {
+      duration: node.data.duration,
+      duration_seconds: node.data.duration_seconds,
+      unit: node.data.unit,
+      final_duration: durationSeconds
+    });
+
+    // if (node.data.duration_seconds !== undefined) {
+    //   durationSeconds = node.data.duration_seconds;
+    // }
     const executeAt = new Date(Date.now() + durationSeconds * 1000);
 
-    console.log(`[Processor] ⏰ Scheduling wait: ${durationSeconds}s until ${executeAt.toISOString()}`);
+    console.log(`[Processor] Scheduling wait: ${durationSeconds}s until ${executeAt.toISOString()}`);
 
     const { error: updateError } = await supabase
       .from('user_journey_states')
@@ -1711,7 +1795,7 @@ async function processWaitNode(
       throw updateError;
     }
 
-    console.log('[Processor] ✅ State updated to waiting');
+    console.log('[Processor]  State updated to waiting');
 
     const { data: scheduledStep, error: scheduleError } = await supabase
       .from('scheduled_journey_steps')
@@ -1736,7 +1820,7 @@ async function processWaitNode(
       throw scheduleError;
     }
 
-    console.log('[Processor] ✅ Scheduled step created:', scheduledStep.id);
+    console.log('[Processor] Scheduled step created:', scheduledStep.id);
 
     try {
       const queue = getNotificationQueue();
@@ -1756,7 +1840,7 @@ async function processWaitNode(
         }
       );
 
-      console.log(`[Processor] ✅ Job queued: wait-${scheduledStep.id}`);
+      console.log(`[Processor]  Job queued: wait-${scheduledStep.id}`);
     } catch (queueError: any) {
       console.error('[Processor] ✗ Queue error:', queueError.message);
       await supabase
@@ -1782,19 +1866,45 @@ async function processWaitNode(
       node.id
     );
 
-    // 🔥 CRITICAL: STOP HERE
-    console.log('[Processor] ⏸️  Journey paused - waiting for timer');
+    //  CRITICAL: STOP HERE
+    console.log('[Processor] ⏸  Journey paused - waiting for timer');
     return;
 
   }
   else if (waitMode === 'until_event') {
-    // 🔥 FIX: Better event name extraction
+    //  FIX: Better event name extraction
+    // const eventName = 
+    //   node.data.event?.name ||
+    //   node.data.event?.event_name ||
+    //   node.data.event_name ||
+    //   node.data.waiting_for_event;
+
+
+      console.log('[Processor] 🔍 DEBUG: Inspecting node.data for event name');
+  console.log('[Processor] 🔍 node.data.event_name:', node.data.event_name);
+  console.log('[Processor] 🔍 node.data.waiting_for_event:', node.data.waiting_for_event);
+  console.log('[Processor] 🔍 node.data.event:', JSON.stringify(node.data.event));
+  console.log('[Processor] 🔍 Full node.data keys:', Object.keys(node.data));
+  
     const eventName = 
-      node.data.event?.name ||
-      node.data.event?.event_name ||
-      node.data.event_name ||
-      node.data.waiting_for_event;
-    
+    node.data.event_name ||                    // Direct property
+    node.data.waiting_for_event ||             // Alternative location
+    node.data.event?.event_name ||             // Nested in event object
+    node.data.event?.name ||                   // Event.name
+    node.data.waitConfig?.event_name ||        // Wait config
+    node.data.config?.event_name ||            // Generic config
+    (typeof node.data.event === 'string' ? node.data.event : null);  // String directly
+  
+  // 🔥 CRITICAL: Log the full node data if event name is missing
+  if (!eventName) {
+    console.error('[Processor] ✗ Event name missing!');
+    console.error('[Processor] 📋 Full node.data:', JSON.stringify(node.data, null, 2));
+    console.error('[Processor] 📋 Available keys:', Object.keys(node.data));
+    throw new Error('Event name is required for wait-until-event mode');
+  }
+
+  console.log(`[Processor] ⏰ Waiting for event: "${eventName}"`);
+  
     const timeoutSeconds = 
       node.data.timeout_seconds || 
       node.data.event?.timeout_seconds || 
@@ -1805,6 +1915,7 @@ async function processWaitNode(
     const eventConfig = 
       node.data.event_config || 
       node.data.event?.config || 
+       node.data.config ||
       {};
 
     if (!eventName) {
