@@ -16,6 +16,7 @@ export const PUT = withSuperAdmin(
         name,
         description,
         price,
+        yearly_price,
         recurring_limit,
         websites_limit,
         subscribers_limit,
@@ -34,6 +35,8 @@ export const PUT = withSuperAdmin(
       if (name !== undefined) updateData.name = name;
       if (description !== undefined) updateData.description = description;
       if (price !== undefined) updateData.price = price;
+      if (yearly_price !== undefined) updateData.yearly_price = yearly_price;
+
       if (recurring_limit !== undefined) updateData.recurring_limit = recurring_limit;
       if (websites_limit !== undefined) updateData.websites_limit = websites_limit;
       if (subscribers_limit !== undefined) updateData.subscribers_limit = subscribers_limit;
