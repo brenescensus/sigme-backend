@@ -1681,20 +1681,21 @@ async function processSendNotification(
       click_url: notificationUrl, // ✅ CRITICAL: Backup URL field
       tag: notificationLog?.id || `notif-${state.id}-${Date.now()}`,
       requireInteraction: false,
+      // ✅ TOP-LEVEL fields for service worker
+      subscriber_id: subscriber.id,
+      notification_id: notificationLog?.id ?? undefined,
+      journey_id: state.journey_id,
+      campaign_id: null,
       // ✅ CRITICAL: Include ALL tracking data
       data: {
         url: notificationUrl,
         click_url: notificationUrl,
         subscriber_id: subscriber.id,
-        notification_id: notificationLog?.id || null,
+        notification_id: notificationLog?.id ?? undefined,
         journey_id: state.journey_id,
         campaign_id: null,
       },
-      // ✅ TOP-LEVEL fields for service worker
-      subscriber_id: subscriber.id,
-      notification_id: notificationLog?.id || null,
-      journey_id: state.journey_id,
-      campaign_id: null,
+      
       branding: {
         primary_color: branding?.primary_color || '#667eea',
         secondary_color: branding?.secondary_color || '#764ba2',

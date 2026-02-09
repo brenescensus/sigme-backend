@@ -31,6 +31,7 @@ export interface NotificationPayload {
   badge?: string;
   image?: string;
   url?: string;
+  click_url?: string;
   tag?: string;
   requireInteraction?: boolean;
   actions?: Array<{
@@ -40,6 +41,18 @@ export interface NotificationPayload {
   }>;
   //  Use the imported type
   branding?: NotificationBranding;
+  subscriber_id?: string | null;
+  notification_id?: string | null;
+  journey_id?: string | null;
+  campaign_id?: string | null;
+  data?: {
+    url?: string;
+    click_url?: string;
+    subscriber_id?: string | null;
+    notification_id?: string | null;
+    journey_id?: string | null;
+    campaign_id?: string | null;
+  };
 }
 
 /**
@@ -62,6 +75,7 @@ export async function sendWebPushNotification(
       badge: notification.badge || '/badge-72.png',
       image: notification.image,
       url: notification.url || '/',
+      click_url: notification.url || '/',
       tag: notification.tag || `notification-${Date.now()}`,
       requireInteraction: notification.requireInteraction || false,
       actions: notification.actions || [],
@@ -69,6 +83,20 @@ export async function sendWebPushNotification(
       branding: notification.branding || DEFAULT_BRANDING,
       //  Add timestamp for debugging
       timestamp: Date.now(),
+
+      // ✅ CRITICAL: Pass through ALL tracking data
+  subscriber_id: (notification as any).subscriber_id,
+  notification_id: (notification as any).notification_id,
+  journey_id: (notification as any).journey_id,
+  campaign_id: (notification as any).campaign_id,
+  data: {
+    url: notification.url || '/',
+    click_url: notification.url || '/',
+    subscriber_id: (notification as any).subscriber_id,
+    notification_id: (notification as any).notification_id,
+    journey_id: (notification as any).journey_id,
+    campaign_id: (notification as any).campaign_id,
+  },
     });
 
     console.log('[Web Push] Sending notification with branding:', {
