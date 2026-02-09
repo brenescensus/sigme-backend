@@ -54,7 +54,7 @@ class JourneyEntryHandler {
     const now = Date.now();
 
     if (lastEnrollment && (now - lastEnrollment) < this.ENROLLMENT_COOLDOWN_MS) {
-      console.log(`[JourneyEntry] ⏸️  Cooldown active for ${cacheKey} (${this.ENROLLMENT_COOLDOWN_MS}ms)`);
+      console.log(`[JourneyEntry] Cooldown active for ${cacheKey} (${this.ENROLLMENT_COOLDOWN_MS}ms)`);
       return false;
     }
 
@@ -123,7 +123,7 @@ class JourneyEntryHandler {
 
         // Check per-journey cooldown
         if (!this.canEnroll(event.subscriber_id, journey.id)) {
-          console.log(`[JourneyEntry] ⏸️  Skipping ${journey.name} - cooldown active`);
+          console.log(`[JourneyEntry] Skipping ${journey.name} - cooldown active`);
           continue; // Skip THIS journey, check OTHERS
         }
 

@@ -395,14 +395,7 @@ self.addEventListener('notificationclick', (event) => {
     const apiUrl = getApiUrl();
     const trackingUrl = `${apiUrl}/api/notifications/track-click`;
 
-    // Debug: Log config state
-    // console.log('[Sigme SW Core]  Config state:', {
-    //   hasConfig: !!websiteConfig,
-    //   configApiUrl: websiteConfig?.apiUrl,
-    //   resolvedApiUrl: apiUrl
-    // });
-
-    // FIX: Include notification_id for proper tracking
+       // FIX: Include notification_id for proper tracking
     const payload = {
       notification_id: event.notification.tag || notificationData.notification_id, // Use tag as fallback
       campaign_id: notificationData.campaign_id || null,
@@ -417,14 +410,7 @@ self.addEventListener('notificationclick', (event) => {
       journey_id: payload.journey_id || 'none',
     });
 
-    // console.log('[Sigme SW Core]  Sending click tracking:', {
-    //   endpoint: trackingUrl,
-    //   notification_id: payload.notification_id,
-    //   campaign_id: payload.campaign_id,
-    //   subscriber_id: payload.subscriber_id,
-    // });
-
-    // FIX: Use fetch with keepalive (sendBeacon not available in service workers)
+      // FIX: Use fetch with keepalive (sendBeacon not available in service workers)
     const trackingPromise = fetch(trackingUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -453,12 +439,13 @@ self.addEventListener('notificationclick', (event) => {
   }
 
   // Now navigate to the URL
+
   const openWindowPromise = self.clients.matchAll({
     type: 'window',
     includeUncontrolled: true
   })
     .then((clientList) => {
-      // console.log('[Sigme SW Core] Found', clientList.length, 'open windows');
+      console.log('[Sigme SW Core] 🔍 Found', clientList.length, 'open window(s)');
 
       const targetUrlObj = new URL(urlToOpen);
 
@@ -468,35 +455,81 @@ self.addEventListener('notificationclick', (event) => {
           const clientUrlObj = new URL(client.url);
 
           if (clientUrlObj.origin === targetUrlObj.origin) {
-            console.log('[Sigme SW Core] Navigating existing window');
+            console.log('[Sigme SW Core] ♻️ Found matching window, sending navigation message');
+            
+            // Focus the window and send navigation message
             return client.focus().then(() => {
-              if ('navigate' in client) {
-                return
-                client.navigate(urlToOpen)
-              }
-              else {
-                console.warn('[Sigme SW Core] ⚠️ Navigate not available, opening new window');
-                return self.clients.openWindow(urlToOpen);
-              }
-          });
+              client.postMessage({
+                type: 'SIGME_NAVIGATE',
+                url: urlToOpen
+              });
+              console.log('[Sigme SW Core] 📤 Navigation message sent to client');
+              return client;
+            });
           }
         } catch (e) {
-          console.warn('[Sigme SW Core]  Error parsing client URL:', e);
+          console.warn('[Sigme SW Core] ⚠️ Error checking client:', e);
         }
       }
 
-      // Open new window
-      // console.log('[Sigme SW Core] Opening new window');
+      // No existing window found - open new one
+      console.log('[Sigme SW Core] 🆕 Opening new window');
       if (self.clients.openWindow) {
         return self.clients.openWindow(urlToOpen);
+      } else {
+        console.error('[Sigme SW Core] ❌ openWindow not available');
       }
     })
     .catch((error) => {
-      console.error('[Sigme SW Core]  Error opening window:', error);
+      console.error('[Sigme SW Core] ❌ Navigation error:', error);
     });
 
   event.waitUntil(openWindowPromise);
 });
+//   const openWindowPromise = self.clients.matchAll({
+//     type: 'window',
+//     includeUncontrolled: true
+//   })
+//     .then((clientList) => {
+//       // console.log('[Sigme SW Core] Found', clientList.length, 'open windows');
+
+//       const targetUrlObj = new URL(urlToOpen);
+
+//       // Try to find an existing window from the same origin
+//       for (const client of clientList) {
+//         try {
+//           const clientUrlObj = new URL(client.url);
+
+//           if (clientUrlObj.origin === targetUrlObj.origin) {
+//             console.log('[Sigme SW Core] Navigating existing window');
+//             return client.focus().then(() => {
+//               if ('navigate' in client) {
+//                 return
+//                 client.navigate(urlToOpen)
+//               }
+//               else {
+//                 console.warn('[Sigme SW Core] ⚠️ Navigate not available, opening new window');
+//                 return self.clients.openWindow(urlToOpen);
+//               }
+//           });
+//           }
+//         } catch (e) {
+//           console.warn('[Sigme SW Core]  Error parsing client URL:', e);
+//         }
+//       }
+
+//       // Open new window
+//       // console.log('[Sigme SW Core] Opening new window');
+//       if (self.clients.openWindow) {
+//         return self.clients.openWindow(urlToOpen);
+//       }
+//     })
+//     .catch((error) => {
+//       console.error('[Sigme SW Core]  Error opening window:', error);
+//     });
+
+//   event.waitUntil(openWindowPromise);
+// });
 
 // ============================================
 // UTILITY FUNCTIONS

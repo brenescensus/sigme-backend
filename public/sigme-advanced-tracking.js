@@ -794,4 +794,24 @@ window.addEventListener('unload', () => {
 
   console.log('[Sigme]  Advanced tracking  loaded......');
 
+// ============================================
+// HANDLE SERVICE WORKER NAVIGATION MESSAGES
+// ============================================
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    console.log('[Sigme]  Message from service worker:', event.data);
+    
+    if (event.data.type === 'SIGME_NAVIGATE') {
+      const url = event.data.url;
+      console.log('[Sigme]  Navigating to:', url);
+      
+      // Use window.location.href for full navigation
+      window.location.href = url;
+    }
+  });
+  
+  console.log('[Sigme] Listening for service worker messages');
+}
+
 })();

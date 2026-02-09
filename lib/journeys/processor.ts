@@ -2126,7 +2126,7 @@ async function processWaitNode(
     );
 
     // 🔥 CRITICAL: STOP HERE
-    console.log('[Processor] ⏸️  Journey paused - waiting for event or timeout');
+    console.log('[Processor] Journey paused - waiting for event or timeout');
     return;
   }
 }
