@@ -1,10 +1,414 @@
+// // 
+// // app/api/settings/subscription/upgrade/route.ts
+// import { NextRequest, NextResponse } from 'next/server';
+// import { withAuth } from '@/lib/auth-middleware';
+// import { createClient } from '@supabase/supabase-js';
+// import type { Database } from '@/types/database';
+// import { paystackConfig } from '@/lib/paystack/paystack-config';
+// import { convertCurrency, getExchangeRate } from '@/lib/currency/currency-service';
+
+// const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY!;
+
+// // Supported Paystack currencies
+// const SUPPORTED_CURRENCIES = ['NGN', 'GHS', 'ZAR', 'KES'] as const;
+// type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
+
+// //  Create service role client (bypasses RLS)
+// const getServiceRoleClient = () => {
+//   return createClient<Database>(
+//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//     process.env.SUPABASE_SERVICE_ROLE_KEY!,
+//     {
+//       auth: {
+//         autoRefreshToken: false,
+//         persistSession: false
+//       }
+//     }
+//   );
+// };
+
+// export const POST = withAuth(async (req, user) => {
+//   try {
+// const { plan_id, coupon_code, currency = 'ZAR' } = await req.json();
+//     if (!plan_id) {
+//       return NextResponse.json(
+//         { error: 'Plan ID is required' },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Validate currency
+//     if (!SUPPORTED_CURRENCIES.includes(currency as SupportedCurrency)) {
+//       return NextResponse.json(
+//         { 
+//           error: `Currency ${currency} not supported. Supported currencies: ${SUPPORTED_CURRENCIES.join(', ')}` 
+//         },
+//         { status: 400 }
+//       );
+//     }
+
+//     //  Use service role client
+//     const supabase = getServiceRoleClient();
+
+//     // Get the plan details
+//     const { data: plan, error: planError } = await supabase
+//       .from('pricing_plans')
+//       .select('*')
+//       .eq('plan_id', plan_id)
+//       .eq('is_active', true)
+//       .single();
+
+//     if (planError || !plan) {
+//       console.error('❌ Plan lookup error:', planError);
+//       return NextResponse.json(
+//         { error: 'Invalid plan selected' },
+//         { status: 400 }
+//       );
+//     }
+
+//     console.log('✅ Plan found:', {
+//       plan_id: plan.plan_id,
+//       name: plan.name,
+//       price: plan.price
+//     });
+
+//     // Validate required plan fields and price
+//     if (plan.websites_limit === null || plan.notifications_limit === null || plan.price === null) {
+//       return NextResponse.json(
+//         { error: 'Invalid plan configuration. Please contact support.' },
+//         { status: 400 }
+//       );
+//     }
+
+//     // If plan is free or doesn't require payment
+//     if (plan.price === 0) {
+//       const subscriptionData = {
+//         user_id: user.id,
+//         plan_tier: plan.plan_id,
+//         plan_name: plan.name,
+//         plan_price: 0,
+//         websites_limit: plan.websites_limit,
+//         notifications_limit: plan.notifications_limit,
+//         recurring_limit: plan.recurring_limit ?? undefined,
+//         status: 'active' as const,
+//         subscription_starts_at: new Date().toISOString(),
+//       };
+
+//       const { data: existingSub } = await supabase
+//         .from('user_subscriptions')
+//         .select('*')
+//         .eq('user_id', user.id)
+//         .single();
+
+//       if (existingSub) {
+//         await supabase
+//           .from('user_subscriptions')
+//           .update(subscriptionData)
+//           .eq('user_id', user.id);
+//       } else {
+//         await supabase
+//           .from('user_subscriptions')
+//           .insert(subscriptionData);
+//       }
+
+//       return NextResponse.json({
+//         success: true,
+//         message: `Successfully upgraded to ${plan.name} plan`,
+//         subscription: subscriptionData,
+//       });
+//     }
+
+//     // For paid plans, handle coupon validation
+//     let couponData = null;
+//     let discountAmount = 0;
+//     let finalPriceUSD = plan.price;
+
+//     if (coupon_code) {
+//       console.log('🎫 Validating coupon:', coupon_code);
+
+//       const normalizedCouponCode = String(coupon_code).trim().toUpperCase();
+
+//       const { data: coupon, error: couponError } = await supabase
+//         .from('coupons')
+//         .select('*')
+//         .eq('code', normalizedCouponCode)
+//         .single();
+
+//       if (couponError || !coupon) {
+//         console.error('❌ Coupon not found:', normalizedCouponCode);
+//         return NextResponse.json(
+//           { error: 'Invalid coupon code' },
+//           { status: 400 }
+//         );
+//       }
+
+//       // Validate coupon
+//       const now = new Date();
+
+//       if (!coupon.is_active) {
+//         return NextResponse.json(
+//           { error: 'This coupon is no longer active' },
+//           { status: 400 }
+//         );
+//       }
+
+//       if (coupon.valid_from && new Date(coupon.valid_from) > now) {
+//         return NextResponse.json(
+//           { error: 'This coupon is not yet valid' },
+//           { status: 400 }
+//         );
+//       }
+
+//       if (coupon.valid_until && new Date(coupon.valid_until) < now) {
+//         return NextResponse.json(
+//           { error: 'This coupon has expired' },
+//           { status: 400 }
+//         );
+//       }
+
+//       const timesRedeemed = coupon.times_redeemed ?? 0;
+//       if (coupon.max_redemptions && timesRedeemed >= coupon.max_redemptions) {
+//         return NextResponse.json(
+//           { error: 'This coupon has reached its maximum redemptions' },
+//           { status: 400 }
+//         );
+//       }
+
+//       // Check if user already redeemed
+//       const { data: existingRedemption } = await supabase
+//         .from('coupon_redemptions')
+//         .select('id')
+//         .eq('coupon_id', coupon.id)
+//         .eq('user_id', user.id)
+//         .single();
+
+//       if (existingRedemption) {
+//         return NextResponse.json(
+//           { error: 'You have already used this coupon' },
+//           { status: 400 }
+//         );
+//       }
+
+//       // Check minimum purchase amount
+//       if (coupon.min_purchase_amount && plan.price < coupon.min_purchase_amount) {
+//         return NextResponse.json(
+//           { error: `Minimum purchase amount of $${coupon.min_purchase_amount} required` },
+//           { status: 400 }
+//         );
+//       }
+
+//       // Check applicable plans
+//       if (coupon.applicable_plans && coupon.applicable_plans.length > 0) {
+//         if (!coupon.applicable_plans.includes(plan_id)) {
+//           return NextResponse.json(
+//             { error: 'Coupon not applicable to this plan' },
+//             { status: 400 }
+//           );
+//         }
+//       }
+
+//       // Calculate discount
+//       if (coupon.type === 'percentage') {
+//         discountAmount = (plan.price * coupon.value) / 100;
+//       } else if (coupon.type === 'fixed') {
+//         discountAmount = Math.min(coupon.value, plan.price);
+//       }
+
+//       finalPriceUSD = Math.max(0, plan.price - discountAmount);
+//       couponData = coupon;
+
+//       console.log('✅ Coupon validated:', {
+//         code: coupon.code,
+//         discount: discountAmount,
+//         final_price_usd: finalPriceUSD,
+//       });
+//     }
+
+//     // Get real-time exchange rate and convert
+//     const exchangeRate = await getExchangeRate(currency);
+//     const paymentAmount = await convertCurrency(finalPriceUSD, currency);
+
+//     console.log('💰 Payment calculation:', {
+//       plan_price_usd: plan.price,
+//       discount_usd: discountAmount,
+//       final_price_usd: finalPriceUSD,
+//       currency: currency,
+//       exchange_rate: exchangeRate,
+//       amount_in_currency: paymentAmount,
+//       rate_updated: new Date().toISOString()
+//     });
+
+//     // Convert to kobo/cents for Paystack (multiply by 100)
+//     const paystackAmount = paymentAmount * 100;
+
+//     // Get user profile
+//     const { data: profile } = await supabase
+//       .from('user_profiles')
+//       .select('first_name, last_name')
+//       .eq('id', user.id)
+//       .single();
+
+//     // Generate unique reference
+//     const reference = `sigma_${user.id.substring(0, 8)}_${Date.now()}`;
+
+//     console.log('🔄 Initializing Paystack payment:', {
+//       reference,
+//       amount: paystackAmount,
+//       currency,
+//       email: user.email,
+//       test_mode: paystackConfig.isTestMode
+//     });
+
+//     // Initialize Paystack payment
+//     const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+//       method: 'POST',
+//       headers: {
+//         'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify({
+//         email: user.email,
+//         amount: paystackAmount,
+//         currency: currency,
+//         reference: reference,
+//         callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?payment=success&reference=${reference}`,
+//         metadata: {
+//           user_id: user.id,
+//           plan_id: plan_id,
+//           plan_name: plan.name,
+//           coupon_code: coupon_code || null,
+//           discount_amount_usd: discountAmount,
+//           original_price_usd: plan.price,
+//           final_price_usd: finalPriceUSD,
+//           payment_currency: currency,
+//           payment_amount: paymentAmount,
+//           exchange_rate: exchangeRate,
+//           custom_fields: [
+//             {
+//               display_name: "Plan",
+//               variable_name: "plan",
+//               value: plan.name
+//             },
+//             {
+//               display_name: "User",
+//               variable_name: "user",
+//               value: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || user.email
+//             }
+//           ]
+//         },
+//         channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
+//       }),
+//     });
+
+//     if (!paystackResponse.ok) {
+//       const error = await paystackResponse.json();
+//       console.error('❌ Paystack error:', error);
+//       throw new Error(error.message || 'Failed to initialize payment');
+//     }
+
+//     const paymentData = await paystackResponse.json();
+
+//     console.log('✅ Paystack response received');
+
+//     // Create payment intent record
+//     const { data: paymentIntent, error: intentError } = await supabase
+//       .from('payment_intents')
+//       .insert({
+//         user_id: user.id,
+//         plan_id: plan_id,
+//         amount: finalPriceUSD, // Store USD amount
+//         currency: currency,
+//         discount_amount: discountAmount || null,
+//         coupon_code: coupon_code || null,
+//         payment_provider: 'paystack',
+//         provider_reference: reference,
+//         provider_access_code: paymentData.data.access_code,
+//         status: 'pending',
+//         metadata: {
+//           authorization_url: paymentData.data.authorization_url,
+//           plan_name: plan.name,
+//           original_amount_usd: plan.price,
+//           final_amount_usd: finalPriceUSD,
+//           payment_currency: currency,
+//           payment_amount: paymentAmount,
+//           exchange_rate: exchangeRate,
+//           coupon_applied: !!coupon_code,
+//         },
+//       })
+//       .select()
+//       .single();
+
+//     if (intentError) {
+//       console.error('❌ Failed to create payment intent:', intentError);
+//       throw new Error('Failed to create payment record');
+//     }
+
+//     console.log('✅ Payment initialized successfully:', {
+//       user: user.email,
+//       plan: plan.name,
+//       amount_usd: finalPriceUSD,
+//       amount_local: paymentAmount,
+//       currency: currency,
+//       exchange_rate: exchangeRate,
+//       reference: reference,
+//       test_mode: paystackConfig.isTestMode
+//     });
+
+//     return NextResponse.json({
+//       success: true,
+//       payment: {
+//         reference: reference,
+//         access_code: paymentData.data.access_code,
+//         authorization_url: paymentData.data.authorization_url,
+//       },
+//       payment_intent_id: paymentIntent.id,
+//       plan: {
+//         id: plan.id,
+//         plan_id: plan.plan_id,
+//         name: plan.name,
+//         price_usd: plan.price,
+//         final_price_usd: finalPriceUSD,
+//         final_price_local: paymentAmount,
+//       },
+//       amount_usd: finalPriceUSD,
+//       amount_local: paymentAmount,
+//       currency: currency,
+//       exchange_rate: exchangeRate,
+//       discount: discountAmount,
+//       test_mode: paystackConfig.isTestMode,
+//     });
+
+//   } catch (error: any) {
+//     console.error('❌ Error upgrading plan:', error);
+//     return NextResponse.json(
+//       { error: error.message || 'Failed to upgrade plan' },
+//       { status: 500 }
+//     );
+//   }
+// });
+
+
+
+
+
+
+
+
+
+
 // app/api/settings/subscription/upgrade/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth-middleware';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
+import { paystackConfig } from '@/lib/paystack/paystack-config';
+import { convertCurrency, getExchangeRate } from '@/lib/currency/currency-service';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY!;
+
+// Supported Paystack currencies
+const SUPPORTED_CURRENCIES = ['NGN', 'GHS', 'ZAR', 'KES'] as const;
+type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
 
 //  Create service role client (bypasses RLS)
 const getServiceRoleClient = () => {
@@ -22,19 +426,35 @@ const getServiceRoleClient = () => {
 
 export const POST = withAuth(async (req, user) => {
   try {
-    const { plan_id, coupon_code, currency = 'USD', amount } = await req.json();
-
-    // console.log(' Upgrade request:', {
-    //   plan_id,
-    //   coupon_code,
-    //   currency,
-    //   amount,
-    //   user: user.email
-    // });
+    const { 
+      plan_id, 
+      coupon_code, 
+      currency = 'ZAR',
+      billing_cycle = 'monthly',
+      billing_duration = 1
+    } = await req.json();
 
     if (!plan_id) {
       return NextResponse.json(
         { error: 'Plan ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate currency
+    if (!SUPPORTED_CURRENCIES.includes(currency as SupportedCurrency)) {
+      return NextResponse.json(
+        { 
+          error: `Currency ${currency} not supported. Supported currencies: ${SUPPORTED_CURRENCIES.join(', ')}` 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate billing duration
+    if (billing_duration < 1 || billing_duration > 12) {
+      return NextResponse.json(
+        { error: 'Billing duration must be between 1 and 12' },
         { status: 400 }
       );
     }
@@ -51,20 +471,23 @@ export const POST = withAuth(async (req, user) => {
       .single();
 
     if (planError || !plan) {
-      console.error(' Plan lookup error:', planError);
+      console.error('❌ Plan lookup error:', planError);
       return NextResponse.json(
         { error: 'Invalid plan selected' },
         { status: 400 }
       );
     }
 
-    console.log(' Plan found:', {
+    console.log('✅ Plan found:', {
       plan_id: plan.plan_id,
       name: plan.name,
-      price: plan.price
+      price: plan.price,
+      billing_cycle,
+      billing_duration
     });
-    // Validate required plan fields
-    if (plan.websites_limit === null || plan.notifications_limit === null) {
+
+    // Validate required plan fields and price
+    if (plan.websites_limit === null || plan.notifications_limit === null || plan.price === null) {
       return NextResponse.json(
         { error: 'Invalid plan configuration. Please contact support.' },
         { status: 400 }
@@ -72,7 +495,7 @@ export const POST = withAuth(async (req, user) => {
     }
 
     // If plan is free or doesn't require payment
-    if (!plan.price || plan.price === 0) {
+    if (plan.price === 0) {
       const subscriptionData = {
         user_id: user.id,
         plan_tier: plan.plan_id,
@@ -109,54 +532,30 @@ export const POST = withAuth(async (req, user) => {
       });
     }
 
-    // For paid plans, handle coupon validation and payment initialization
-    let couponData = null;
+    // Calculate total price based on billing cycle and duration
+    const basePrice = billing_cycle === 'yearly'
+      ? (plan.yearly_price || plan.price * 12)
+      : plan.price;
+    
+    const totalPriceUSD = basePrice * billing_duration;
+    let finalPriceUSD = totalPriceUSD;
     let discountAmount = 0;
-    let finalPrice = plan.price;
+    let couponData = null;
 
-    // Validate coupon if provided
-
-        if (coupon_code) {
-      console.log(' Validating coupon:', {
-        code: coupon_code,
-        uppercase: coupon_code.toUpperCase(),
-        plan_price: plan.price
-      });
+    // Handle coupon validation with total price
+    if (coupon_code) {
+      console.log('🎫 Validating coupon:', coupon_code);
 
       const normalizedCouponCode = String(coupon_code).trim().toUpperCase();
 
-  
-
-        const { data: coupon, error: couponError } = await supabase
+      const { data: coupon, error: couponError } = await supabase
         .from('coupons')
-        .select(`
-          id,
-          code,
-          type,
-          value,
-          is_active,
-          valid_from,
-          valid_until,
-          max_redemptions,
-          times_redeemed,
-          min_purchase_amount,
-          applicable_plans,
-          description
-        `)
+        .select('*')
         .eq('code', normalizedCouponCode)
         .single();
 
-      console.log(' Coupon lookup result:', {
-        found: !!coupon,
-        error: couponError?.message,
-        code_searched: normalizedCouponCode
-      });
-
       if (couponError || !coupon) {
-        console.error(' Coupon not found:', {
-          code: normalizedCouponCode,
-          error: couponError
-        });
+        console.error('❌ Coupon not found:', normalizedCouponCode);
         return NextResponse.json(
           { error: 'Invalid coupon code' },
           { status: 400 }
@@ -167,7 +566,6 @@ export const POST = withAuth(async (req, user) => {
       const now = new Date();
 
       if (!coupon.is_active) {
-        console.error(' Coupon inactive:', coupon.code);
         return NextResponse.json(
           { error: 'This coupon is no longer active' },
           { status: 400 }
@@ -175,10 +573,6 @@ export const POST = withAuth(async (req, user) => {
       }
 
       if (coupon.valid_from && new Date(coupon.valid_from) > now) {
-        console.error(' Coupon not yet valid:', {
-          code: coupon.code,
-          valid_from: coupon.valid_from
-        });
         return NextResponse.json(
           { error: 'This coupon is not yet valid' },
           { status: 400 }
@@ -186,22 +580,14 @@ export const POST = withAuth(async (req, user) => {
       }
 
       if (coupon.valid_until && new Date(coupon.valid_until) < now) {
-        console.error(' Coupon expired:', {
-          code: coupon.code,
-          valid_until: coupon.valid_until
-        });
         return NextResponse.json(
           { error: 'This coupon has expired' },
           { status: 400 }
         );
       }
 
-      if (coupon.max_redemptions && (coupon.times_redeemed || 0) >= coupon.max_redemptions) {
-        console.error(' Coupon max redemptions reached:', {
-          code: coupon.code,
-          times_redeemed: coupon.times_redeemed,
-          max_redemptions: coupon.max_redemptions
-        });
+      const timesRedeemed = coupon.times_redeemed ?? 0;
+      if (coupon.max_redemptions && timesRedeemed >= coupon.max_redemptions) {
         return NextResponse.json(
           { error: 'This coupon has reached its maximum redemptions' },
           { status: 400 }
@@ -217,22 +603,14 @@ export const POST = withAuth(async (req, user) => {
         .single();
 
       if (existingRedemption) {
-        console.error(' User already redeemed coupon:', {
-          user: user.email,
-          code: coupon.code
-        });
         return NextResponse.json(
           { error: 'You have already used this coupon' },
           { status: 400 }
         );
       }
 
-      // Check minimum purchase amount
-      if (coupon.min_purchase_amount && plan.price < coupon.min_purchase_amount) {
-        console.error(' Minimum purchase amount not met:', {
-          plan_price: plan.price,
-          min_required: coupon.min_purchase_amount
-        });
+      // Check minimum purchase amount (compare with total price)
+      if (coupon.min_purchase_amount && totalPriceUSD < coupon.min_purchase_amount) {
         return NextResponse.json(
           { error: `Minimum purchase amount of $${coupon.min_purchase_amount} required` },
           { status: 400 }
@@ -242,11 +620,6 @@ export const POST = withAuth(async (req, user) => {
       // Check applicable plans
       if (coupon.applicable_plans && coupon.applicable_plans.length > 0) {
         if (!coupon.applicable_plans.includes(plan_id)) {
-          console.error(' Coupon not applicable to plan:', {
-            code: coupon.code,
-            plan_id: plan_id,
-            applicable_plans: coupon.applicable_plans
-          });
           return NextResponse.json(
             { error: 'Coupon not applicable to this plan' },
             { status: 400 }
@@ -254,39 +627,42 @@ export const POST = withAuth(async (req, user) => {
         }
       }
 
-      // Calculate discount
+      // Calculate discount on total price
       if (coupon.type === 'percentage') {
-        discountAmount = (plan.price * coupon.value) / 100;
+        discountAmount = (totalPriceUSD * coupon.value) / 100;
       } else if (coupon.type === 'fixed') {
-        discountAmount = Math.min(coupon.value, plan.price);
+        discountAmount = Math.min(coupon.value, totalPriceUSD);
       }
 
-      finalPrice = Math.max(0, plan.price - discountAmount);
+      finalPriceUSD = Math.max(0, totalPriceUSD - discountAmount);
       couponData = coupon;
 
-      console.log(' Coupon validated successfully:', {
+      console.log('✅ Coupon validated:', {
         code: coupon.code,
-        type: coupon.type,
-        value: coupon.value,
+        total_price: totalPriceUSD,
         discount: discountAmount,
-        original_price: plan.price,
-        final_price: finalPrice,
+        final_price_usd: finalPriceUSD,
       });
     }
 
-    // Use provided amount or calculated final price
-    const paymentAmount = amount || finalPrice;
+    // Get real-time exchange rate and convert
+    const exchangeRate = await getExchangeRate(currency);
+    const paymentAmount = await convertCurrency(finalPriceUSD, currency);
 
-    console.log('Payment calculation:', {
-      plan_price: plan.price,
-      discount: discountAmount,
-      final_price: finalPrice,
-      amount_to_charge: paymentAmount,
-      currency: currency
+    console.log('💰 Payment calculation:', {
+      base_price_usd: basePrice,
+      billing_duration: billing_duration,
+      total_price_usd: totalPriceUSD,
+      discount_usd: discountAmount,
+      final_price_usd: finalPriceUSD,
+      currency: currency,
+      exchange_rate: exchangeRate,
+      amount_in_currency: paymentAmount,
+      rate_updated: new Date().toISOString()
     });
 
-    // Convert to kobo/cents for Paystack
-    const paystackAmount = Math.round(paymentAmount * 100);
+    // Convert to kobo/cents for Paystack (multiply by 100)
+    const paystackAmount = paymentAmount * 100;
 
     // Get user profile
     const { data: profile } = await supabase
@@ -296,13 +672,20 @@ export const POST = withAuth(async (req, user) => {
       .single();
 
     // Generate unique reference
-    const reference = `sigma_${user.id}_${Date.now()}`;
+    const reference = `sigma_${user.id.substring(0, 8)}_${Date.now()}`;
 
-    console.log(' Initializing Paystack payment:', {
+    // Duration label for display
+    const durationLabel = billing_cycle === 'yearly'
+      ? `${billing_duration} year${billing_duration > 1 ? 's' : ''}`
+      : `${billing_duration} month${billing_duration > 1 ? 's' : ''}`;
+
+    console.log('🔄 Initializing Paystack payment:', {
       reference,
       amount: paystackAmount,
       currency,
-      email: user.email
+      email: user.email,
+      duration: durationLabel,
+      test_mode: paystackConfig.isTestMode
     });
 
     // Initialize Paystack payment
@@ -317,20 +700,32 @@ export const POST = withAuth(async (req, user) => {
         amount: paystackAmount,
         currency: currency,
         reference: reference,
-        callback_url: `${process.env.FRONTEND_URL}/dashboard/settings?payment=success&reference=${reference}`,
+        callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?payment=success&reference=${reference}`,
         metadata: {
           user_id: user.id,
           plan_id: plan_id,
           plan_name: plan.name,
+          billing_cycle: billing_cycle,
+          billing_duration: billing_duration,
+          duration_label: durationLabel,
           coupon_code: coupon_code || null,
-          discount_amount: discountAmount,
-          original_price: plan.price,
-          final_price: finalPrice,
+          discount_amount_usd: discountAmount,
+          base_price_usd: basePrice,
+          total_price_usd: totalPriceUSD,
+          final_price_usd: finalPriceUSD,
+          payment_currency: currency,
+          payment_amount: paymentAmount,
+          exchange_rate: exchangeRate,
           custom_fields: [
             {
               display_name: "Plan",
               variable_name: "plan",
               value: plan.name
+            },
+            {
+              display_name: "Duration",
+              variable_name: "duration",
+              value: durationLabel
             },
             {
               display_name: "User",
@@ -345,25 +740,21 @@ export const POST = withAuth(async (req, user) => {
 
     if (!paystackResponse.ok) {
       const error = await paystackResponse.json();
-      console.error(' Paystack error:', error);
+      console.error('❌ Paystack error:', error);
       throw new Error(error.message || 'Failed to initialize payment');
     }
 
     const paymentData = await paystackResponse.json();
 
-    console.log(' Paystack response:', {
-      reference: paymentData.data.reference,
-      access_code: paymentData.data.access_code,
-      has_auth_url: !!paymentData.data.authorization_url
-    });
+    console.log('✅ Paystack response received');
 
     // Create payment intent record
     const { data: paymentIntent, error: intentError } = await supabase
       .from('payment_intents')
       .insert({
         user_id: user.id,
-        plan_id: plan.id, //  Use UUID plan.id, not plan_id string
-        amount: finalPrice,
+        plan_id: plan_id,
+        amount: finalPriceUSD, // Store final USD amount
         currency: currency,
         discount_amount: discountAmount || null,
         coupon_code: coupon_code || null,
@@ -374,8 +765,15 @@ export const POST = withAuth(async (req, user) => {
         metadata: {
           authorization_url: paymentData.data.authorization_url,
           plan_name: plan.name,
-          plan_id: plan.plan_id, // Store string plan_id in metadata
-          original_amount: plan.price,
+          billing_cycle: billing_cycle,
+          billing_duration: billing_duration,
+          duration_label: durationLabel,
+          base_price_usd: basePrice,
+          total_price_usd: totalPriceUSD,
+          final_amount_usd: finalPriceUSD,
+          payment_currency: currency,
+          payment_amount: paymentAmount,
+          exchange_rate: exchangeRate,
           coupon_applied: !!coupon_code,
         },
       })
@@ -383,18 +781,22 @@ export const POST = withAuth(async (req, user) => {
       .single();
 
     if (intentError) {
-      console.error(' Failed to create payment intent:', intentError);
+      console.error('❌ Failed to create payment intent:', intentError);
       throw new Error('Failed to create payment record');
     }
 
-    console.log(' Payment initialized successfully:', {
+    console.log('✅ Payment initialized successfully:', {
       user: user.email,
       plan: plan.name,
-      amount: finalPrice,
+      duration: durationLabel,
+      base_price_usd: basePrice,
+      total_price_usd: totalPriceUSD,
+      final_price_usd: finalPriceUSD,
+      amount_local: paymentAmount,
       currency: currency,
+      exchange_rate: exchangeRate,
       reference: reference,
-      coupon: coupon_code || 'none',
-      payment_intent_id: paymentIntent.id
+      test_mode: paystackConfig.isTestMode
     });
 
     return NextResponse.json({
@@ -409,21 +811,25 @@ export const POST = withAuth(async (req, user) => {
         id: plan.id,
         plan_id: plan.plan_id,
         name: plan.name,
-        price: plan.price,
-        final_price: finalPrice,
+        price_usd: plan.price,
+        base_price_usd: basePrice,
+        total_price_usd: totalPriceUSD,
+        final_price_usd: finalPriceUSD,
+        final_price_local: paymentAmount,
       },
-      amount: finalPrice,
+      billing_cycle: billing_cycle,
+      billing_duration: billing_duration,
+      duration_label: durationLabel,
+      amount_usd: finalPriceUSD,
+      amount_local: paymentAmount,
       currency: currency,
+      exchange_rate: exchangeRate,
       discount: discountAmount,
+      test_mode: paystackConfig.isTestMode,
     });
 
   } catch (error: any) {
-    // console.error(' Error upgrading plan:', error);
-    // return NextResponse.json(
-    //   { error: error.message || 'Failed to upgrade plan' },
-    //   { status: 500 }
-
-    console.error(' Error upgrading plan:', error);
+    console.error('❌ Error upgrading plan:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to upgrade plan' },
       { status: 500 }
