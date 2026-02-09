@@ -52,7 +52,7 @@
   function trackPageLanding() {
     const currentUrl = window.location.href;
     const currentPath = window.location.pathname;
-    
+    const deviceInfo = getDeviceInfo();
     console.log('[Sigme]  Tracking page landing :', currentPath);
     
     window.Sigme.track('page_landed', {
@@ -62,6 +62,10 @@
       hash: window.location.hash,
       referrer: document.referrer || null,
       timestamp: new Date().toISOString(),
+      device: deviceInfo.deviceType,
+    device_type: deviceInfo.deviceType,
+    platform: deviceInfo.platform,
+    os: deviceInfo.os,
     });
   }
 
@@ -195,6 +199,7 @@
       console.log('[Sigme]  No website , skipping tracking');
       return;
     }
+const deviceInfo = getDeviceInfo();
 
     const eventData = {
       url: window.location.href,
@@ -202,6 +207,8 @@
       time_on_page_seconds: timeOnPage,
       scroll_depth: scrollDepth,
       timestamp: new Date().toISOString(),
+      device: deviceInfo.deviceType,
+  platform: deviceInfo.platform,
     };
 
     const payload = {
@@ -483,25 +490,25 @@ function startTimeTracking() {
   // 7. PRODUCT PURCHASE TRACKING
   // ==========================================
   
-  function setupPurchaseTracking() {
-    window.Sigme.trackPurchase = function(purchaseData) {
-      if (!trackingInitialized) {
-        console.warn('[Sigme]   Advanced tracking not initialized yet');
-        return;
-      }
+  // function setupPurchaseTracking() {
+  //   window.Sigme.trackPurchase = function(purchaseData) {
+  //     if (!trackingInitialized) {
+  //       console.warn('[Sigme]   Advanced tracking not initialized yet');
+  //       return;
+  //     }
       
-      console.log('[Sigme]  Purchase completed:', purchaseData);
+  //     console.log('[Sigme]  Purchase completed:', purchaseData);
       
-      window.Sigme.track('product_purchased', {
-        order_id: purchaseData.order_id,
-        items: purchaseData.items || [],
-        total_value: purchaseData.total,
-        currency: purchaseData.currency || 'USD',
-        payment_method: purchaseData.payment_method || null,
-        timestamp: new Date().toISOString(),
-      });
-    };
-  }
+  //     window.Sigme.track('product_purchased', {
+  //       order_id: purchaseData.order_id,
+  //       items: purchaseData.items || [],
+  //       total_value: purchaseData.total,
+  //       currency: purchaseData.currency || 'USD',
+  //       payment_method: purchaseData.payment_method || null,
+  //       timestamp: new Date().toISOString(),
+  //     });
+  //   };
+  // }
 
   // ==========================================
   // 8. FORM INTERACTION TRACKING
@@ -553,31 +560,85 @@ function startTimeTracking() {
     const ua = navigator.userAgent;
     
     let deviceType = 'desktop';
-    if (/Mobile|Android|iP(hone|od)|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
-      deviceType = 'mobile';
-    } else if (/Tablet|iPad/.test(ua)) {
-      deviceType = 'tablet';
-    }
-    // Special case: iPad can be tricky
-    else if (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) {
-      deviceType = 'tablet'; 
-    }
+     let platform = 'unknown';
+  //   if (/Mobile|Android|iP(hone|od)|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+  //     deviceType = 'mobile';
+  //   } else if (/Tablet|iPad/.test(ua)) {
+  //     deviceType = 'tablet';
+  //   }
+  //   // Special case: iPad can be tricky
+  //   else if (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) {
+  //     deviceType = 'tablet'; 
+  //   }
 
-    let browser = 'Unknown';
-    if (ua.includes('Chrome')) browser = 'Chrome';
-    else if (ua.includes('Safari')) browser = 'Safari';
-    else if (ua.includes('Firefox')) browser = 'Firefox';
-    else if (ua.includes('Edge')) browser = 'Edge';
+  //   let browser = 'Unknown';
+  //   if (ua.includes('Chrome')) browser = 'Chrome';
+  //   else if (ua.includes('Safari')) browser = 'Safari';
+  //   else if (ua.includes('Firefox')) browser = 'Firefox';
+  //   else if (ua.includes('Edge')) browser = 'Edge';
 
-    let os = 'Unknown';
-    if (ua.includes('Windows')) os = 'Windows';
-    else if (ua.includes('Mac')) os = 'macOS';
-    else if (ua.includes('Linux')) os = 'Linux';
-    else if (ua.includes('Android')) os = 'Android';
-    else if (ua.includes('iOS')) os = 'iOS';
+  //   let os = 'Unknown';
+  //   if (ua.includes('Windows')) os = 'Windows';
+  //   else if (ua.includes('Mac')) os = 'macOS';
+  //   else if (ua.includes('Linux')) os = 'Linux';
+  //   else if (ua.includes('Android')) os = 'Android';
+  //   else if (ua.includes('iOS')) os = 'iOS';
 
-    return { deviceType, browser, os };
+  //   return { deviceType, browser, os };
+  // }
+
+ if (/iPhone|iPod/.test(ua)) {
+    deviceType = 'mobile';
+    platform = 'ios';
+  } 
+  // 🔥 ENHANCED: Detect iPad (tricky - can report as desktop)
+  else if (/iPad/.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform))) {
+    deviceType = 'tablet';
+    platform = 'ios';
   }
+  // 🔥 ENHANCED: Detect Android devices
+  else if (/Android/.test(ua)) {
+    if (/Mobile/.test(ua)) {
+      deviceType = 'mobile';
+      platform = 'android';
+    } else {
+      deviceType = 'tablet';
+      platform = 'android';
+    }
+  }
+  // Other mobile devices
+  else if (/Mobile|BlackBerry|IEMobile|Opera Mini/.test(ua)) {
+    deviceType = 'mobile';
+  } 
+  // Other tablets
+  else if (/Tablet/.test(ua)) {
+    deviceType = 'tablet';
+  }
+
+  let browser = 'Unknown';
+  if (ua.includes('Chrome')) browser = 'Chrome';
+  else if (ua.includes('Safari')) browser = 'Safari';
+  else if (ua.includes('Firefox')) browser = 'Firefox';
+  else if (ua.includes('Edge')) browser = 'Edge';
+
+  let os = 'Unknown';
+  if (ua.includes('Windows')) os = 'Windows';
+  else if (ua.includes('Mac')) os = 'macOS';
+  else if (ua.includes('Linux')) os = 'Linux';
+  else if (ua.includes('Android')) os = 'Android';
+  else if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
+
+  return { 
+    deviceType,
+    platform,  // 🔥 NEW: 'ios', 'android', or 'unknown'
+    browser, 
+    os 
+  };
+}
+
+
+
+
 // ==========================================
   // ✅ NEW: NAVIGATION DETECTION
   // ==========================================
@@ -669,10 +730,9 @@ function startTimeTracking() {
     startTimeTracking();
     trackLinkClicks();
     setupCartTracking();
-    setupPurchaseTracking();
     trackFormInteractions();
     setupNavigationTracking();
-
+ // setupPurchaseTracking();
     // Store device info
     const deviceInfo = getDeviceInfo();
     window.Sigme.deviceInfo = deviceInfo;

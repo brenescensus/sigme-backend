@@ -26,7 +26,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       await self.clients.claim();
-      
+
       // Load config from IndexedDB on activation
       try {
         const db = await openConfigDB();
@@ -57,7 +57,7 @@ self.addEventListener('message', async (event) => {
 
   if (type === 'SIGME_INIT') {
     websiteConfig = config;
-    
+
     // Store config in IndexedDB for persistence
     try {
       const db = await openConfigDB();
@@ -81,10 +81,10 @@ self.addEventListener('message', async (event) => {
 function openConfigDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('SigmeConfig', 1);
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    
+
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
       if (!db.objectStoreNames.contains('config')) {
@@ -99,7 +99,7 @@ function saveConfig(db, config) {
     const transaction = db.transaction(['config'], 'readwrite');
     const store = transaction.objectStore('config');
     const request = store.put(config, 'websiteConfig');
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve();
   });
@@ -110,7 +110,7 @@ function loadConfig(db) {
     const transaction = db.transaction(['config'], 'readonly');
     const store = transaction.objectStore('config');
     const request = store.get('websiteConfig');
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
   });
@@ -121,7 +121,7 @@ async function getConfig() {
   if (websiteConfig) {
     return websiteConfig;
   }
-  
+
   try {
     const db = await openConfigDB();
     const config = await loadConfig(db);
@@ -132,7 +132,7 @@ async function getConfig() {
   } catch (err) {
     console.warn('[Sigme SW Core] Could not load config ', err);
   }
-  
+
   return null;
 }
 
@@ -142,7 +142,7 @@ function getApiUrl() {
   if (websiteConfig && websiteConfig.apiUrl) {
     return websiteConfig.apiUrl;
   }
-  
+
   // Fallback: Development default (should never reach here in production)
   return 'http://localhost:3000'; // Development fallback
 }
@@ -154,13 +154,13 @@ function getApiUrl() {
 async function handleSubscribe(event) {
   try {
     const config = await getConfig();
-    
+
     if (!config) {
       throw new Error('Configuration not loaded');
     }
 
     const vapidPublicKey = config.vapidPublicKey;
-    
+
     if (!vapidPublicKey) {
       throw new Error('VAPID public key not found in configuration');
     }
@@ -177,7 +177,7 @@ async function handleSubscribe(event) {
     const subscriptionJSON = subscription.toJSON();
     const endpoint = subscriptionJSON.endpoint;
     const keys = subscriptionJSON.keys || {};
-    
+
     const p256dh = keys.p256dh;
     const auth = keys.auth;
 
@@ -202,7 +202,7 @@ async function handleSubscribe(event) {
     else if (userAgent.includes('iOS')) os = 'iOS';
 
     const apiUrl = getApiUrl();
-    
+
     console.log('[Sigme SW Core] Registering......:', apiUrl);
 
     const response = await fetch(`${apiUrl}/api/subscribers/register`, {
@@ -278,7 +278,7 @@ self.addEventListener('push', (event) => {
     try {
       const data = event.data.json();
       // console.log('[Sigme SW Core] Push data:', data);
-      
+
       // if (data.data) {
       //   console.log('[Sigme SW Core] Subscriber exists.....');
       //   // console.log('[Sigme SW Core]   - subscriber_id:', data.data.subscriber_id);
@@ -287,7 +287,7 @@ self.addEventListener('push', (event) => {
       // } else {
       //   console.error('[Sigme SW Core] NO DATA IN PUSH!');
       // }
-      
+
       // notification = {
       //   title: data.title || notification.title,
       //   body: data.body || notification.body,
@@ -297,15 +297,15 @@ self.addEventListener('push', (event) => {
       //   tag: data.tag,
       //   data: data.data || {},
       // };
-      
 
- console.log('[Sigme SW Core] Push data received:', {
+
+      console.log('[Sigme SW Core] Push data received:', {
         hasTitle: !!data.title,
         hasBody: !!data.body,
         hasUrl: !!(data.url || data.click_url),
         hasTag: !!data.tag
       });
-      
+
       // ✅ FIX: Build data object from ALL possible sources
       const notificationData = {
         url: data.url || data.click_url || '/',
@@ -315,7 +315,7 @@ self.addEventListener('push', (event) => {
         journey_id: data.journey_id || data.data?.journey_id,
         notification_id: data.notification_id || data.tag || data.data?.notification_id,
       };
-      
+
       // Log what we extracted (helpful for debugging)
       // console.log('[Sigme SW Core]  Extracted data:', {
       //   subscriber_id: notificationData.subscriber_id ? 'present' : 'missing',
@@ -323,7 +323,7 @@ self.addEventListener('push', (event) => {
       //   journey_id: notificationData.journey_id ? 'present' : 'missing',
       //   notification_id: notificationData.notification_id ? 'present' : 'missing',
       // });
-      
+
       notification = {
         title: data.title || notification.title,
         body: data.body || notification.body,
@@ -333,7 +333,7 @@ self.addEventListener('push', (event) => {
         tag: data.tag || `notif-${Date.now()}`,
         data: notificationData, //  Use properly built object
       };
-      
+
 
       // console.log('[Sigme SW Core] Notification data:', notification.data);
     } catch (e) {
@@ -369,11 +369,18 @@ self.addEventListener('push', (event) => {
 // ============================================
 
 self.addEventListener('notificationclick', (event) => {
-  
+
   event.notification.close();
 
   const notificationData = event.notification.data || {};
-  let urlToOpen = notificationData.url || notificationData.click_url || '/';
+  let urlToOpen =
+    notificationData.url ||
+    notificationData.click_url ||
+    event.notification.url ||
+    event.notification.click_url ||
+    '/';
+  // let urlToOpen = notificationData.url || notificationData.click_url || '/';
+  console.log('[Sigme SW Core]  Raw URL:', urlToOpen);
 
   // Ensure absolute URL
   if (!urlToOpen.startsWith('http')) {
@@ -386,15 +393,15 @@ self.addEventListener('notificationclick', (event) => {
   // FIX: Track click using the UNIFIED /api/notifications/track-click endpoint
   if (notificationData.subscriber_id) {
     const apiUrl = getApiUrl();
-    const trackingUrl = `${apiUrl}/api/notifications/track-click`; 
-    
+    const trackingUrl = `${apiUrl}/api/notifications/track-click`;
+
     // Debug: Log config state
     // console.log('[Sigme SW Core]  Config state:', {
     //   hasConfig: !!websiteConfig,
     //   configApiUrl: websiteConfig?.apiUrl,
     //   resolvedApiUrl: apiUrl
     // });
-    
+
     // FIX: Include notification_id for proper tracking
     const payload = {
       notification_id: event.notification.tag || notificationData.notification_id, // Use tag as fallback
@@ -404,6 +411,11 @@ self.addEventListener('notificationclick', (event) => {
       url: urlToOpen,
       title: event.notification.title,
     };
+    console.log('[Sigme SW Core]  Tracking click:', {
+      notification_id: payload.notification_id ? '✓' : '✗',
+      subscriber_id: payload.subscriber_id ? '✓' : '✗',
+      journey_id: payload.journey_id || 'none',
+    });
 
     // console.log('[Sigme SW Core]  Sending click tracking:', {
     //   endpoint: trackingUrl,
@@ -419,21 +431,21 @@ self.addEventListener('notificationclick', (event) => {
       body: JSON.stringify(payload),
       keepalive: true, // Ensures request completes even if page closes
     })
-    .then(response => {
-      if (response.ok) {
-        // console.log('[Sigme SW Core] Click tracked successfully');
-        return response.json();
-      } else {
-        // console.error('[Sigme SW Core]  Tracking failed:', response.status);
-        return response.text().then(text => {
-          console.error('[Sigme SW Core]  Error:', text);
-        });
-      }
-    })
-    .catch(err => {
-      console.error('[Sigme SW Core]  Fetch tracking failed:', err);
-    });
-    
+      .then(response => {
+        if (response.ok) {
+          console.log('[Sigme SW Core] Click tracked successfully');
+          return response.json();
+        } else {
+          // console.error('[Sigme SW Core]  Tracking failed:', response.status);
+          return response.text().then(text => {
+            console.error('[Sigme SW Core]  Error:', text);
+          });
+        }
+      })
+      .catch(err => {
+        console.error('[Sigme SW Core]  Fetch tracking failed:', err);
+      });
+
     // Wait for tracking to complete before navigation
     event.waitUntil(trackingPromise);
   } else {
@@ -441,38 +453,47 @@ self.addEventListener('notificationclick', (event) => {
   }
 
   // Now navigate to the URL
-  const openWindowPromise = self.clients.matchAll({ 
-    type: 'window', 
-    includeUncontrolled: true 
+  const openWindowPromise = self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true
   })
-  .then((clientList) => {
-    // console.log('[Sigme SW Core] Found', clientList.length, 'open windows');
-    
-    const targetUrlObj = new URL(urlToOpen);
-    
-    // Try to find an existing window from the same origin
-    for (const client of clientList) {
-      try {
-        const clientUrlObj = new URL(client.url);
-        
-        if (clientUrlObj.origin === targetUrlObj.origin) {
-          console.log('[Sigme SW Core] Navigating existing window');
-          return client.focus().then(() => client.navigate(urlToOpen));
+    .then((clientList) => {
+      // console.log('[Sigme SW Core] Found', clientList.length, 'open windows');
+
+      const targetUrlObj = new URL(urlToOpen);
+
+      // Try to find an existing window from the same origin
+      for (const client of clientList) {
+        try {
+          const clientUrlObj = new URL(client.url);
+
+          if (clientUrlObj.origin === targetUrlObj.origin) {
+            console.log('[Sigme SW Core] Navigating existing window');
+            return client.focus().then(() => {
+              if ('navigate' in client) {
+                return
+                client.navigate(urlToOpen)
+              }
+              else {
+                console.warn('[Sigme SW Core] ⚠️ Navigate not available, opening new window');
+                return self.clients.openWindow(urlToOpen);
+              }
+          });
+          }
+        } catch (e) {
+          console.warn('[Sigme SW Core]  Error parsing client URL:', e);
         }
-      } catch (e) {
-        console.warn('[Sigme SW Core]  Error parsing client URL:', e);
       }
-    }
-    
-    // Open new window
-    // console.log('[Sigme SW Core] Opening new window');
-    if (self.clients.openWindow) {
-      return self.clients.openWindow(urlToOpen);
-    }
-  })
-  .catch((error) => {
-    console.error('[Sigme SW Core]  Error opening window:', error);
-  });
+
+      // Open new window
+      // console.log('[Sigme SW Core] Opening new window');
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(urlToOpen);
+      }
+    })
+    .catch((error) => {
+      console.error('[Sigme SW Core]  Error opening window:', error);
+    });
 
   event.waitUntil(openWindowPromise);
 });

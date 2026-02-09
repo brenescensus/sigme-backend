@@ -91,6 +91,8 @@ function validateAndNormalizeKeys(p256dh: string, auth: string): {
   }
 }
 
+
+
 /**
  * Send notification to a single subscriber
  */

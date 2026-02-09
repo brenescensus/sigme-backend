@@ -278,7 +278,7 @@ async function sendNotificationFromWorker(
     const result = await sendNotificationToSubscriber(subscriber, {
       title: node.data.title || 'Notification',
       body: node.data.body || '',
-      icon: branding.logo_url || '/icon-192x192.png',
+      icon: branding.logo_url || '/favicon.ico',
       image: node.data.image_url,
       url: node.data.url || '/',
       tag: notificationLog?.id,

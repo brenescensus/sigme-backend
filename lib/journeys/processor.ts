@@ -319,12 +319,22 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           trigger.minimum_time ||
           trigger.time_value ||
           trigger.min_time ||
-          0;
+          5;
 
-        if (minTime <= 0 || minTime > 3600) {
-          console.log('[Processor] ✗ Page abandonment: invalid time value:', minTime);
-          return false;
+        console.log('[Processor] Page abandonment check - min time:', minTime, 'seconds');
+
+        // 🔥 FIX: Validate range but don't reject completely
+        const validatedMinTime = Math.max(1, Math.min(minTime, 3600)); // Clamp between 1s and 1hr
+
+
+
+        if (minTime !== validatedMinTime) {
+          console.log(`[Processor] Adjusted min time from ${minTime}s to ${validatedMinTime}s`);
         }
+        // if (minTime <= 0 || minTime > 3600) {
+        //   console.log('[Processor] ✗ Page abandonment: invalid time value:', minTime);
+        //   return false;
+        // }
         const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
 
         const { data: events } = await supabase
@@ -333,42 +343,79 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           .eq('subscriber_id', subscriberId)
           .eq('event_name', 'page_abandoned')
           .order('created_at', { ascending: false })
-          .limit(3);
+          .limit(10);
 
         if (!events || events.length === 0) {
-          console.log('[Processor] ✗ No page_abandoned events found');
+          console.log('[Processor]  No page_abandoned events found');
           return false;
         }
 
-        const hasAbandoned = events.some(e => {
+        const hasAbandoned = events.some((e, index) => {
           const props = getEventProperties(e.properties);
           const timeOnPage = props.time_on_page_seconds || props.time_on_page || props.seconds || 0;
           const eventPath = props.path || props.url || '';
+          console.log(`[Processor]  Event ${index + 1}: path="${eventPath}", time=${timeOnPage}s`);
+
+          // if (pagePattern) {
+          //   if (pagePattern.includes('*')) {
+          //     const escapedPattern = pagePattern
+          //       .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+          //       .replace(/\*/g, '.*');
+          //     const regex = new RegExp('^' + escapedPattern + '$', 'i');
+          //     const pathMatches = regex.test(eventPath);
+
 
           if (pagePattern) {
+            let pathMatches = false;
+
             if (pagePattern.includes('*')) {
+              // Wildcard matching
               const escapedPattern = pagePattern
                 .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
                 .replace(/\*/g, '.*');
               const regex = new RegExp('^' + escapedPattern + '$', 'i');
-              const pathMatches = regex.test(eventPath);
-
-              if (!pathMatches) {
-                return false;
-              }
+              pathMatches = regex.test(eventPath);
             } else {
-              const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
-              if (!pathMatches) {
-                return false;
-              }
+              // Simple contains matching
+              pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
             }
+
+            if (!pathMatches) {
+              console.log(`[Processor]   ✗ Path mismatch (pattern: "${pagePattern}")`);
+
+              return false;
+            }
+            console.log(`[Processor]   ✓ Path matches pattern`);
           }
-          return timeOnPage >= minTime;
+
+          const meetsTime = timeOnPage >= validatedMinTime;
+          console.log(`[Processor]   ${meetsTime ? '✓' : '✗'} Time check: ${timeOnPage}s >= ${validatedMinTime}s`);
+
+          return meetsTime;
         });
 
-        console.log('[Processor]', hasAbandoned ? '✓' : '✗', 'Page abandonment check:', { minTime, hasAbandoned });
+        console.log('[Processor]', hasAbandoned ? '✅' : '❌', 'Page abandonment final result:', {
+          minTime: validatedMinTime,
+          pagePattern: pagePattern || 'any',
+          hasAbandoned
+        });
+
         return hasAbandoned;
       }
+
+      //       } else {
+      //         const pathMatches = eventPath.toLowerCase().includes(pagePattern.toLowerCase());
+      //         if (!pathMatches) {
+      //           return false;
+      //         }
+      //       }
+      //     }
+      //       return timeOnPage >= minTime;
+      //   });
+
+      //     console.log('[Processor]', hasAbandoned ? '✓' : '✗', 'Page abandonment check:', { minTime, hasAbandoned });
+      //     return hasAbandoned;
+      // }
 
       case 'time_on_page': {
         const threshold = trigger.event_config?.threshold_seconds ||
@@ -520,120 +567,163 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         return hasAbandonedCart;
       }
 
-      case 'product_purchased': {
-        const productId = trigger.product_id;
-        const productIds = trigger.product_ids || (productId ? [productId] : []);
-        const category = trigger.category;
-        const categories = trigger.categories || (category ? [category] : []);
-        const sku = trigger.sku;
+      // case 'product_purchased': {
+      //   const productId = trigger.product_id;
+      //   const productIds = trigger.product_ids || (productId ? [productId] : []);
+      //   const category = trigger.category;
+      //   const categories = trigger.categories || (category ? [category] : []);
+      //   const sku = trigger.sku;
 
-        const { data: events } = await supabase
-          .from('subscriber_events')
-          .select('*')
-          .eq('subscriber_id', subscriberId)
-          .eq('event_name', 'product_purchased')
-          .order('created_at', { ascending: false })
-          .limit(10);
+      //   const { data: events } = await supabase
+      //     .from('subscriber_events')
+      //     .select('*')
+      //     .eq('subscriber_id', subscriberId)
+      //     .eq('event_name', 'product_purchased')
+      //     .order('created_at', { ascending: false })
+      //     .limit(10);
 
-        if (!events || events.length === 0) {
-          console.log('[Processor] ✗ No product_purchased events found');
-          return false;
-        }
+      //   if (!events || events.length === 0) {
+      //     console.log('[Processor] ✗ No product_purchased events found');
+      //     return false;
+      //   }
 
-        if (productIds.length > 0) {
-          const hasPurchased = events.some(e => {
-            const props = getEventProperties(e.properties);
-            const items = props.items || [];
-            return items.some((item: any) =>
-              productIds.includes(item.id) ||
-              productIds.includes(item.product_id) ||
-              productIds.includes(item.sku)
-            );
-          });
+      //   if (productIds.length > 0) {
+      //     const hasPurchased = events.some(e => {
+      //       const props = getEventProperties(e.properties);
+      //       const items = props.items || [];
+      //       return items.some((item: any) =>
+      //         productIds.includes(item.id) ||
+      //         productIds.includes(item.product_id) ||
+      //         productIds.includes(item.sku)
+      //       );
+      //     });
 
-          console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by ID):', { productIds, hasPurchased });
-          return hasPurchased;
-        }
+      //     console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by ID):', { productIds, hasPurchased });
+      //     return hasPurchased;
+      //   }
 
-        if (sku) {
-          const hasPurchased = events.some(e => {
-            const props = getEventProperties(e.properties);
-            const items = props.items || [];
-            return items.some((item: any) => item.sku === sku);
-          });
+      //   if (sku) {
+      //     const hasPurchased = events.some(e => {
+      //       const props = getEventProperties(e.properties);
+      //       const items = props.items || [];
+      //       return items.some((item: any) => item.sku === sku);
+      //     });
 
-          console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by SKU):', { sku, hasPurchased });
-          return hasPurchased;
-        }
+      //     console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by SKU):', { sku, hasPurchased });
+      //     return hasPurchased;
+      //   }
 
-        if (categories.length > 0) {
-          const lowerCategories = categories.map((c: string) => c.toLowerCase());
-          const hasPurchased = events.some(e => {
-            const props = getEventProperties(e.properties);
-            const items = props.items || [];
-            return items.some((item: any) =>
-              lowerCategories.includes((item.category || '').toLowerCase())
-            );
-          });
+      //   if (categories.length > 0) {
+      //     const lowerCategories = categories.map((c: string) => c.toLowerCase());
+      //     const hasPurchased = events.some(e => {
+      //       const props = getEventProperties(e.properties);
+      //       const items = props.items || [];
+      //       return items.some((item: any) =>
+      //         lowerCategories.includes((item.category || '').toLowerCase())
+      //       );
+      //     });
 
-          console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by category):', { categories, hasPurchased });
-          return hasPurchased;
-        }
+      //     console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by category):', { categories, hasPurchased });
+      //     return hasPurchased;
+      //   }
 
-        console.log('[Processor] ✓ Product purchased check: any product');
-        return true;
-      }
+      //   console.log('[Processor] ✓ Product purchased check: any product');
+      //   return true;
+      // }
 
       case 'device_filter': {
         const allowedDevices = trigger.devices || [];
         if (allowedDevices.length === 0) {
-          console.log('[Processor] ✓ Device filter: no restrictions');
+          console.log('[Processor] Device filter: no restrictions');
           return true;
         }
 
         const normalizedAllowedDevices = allowedDevices.map((d: string) => d.toLowerCase());
         let device = 'desktop';
-
+        let platform = 'unknown';
         const { data: events } = await supabase
           .from('subscriber_events')
           .select('*')
           .eq('subscriber_id', subscriberId)
           .order('created_at', { ascending: false })
-          .limit(5);
+          .limit(10);
 
         if (events && events.length > 0) {
           for (const event of events) {
             const props = getEventProperties(event.properties);
             const eventDevice = (props.device || props.device_type || '').toLowerCase();
+            const eventPlatform = (props.platform || '').toLowerCase();
 
             if (eventDevice && ['mobile', 'tablet', 'desktop'].includes(eventDevice)) {
               device = eventDevice;
-              console.log('[Processor] ✓ Device from recent event:', device);
+              // console.log('[Processor] ✓ Device from recent event:', device);
+              // break;
+              platform = eventPlatform;
+              console.log('[Processor]  Device from event:', device, '| Platform:', platform);
               break;
             }
           }
         }
 
-        if (device === 'desktop') {
+        // Fallback to custom attributes
+        if (device === 'desktop' && platform === 'unknown') {
           const customAttrs = subscriber.custom_attributes as any;
           if (customAttrs?.device) {
             device = customAttrs.device.toLowerCase();
-            console.log('[Processor] ✓ Device from custom attributes:', device);
+          }
+          if (customAttrs?.platform) {
+            platform = customAttrs.platform.toLowerCase();
           }
         }
+
+        // if (device === 'desktop') {
+        //   const customAttrs = subscriber.custom_attributes as any;
+        //   if (customAttrs?.device) {
+        //     device = customAttrs.device.toLowerCase();
+        //     console.log('[Processor] ✓ Device from custom attributes:', device);
+        //   }
+        // }
+
+        // if (device === 'desktop' && subscriber.user_agent) {
+        //   const ua = subscriber.user_agent.toLowerCase();
+        //   if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+        //     device = 'mobile';
+        //   } else if (ua.includes('tablet') || ua.includes('ipad')) {
+        //     device = 'tablet';
+        //   }
+        //   console.log('[Processor] ✓ Device from user agent:', device);
+        // }
+
 
         if (device === 'desktop' && subscriber.user_agent) {
           const ua = subscriber.user_agent.toLowerCase();
-          if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+          if (ua.includes('iphone') || ua.includes('ipod')) {
             device = 'mobile';
-          } else if (ua.includes('tablet') || ua.includes('ipad')) {
+            platform = 'ios';
+          } else if (ua.includes('ipad')) {
+            device = 'tablet';
+            platform = 'ios';
+          } else if (ua.includes('android')) {
+            if (ua.includes('mobile')) {
+              device = 'mobile';
+              platform = 'android';
+            } else {
+              device = 'tablet';
+              platform = 'android';
+            }
+          } else if (ua.includes('mobile')) {
+            device = 'mobile';
+          } else if (ua.includes('tablet')) {
             device = 'tablet';
           }
-          console.log('[Processor] ✓ Device from user agent:', device);
+          console.log('[Processor]  Device from user agent:', device, '| Platform:', platform);
         }
+        const deviceMatches = normalizedAllowedDevices.includes(device);
+        const platformMatches = normalizedAllowedDevices.includes(platform);
 
-        const matches = normalizedAllowedDevices.includes(device);
-        console.log('[Processor]', matches ? '✓' : '✗', 'Device filter check:', {
+        const matches = deviceMatches || platformMatches;
+        // const matches = normalizedAllowedDevices.includes(device);
+        console.log('[Processor]', matches ? '' : '', 'Device filter check:', {
           allowedDevices: normalizedAllowedDevices,
           subscriberDevice: device,
           matches
@@ -911,7 +1001,7 @@ export async function enrollSubscriber(
       throw new Error(`Journey is not active (status: ${journey.status})`);
     }
 
-     // 🔥 NEW: Log current active journeys for debugging
+    // 🔥 NEW: Log current active journeys for debugging
     const { data: activeJourneys } = await supabase
       .from('user_journey_states')
       .select('journey_id, status')
@@ -1047,7 +1137,7 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
   );
 
   if (activeOrWaitingState) {
-  console.log(`[Processor] ⚠️  Already in journey ${journey.name} (status: ${activeOrWaitingState.status})`);
+    console.log(`[Processor] ⚠️  Already in journey ${journey.name} (status: ${activeOrWaitingState.status})`);
 
     console.log('[Processor]  Already in journey (status:', activeOrWaitingState.status + ')');
     return false;
@@ -1416,9 +1506,9 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
 //           result.error?.includes('404') ||
 //           result.error?.includes('SUBSCRIPTION_EXPIRED') ||
 //           result.error?.includes('Invalid subscription keys')) {
-        
+
 //         console.log('[Processor] ⚠ Push subscription expired - clearing invalid subscription');
-        
+
 //         // Clear the expired subscription (but keep subscriber active)
 //         await supabase.from('subscribers')
 //           .update({
@@ -1486,7 +1576,7 @@ async function processSendNotification(
         .select('website_id')
         .eq('id', state.subscriber_id)
         .single()
-        .then(({ data }) => 
+        .then(({ data }) =>
           data ? supabase.from('websites').select('*').eq('id', data.website_id).single() : null
         ),
     ]);
@@ -1534,49 +1624,77 @@ async function processSendNotification(
     }
 
     const branding = website.notification_branding as any || {};
-// const { data: notificationLog } = await supabase
-//   .from('notification_logs')
-//   .insert({
-//           website_id: subscriber.website_id,
-//             subscriber_id: subscriber.id,
-//             journey_id: state.journey_id,
-//             journey_step_id: node.id,
-//             user_journey_state_id: state.id,
-//             platform: 'web',
-//             sent_at: new Date().toISOString(),
-            
-//   })
-//   .select()
-//   .single();
+    // const { data: notificationLog } = await supabase
+    //   .from('notification_logs')
+    //   .insert({
+    //           website_id: subscriber.website_id,
+    //             subscriber_id: subscriber.id,
+    //             journey_id: state.journey_id,
+    //             journey_step_id: node.id,
+    //             user_journey_state_id: state.id,
+    //             platform: 'web',
+    //             sent_at: new Date().toISOString(),
 
- const { data: notificationLog } = await supabase
-          .from('notification_logs')
-          .insert({
-          website_id: subscriber.website_id,
-    subscriber_id: subscriber.id,
-    journey_id: state.journey_id,
-    journey_step_id: node.id,
-    // user_journey_state_id: stateId,
-    status: 'sent',
-    platform: 'web',
-    sent_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
+    //   })
+    //   .select()
+    //   .single();
+
+    const { data: notificationLog } = await supabase
+      .from('notification_logs')
+      .insert({
+        website_id: subscriber.website_id,
+        subscriber_id: subscriber.id,
+        journey_id: state.journey_id,
+        journey_step_id: node.id,
+        // user_journey_state_id: stateId,
+        status: 'sent',
+        platform: 'web',
+        sent_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+      const notificationUrl = node.data.url || node.data.click_url || '/';
+    
     // 🔥 FIX 3: Prepare notification payload
     const notificationPayload = {
+      // title: node.data.title || 'Notification',
+      // body: node.data.body || '',
+      // icon: branding?.logo_url || node.data.icon_url || '/favicon.ico',
+      // badge: '/badge-96x96.png',
+      // image: node.data.image_url || undefined,
+      //  url: notificationUrl, // ✅ CRITICAL: Primary URL field
+      // click_url: notificationUrl, // ✅ CRITICAL: Backup URL field
+      // url: node.data.url || node.data.click_url || '/',
+      // tag: `notif-${state.id}-${Date.now()}`,
+      // requireInteraction: false,
+      // campaign_id: null,
+      // subscriber_id: subscriber.id,
+      // notification_id: notificationLog?.id || null,
+      // journey_id: state.journey_id,
       title: node.data.title || 'Notification',
       body: node.data.body || '',
-      icon: branding?.logo_url || node.data.icon_url || '/icon-192x192.png',
+      icon: branding?.logo_url || node.data.icon_url || '/favicon.ico',
       badge: '/badge-96x96.png',
       image: node.data.image_url || undefined,
-      url: node.data.url || node.data.click_url || '/',
-      tag: `notif-${state.id}-${Date.now()}`,
+      url: notificationUrl, // ✅ CRITICAL: Primary URL field
+      click_url: notificationUrl, // ✅ CRITICAL: Backup URL field
+      tag: notificationLog?.id || `notif-${state.id}-${Date.now()}`,
       requireInteraction: false,
-      campaign_id: null,
+      // ✅ CRITICAL: Include ALL tracking data
+      data: {
+        url: notificationUrl,
+        click_url: notificationUrl,
         subscriber_id: subscriber.id,
-  notification_id: notificationLog?.id || null,        
-  journey_id: state.journey_id,
+        notification_id: notificationLog?.id || null,
+        journey_id: state.journey_id,
+        campaign_id: null,
+      },
+      // ✅ TOP-LEVEL fields for service worker
+      subscriber_id: subscriber.id,
+      notification_id: notificationLog?.id || null,
+      journey_id: state.journey_id,
+      campaign_id: null,
       branding: {
         primary_color: branding?.primary_color || '#667eea',
         secondary_color: branding?.secondary_color || '#764ba2',
@@ -1589,12 +1707,12 @@ async function processSendNotification(
         show_branding: branding?.show_branding ?? true,
       },
     };
-console.log('[Processor] 📦 Notification payload:', {
-  title: notificationPayload.title,
-  subscriber_id: notificationPayload.subscriber_id,
-  journey_id: notificationPayload.journey_id,
-  has_branding: !!notificationPayload.branding,
-});
+    console.log('[Processor] Notification payload:', {
+      title: notificationPayload.title,
+      subscriber_id: notificationPayload.subscriber_id,
+      journey_id: notificationPayload.journey_id,
+      has_branding: !!notificationPayload.branding,
+    });
     console.log('[Processor] Sending notification...');
 
     // 🔥 FIX 4: Send notification FIRST, then log (saves 700ms)
@@ -1646,7 +1764,7 @@ console.log('[Processor] 📦 Notification payload:', {
         //       auth_key: null,
         //       updated_at: new Date().toISOString(),
         //     }).eq('id', subscriber.id),
-            
+
         //     logJourneyEvent(
         //       state.journey_id,
         //       state.subscriber_id,
@@ -1661,52 +1779,52 @@ console.log('[Processor] 📦 Notification payload:', {
         //   ]);
         // }
 
-    // 🔥 CRITICAL FIX: ONLY clear on CONFIRMED expiration (410/404)
-    if (!result.success) {
-      const errorStr = String(result.error || '').toLowerCase();
-      const statusCode = result.error?.match(/\b(410|404)\b/)?.[0];
-      
-      const isDefinitelyExpired = (
-        statusCode === '410' ||  // HTTP 410 Gone
-        statusCode === '404' ||  // HTTP 404 Not Found
-        errorStr.includes('410 gone') ||
-        errorStr.includes('404 not found')
-      );
-      
-      if (isDefinitelyExpired) {
-        console.log('[Processor] ⚠ Subscription CONFIRMED expired (410/404)');
-        console.log('[Processor] → Clearing invalid subscription');
-        
-        await Promise.all([
-          supabase.from('subscribers').update({
-            endpoint: null,
-            p256dh_key: null,
-            auth_key: null,
-            status: 'inactive',  // 🔥 CRITICAL: Set status too!
-            updated_at: new Date().toISOString(),
-          }).eq('id', subscriber.id),
-          
-          logJourneyEvent(
-            state.journey_id,
-            state.subscriber_id,
-            state.id,
-            'subscription_expired',
-            { 
-              error: result.error,
-              status_code: statusCode,
-              note: 'Subscription confirmed expired (410/404)'
-            },
-            node.id
-          ),
-        ]);
-      } else {
-        // 🔥 NEW: Log but DON'T clear subscription
-        console.log('[Processor] ℹ️ Notification failed but subscription may still be valid');
-        console.log('[Processor] → Error:', result.error);
-        console.log('[Processor] → NOT clearing subscription (might be VAPID/rate limit/network issue)');
-      }
-    }
-  
+        // 🔥 CRITICAL FIX: ONLY clear on CONFIRMED expiration (410/404)
+        if (!result.success) {
+          const errorStr = String(result.error || '').toLowerCase();
+          const statusCode = result.error?.match(/\b(410|404)\b/)?.[0];
+
+          const isDefinitelyExpired = (
+            statusCode === '410' ||  // HTTP 410 Gone
+            statusCode === '404' ||  // HTTP 404 Not Found
+            errorStr.includes('410 gone') ||
+            errorStr.includes('404 not found')
+          );
+
+          if (isDefinitelyExpired) {
+            console.log('[Processor] ⚠ Subscription CONFIRMED expired (410/404)');
+            console.log('[Processor] → Clearing invalid subscription');
+
+            await Promise.all([
+              supabase.from('subscribers').update({
+                endpoint: null,
+                p256dh_key: null,
+                auth_key: null,
+                status: 'inactive',  // 🔥 CRITICAL: Set status too!
+                updated_at: new Date().toISOString(),
+              }).eq('id', subscriber.id),
+
+              logJourneyEvent(
+                state.journey_id,
+                state.subscriber_id,
+                state.id,
+                'subscription_expired',
+                {
+                  error: result.error,
+                  status_code: statusCode,
+                  note: 'Subscription confirmed expired (410/404)'
+                },
+                node.id
+              ),
+            ]);
+          } else {
+            // 🔥 NEW: Log but DON'T clear subscription
+            console.log('[Processor] ℹ️ Notification failed but subscription may still be valid');
+            console.log('[Processor] → Error:', result.error);
+            console.log('[Processor] → NOT clearing subscription (might be VAPID/rate limit/network issue)');
+          }
+        }
+
       } catch (logError) {
         console.error('[Processor] ✗ Background logging failed:', logError);
       }
@@ -1732,7 +1850,7 @@ console.log('[Processor] 📦 Notification payload:', {
       'notification_error',
       { error: error.message },
       node.id
-    ).then(() => {}).catch((err) => console.error('[Processor] ✗ Event logging failed:', err));
+    ).then(() => { }).catch((err) => console.error('[Processor] ✗ Event logging failed:', err));
 
     await moveToNextNode(state, flowDefinition, node.id);
   }
@@ -1754,8 +1872,8 @@ async function processWaitNode(
     .single();
 
   if (existingSchedule) {
-    console.log('[Processor] ⚠ Wait already scheduled:', existingSchedule.id);
-    console.log('[Processor] ⚠ Execute at:', existingSchedule.execute_at);
+    console.log('[Processor]  Wait already scheduled:', existingSchedule.id);
+    console.log('[Processor]  Execute at:', existingSchedule.execute_at);
     return;
   }
 
@@ -1764,8 +1882,8 @@ async function processWaitNode(
   if (waitMode === 'duration') {
     // let durationSeconds = node.data.duration || 86400;
 
-let durationSeconds = node.data.duration_seconds || node.data.duration || 86400;
-    
+    let durationSeconds = node.data.duration_seconds || node.data.duration || 86400;
+
     // ✅ ADD DEBUG LOGGING
     console.log('[Processor] 📊 Wait node data:', {
       duration: node.data.duration,
@@ -1880,42 +1998,42 @@ let durationSeconds = node.data.duration_seconds || node.data.duration || 86400;
     //   node.data.waiting_for_event;
 
 
-      console.log('[Processor] 🔍 DEBUG: Inspecting node.data for event name');
-  console.log('[Processor] 🔍 node.data.event_name:', node.data.event_name);
-  console.log('[Processor] 🔍 node.data.waiting_for_event:', node.data.waiting_for_event);
-  console.log('[Processor] 🔍 node.data.event:', JSON.stringify(node.data.event));
-  console.log('[Processor] 🔍 Full node.data keys:', Object.keys(node.data));
-  
-    const eventName = 
-    node.data.event_name ||                    // Direct property
-    node.data.waiting_for_event ||             // Alternative location
-    node.data.event?.event_name ||             // Nested in event object
-    node.data.event?.name ||                   // Event.name
-    node.data.waitConfig?.event_name ||        // Wait config
-    node.data.config?.event_name ||            // Generic config
-    (typeof node.data.event === 'string' ? node.data.event : null);  // String directly
-  
-  // 🔥 CRITICAL: Log the full node data if event name is missing
-  if (!eventName) {
-    console.error('[Processor] ✗ Event name missing!');
-    console.error('[Processor] 📋 Full node.data:', JSON.stringify(node.data, null, 2));
-    console.error('[Processor] 📋 Available keys:', Object.keys(node.data));
-    throw new Error('Event name is required for wait-until-event mode');
-  }
+    console.log('[Processor] 🔍 DEBUG: Inspecting node.data for event name');
+    console.log('[Processor] 🔍 node.data.event_name:', node.data.event_name);
+    console.log('[Processor] 🔍 node.data.waiting_for_event:', node.data.waiting_for_event);
+    console.log('[Processor] 🔍 node.data.event:', JSON.stringify(node.data.event));
+    console.log('[Processor] 🔍 Full node.data keys:', Object.keys(node.data));
 
-  console.log(`[Processor] ⏰ Waiting for event: "${eventName}"`);
-  
-    const timeoutSeconds = 
-      node.data.timeout_seconds || 
-      node.data.event?.timeout_seconds || 
+    const eventName =
+      node.data.event_name ||                    // Direct property
+      node.data.waiting_for_event ||             // Alternative location
+      node.data.event?.event_name ||             // Nested in event object
+      node.data.event?.name ||                   // Event.name
+      node.data.waitConfig?.event_name ||        // Wait config
+      node.data.config?.event_name ||            // Generic config
+      (typeof node.data.event === 'string' ? node.data.event : null);  // String directly
+
+    // 🔥 CRITICAL: Log the full node data if event name is missing
+    if (!eventName) {
+      console.error('[Processor] ✗ Event name missing!');
+      console.error('[Processor] 📋 Full node.data:', JSON.stringify(node.data, null, 2));
+      console.error('[Processor] 📋 Available keys:', Object.keys(node.data));
+      throw new Error('Event name is required for wait-until-event mode');
+    }
+
+    console.log(`[Processor] ⏰ Waiting for event: "${eventName}"`);
+
+    const timeoutSeconds =
+      node.data.timeout_seconds ||
+      node.data.event?.timeout_seconds ||
       604800;
-    
+
     const timeoutAt = new Date(Date.now() + timeoutSeconds * 1000);
-    
-    const eventConfig = 
-      node.data.event_config || 
-      node.data.event?.config || 
-       node.data.config ||
+
+    const eventConfig =
+      node.data.event_config ||
+      node.data.event?.config ||
+      node.data.config ||
       {};
 
     if (!eventName) {
@@ -2578,29 +2696,29 @@ export async function handleSubscriberEvent(
           }
         }
 
-        if (eventName === 'product_purchased') {
-          if (eventConfig.product_id) {
-            const items = eventData.items || [];
-            configMatches = items.some((item: any) =>
-              item.id === eventConfig.product_id || item.product_id === eventConfig.product_id
-            );
+        // if (eventName === 'product_purchased') {
+        //   if (eventConfig.product_id) {
+        //     const items = eventData.items || [];
+        //     configMatches = items.some((item: any) =>
+        //       item.id === eventConfig.product_id || item.product_id === eventConfig.product_id
+        //     );
 
-            if (!configMatches) {
-              console.log(`[Processor] ✗ Product ID "${eventConfig.product_id}" not in purchase`);
-            }
-          }
+        //     if (!configMatches) {
+        //       console.log(`[Processor] ✗ Product ID "${eventConfig.product_id}" not in purchase`);
+        //     }
+        //   }
 
-          if (eventConfig.category) {
-            const items = eventData.items || [];
-            configMatches = items.some((item: any) =>
-              (item.category || '').toLowerCase() === eventConfig.category.toLowerCase()
-            );
+        //   if (eventConfig.category) {
+        //     const items = eventData.items || [];
+        //     configMatches = items.some((item: any) =>
+        //       (item.category || '').toLowerCase() === eventConfig.category.toLowerCase()
+        //     );
 
-            if (!configMatches) {
-              console.log(`[Processor] ✗ Category "${eventConfig.category}" not in purchase`);
-            }
-          }
-        }
+        //     if (!configMatches) {
+        //       console.log(`[Processor] ✗ Category "${eventConfig.category}" not in purchase`);
+        //     }
+        //   }
+        // }
 
         if ((eventName === 'form_started' || eventName === 'form_submitted') && eventConfig.form_id) {
           const actualFormId = eventData.form_id || eventData.id || '';
