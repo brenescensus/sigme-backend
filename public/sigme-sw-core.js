@@ -404,11 +404,11 @@ self.addEventListener('notificationclick', (event) => {
       url: urlToOpen,
       title: event.notification.title,
     };
-    console.log('[Sigme SW Core]  Tracking click:', {
-      notification_id: payload.notification_id ? '✓' : '✗',
-      subscriber_id: payload.subscriber_id ? '✓' : '✗',
-      journey_id: payload.journey_id || 'none',
-    });
+    // console.log('[Sigme SW Core]  Tracking click:', {
+    //   notification_id: payload.notification_id ? '✓' : '✗',
+    //   subscriber_id: payload.subscriber_id ? '✓' : '✗',
+    //   journey_id: payload.journey_id || 'none',
+    // });
 
       // FIX: Use fetch with keepalive (sendBeacon not available in service workers)
     const trackingPromise = fetch(trackingUrl, {
@@ -445,7 +445,7 @@ self.addEventListener('notificationclick', (event) => {
     includeUncontrolled: true
   })
     .then((clientList) => {
-      console.log('[Sigme SW Core] 🔍 Found', clientList.length, 'open window(s)');
+      console.log('[Sigme SW Core] Found', clientList.length, 'open window(s)');
 
       const targetUrlObj = new URL(urlToOpen);
 
@@ -463,25 +463,25 @@ self.addEventListener('notificationclick', (event) => {
                 type: 'SIGME_NAVIGATE',
                 url: urlToOpen
               });
-              console.log('[Sigme SW Core] 📤 Navigation message sent to client');
+              console.log('[Sigme SW Core]  Navigation message sent to client');
               return client;
             });
           }
         } catch (e) {
-          console.warn('[Sigme SW Core] ⚠️ Error checking client:', e);
+          console.warn('[Sigme SW Core]  Error checking client:', e);
         }
       }
 
       // No existing window found - open new one
-      console.log('[Sigme SW Core] 🆕 Opening new window');
+      console.log('[Sigme SW Core]  Opening new window');
       if (self.clients.openWindow) {
         return self.clients.openWindow(urlToOpen);
       } else {
-        console.error('[Sigme SW Core] ❌ openWindow not available');
+        console.error('[Sigme SW Core]  openWindow not available');
       }
     })
     .catch((error) => {
-      console.error('[Sigme SW Core] ❌ Navigation error:', error);
+      console.error('[Sigme SW Core] Navigation error:', error);
     });
 
   event.waitUntil(openWindowPromise);

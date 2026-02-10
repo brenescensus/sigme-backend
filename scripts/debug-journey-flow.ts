@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 async function debugJourneyFlow(journeyName: string) {
-  console.log(`\n🔍 Debugging Journey: "${journeyName}"\n`);
+  console.log(`\nDebugging Journey: "${journeyName}"\n`);
 
   // Get journey
   const { data: journey } = await supabase

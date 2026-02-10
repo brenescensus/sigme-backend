@@ -291,7 +291,7 @@ async function sendNotificationFromWorker(
         delivered_at: new Date().toISOString() 
       }).eq('id', notificationLog?.id);
       
-      console.log('[Worker] ✓ Notification sent successfully');
+      console.log('[Worker]  Notification sent successfully');
     } else {
       await supabase.from('notification_logs').update({ 
         status: 'failed',

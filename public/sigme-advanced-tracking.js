@@ -359,31 +359,7 @@ const deviceInfo = getDeviceInfo();
   // 4. TIME ON PAGE TRACKING
   // ==========================================
   
-  // function startTimeTracking() {
-  //   const milestones = CONFIG.TIME_MILESTONES;
-  //   let trackedMilestones = new Set();
-
-  //   setInterval(() => {
-  //     if (!trackingInitialized) return;
-      
-  //     const timeOnPage = Math.round((Date.now() - pageLoadTime) / 1000);
-      
-  //     milestones.forEach(milestone => {
-  //       if (timeOnPage >= milestone && !trackedMilestones.has(milestone)) {
-  //         trackedMilestones.add(milestone);
-          
-  //         console.log(`[Sigme]   Time on page: ${milestone}s`);
-          
-  //         window.Sigme.track('time_on_page', {
-  //           seconds: milestone,
-  //           url: window.location.href,
-  //           path: window.location.pathname,
-  //           timestamp: new Date().toISOString(),
-  //         });
-  //       }
-  //     });
-  //   }, 1000);
-  // }
+  
 function startTimeTracking() {
 
   if (timeTrackingInterval) {
@@ -404,11 +380,7 @@ function startTimeTracking() {
     if (timeOnPage > lastTrackedSecond) {
         lastTrackedSecond = timeOnPage;
                 console.log(`[Sigme] Time on page: ${timeOnPage}s`);
-
-            //  Log every 5 seconds to avoid console spam
-        // if (timeOnPage % 2 === 0 || timeOnPage <= 10) {
-        //   console.log(`[Sigme]   Time on page: ${timeOnPage}s`);
-        // }
+      
         
         window.Sigme.track('time_on_page', {
           seconds: timeOnPage,
@@ -418,22 +390,8 @@ function startTimeTracking() {
         });
       }
     }, 1000);
-  //   milestones.forEach(milestone => {
-  //     if (timeOnPage >= milestone && !trackedMilestones.has(milestone)) {
-  //       trackedMilestones.add(milestone);
-        
-  //       console.log(`[Sigme] ✓ Time on page: ${milestone}s (reached at ${timeOnPage}s)`);
-        
-  //       window.Sigme.track('time_on_page', {
-  //         seconds: milestone,
-  //         actual_time: timeOnPage, //  Also send actual time
-  //         url: window.location.href,
-  //         path: window.location.pathname,
-  //         timestamp: new Date().toISOString(),
-  //       });
-  //     }
-  //   });
-  // }, 1000); //  Check every second for immediate firing
+ 
+ 
 }
   // ==========================================
   // 5. LINK INTERACTION TRACKING
@@ -561,31 +519,7 @@ function startTimeTracking() {
     
     let deviceType = 'desktop';
      let platform = 'unknown';
-  //   if (/Mobile|Android|iP(hone|od)|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
-  //     deviceType = 'mobile';
-  //   } else if (/Tablet|iPad/.test(ua)) {
-  //     deviceType = 'tablet';
-  //   }
-  //   // Special case: iPad can be tricky
-  //   else if (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform)) {
-  //     deviceType = 'tablet'; 
-  //   }
-
-  //   let browser = 'Unknown';
-  //   if (ua.includes('Chrome')) browser = 'Chrome';
-  //   else if (ua.includes('Safari')) browser = 'Safari';
-  //   else if (ua.includes('Firefox')) browser = 'Firefox';
-  //   else if (ua.includes('Edge')) browser = 'Edge';
-
-  //   let os = 'Unknown';
-  //   if (ua.includes('Windows')) os = 'Windows';
-  //   else if (ua.includes('Mac')) os = 'macOS';
-  //   else if (ua.includes('Linux')) os = 'Linux';
-  //   else if (ua.includes('Android')) os = 'Android';
-  //   else if (ua.includes('iOS')) os = 'iOS';
-
-  //   return { deviceType, browser, os };
-  // }
+ 
 
  if (/iPhone|iPod/.test(ua)) {
     deviceType = 'mobile';
@@ -800,11 +734,11 @@ window.addEventListener('unload', () => {
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (event) => {
-    console.log('[Sigme]  Message from service worker:', event.data);
+    // console.log('[Sigme]  Message from service worker:', event.data);
     
     if (event.data.type === 'SIGME_NAVIGATE') {
       const url = event.data.url;
-      console.log('[Sigme]  Navigating to:', url);
+      // console.log('[Sigme]  Navigating to:', url);
       
       // Use window.location.href for full navigation
       window.location.href = url;

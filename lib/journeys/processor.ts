@@ -731,45 +731,124 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         return matches;
       }
 
-      case 'geography_filter': {
-        const allowedCountries = trigger.countries || [];
-        const allowedRegions = trigger.regions || [];
-        const allowedCities = trigger.cities || [];
+      // case 'geography_filter': {
+      //   const allowedCountries = trigger.countries || [];
+      //   const allowedRegions = trigger.regions || [];
+      //   const allowedCities = trigger.cities || [];
 
-        if (allowedCountries.length === 0 && allowedRegions.length === 0 && allowedCities.length === 0) {
-          console.log('[Processor] ✓ Geography filter: no restrictions');
-          return true;
-        }
+      //   if (allowedCountries.length === 0 && allowedRegions.length === 0 && allowedCities.length === 0) {
+      //     console.log('[Processor] ✓ Geography filter: no restrictions');
+      //     return true;
+      //   }
 
-        const subscriberData = subscriber as any;
-        const country = (subscriber.country || '').toLowerCase();
-        const countryCode = (subscriberData.country_code || '').toLowerCase();
-        const region = (subscriberData.region || subscriberData.state || '').toLowerCase();
-        const city = (subscriber.city || '').toLowerCase();
+      //   const subscriberData = subscriber as any;
+      //   const country = (subscriber.country || '').toLowerCase();
+      //   const countryCode = (subscriberData.country_code || '').toLowerCase();
+      //   const region = (subscriberData.region || subscriberData.state || '').toLowerCase();
+      //   const city = (subscriber.city || '').toLowerCase();
 
-        const normalizedCountries = allowedCountries.map((c: string) => c.toLowerCase());
-        const normalizedRegions = allowedRegions.map((r: string) => r.toLowerCase());
-        const normalizedCities = allowedCities.map((c: string) => c.toLowerCase());
+      //   const normalizedCountries = allowedCountries.map((c: string) => c.toLowerCase());
+      //   const normalizedRegions = allowedRegions.map((r: string) => r.toLowerCase());
+      //   const normalizedCities = allowedCities.map((c: string) => c.toLowerCase());
 
-        let countryMatch = allowedCountries.length === 0;
-        if (!countryMatch) {
-          countryMatch = normalizedCountries.includes(country) || normalizedCountries.includes(countryCode);
-        }
+      //   let countryMatch = allowedCountries.length === 0;
+      //   if (!countryMatch) {
+      //     countryMatch = normalizedCountries.includes(country) || normalizedCountries.includes(countryCode);
+      //   }
 
-        let regionMatch = allowedRegions.length === 0;
-        if (!regionMatch) {
-          regionMatch = normalizedRegions.includes(region);
-        }
+      //   let regionMatch = allowedRegions.length === 0;
+      //   if (!regionMatch) {
+      //     regionMatch = normalizedRegions.includes(region);
+      //   }
 
-        let cityMatch = allowedCities.length === 0;
-        if (!cityMatch) {
-          cityMatch = normalizedCities.includes(city);
-        }
+      //   let cityMatch = allowedCities.length === 0;
+      //   if (!cityMatch) {
+      //     cityMatch = normalizedCities.includes(city);
+      //   }
 
-        const matches = countryMatch && regionMatch && cityMatch;
-        console.log('[Processor]', matches ? '✓' : '✗', 'Geography filter check:', { countryMatch, regionMatch, cityMatch, finalMatch: matches });
-        return matches;
-      }
+      //   const matches = countryMatch && regionMatch && cityMatch;
+      //   console.log('[Processor]', matches ? '✓' : '✗', 'Geography filter check:', { countryMatch, regionMatch, cityMatch, finalMatch: matches });
+      //   return matches;
+      // }
+
+      // GEOGRAPHY FILTER FIX - TypeScript Safe Version
+// Replace the geography_filter case in processor.ts (around line 550-620)
+
+case 'geography_filter': {
+  const allowedCountries = trigger.countries || [];
+  const allowedRegions = trigger.regions || [];
+  const allowedCities = trigger.cities || [];
+
+  // ✅ Require at least one filter
+  if (allowedCountries.length === 0 && allowedRegions.length === 0 && allowedCities.length === 0) {
+    console.log('[Processor] ✓ Geography filter: no restrictions');
+    return true;
+  }
+
+  console.log('[Processor] 🌍 Geography filter:', {
+    allowedCountries,
+    allowedCities,
+  });
+
+  // ✅ Get subscriber's ACTUAL location from database
+  const subscriberCountry = (subscriber.country || '').toLowerCase().trim();
+  const subscriberCity = (subscriber.city || '').toLowerCase().trim();
+  const subscriberRegion = ((subscriber as any).region || (subscriber as any).state || '').toLowerCase().trim();
+
+  console.log('[Processor] 📍 Subscriber:', {
+    country: subscriberCountry || 'not set',
+    city: subscriberCity || 'not set',
+  });
+
+  // ✅ Handle missing location - REJECT if no data
+  if (!subscriberCountry && !subscriberCity && !subscriberRegion) {
+    console.log('[Processor] ⚠️ No location data - REJECTING');
+    return false;
+  }
+
+  // Normalize - ✅ FIXED: Explicit type annotations
+  const normalizedCountries = allowedCountries.map((c: string) => c.toLowerCase().trim());
+  const normalizedRegions = allowedRegions.map((r: string) => r.toLowerCase().trim());
+  const normalizedCities = allowedCities.map((c: string) => c.toLowerCase().trim());
+
+  // Check country (if specified) - ✅ FIXED: Explicit type for 'allowed'
+  let countryMatch = allowedCountries.length === 0;
+  if (!countryMatch && subscriberCountry) {
+    countryMatch = normalizedCountries.some((allowed: string) => 
+      subscriberCountry === allowed || 
+      subscriberCountry.startsWith(allowed) ||
+      allowed.startsWith(subscriberCountry)
+    );
+  }
+
+  // Check region (if specified) - ✅ FIXED: Explicit type for 'allowed'
+  let regionMatch = allowedRegions.length === 0;
+  if (!regionMatch && subscriberRegion) {
+    regionMatch = normalizedRegions.some((allowed: string) =>
+      subscriberRegion.includes(allowed) || allowed.includes(subscriberRegion)
+    );
+  }
+
+  // Check city (if specified) - ✅ FIXED: Explicit type for 'allowed'
+  let cityMatch = allowedCities.length === 0;
+  if (!cityMatch && subscriberCity) {
+    cityMatch = normalizedCities.some((allowed: string) =>
+      subscriberCity.includes(allowed) || allowed.includes(subscriberCity)
+    );
+  }
+
+  // ✅ ALL filters must match (AND logic)
+  const matches = countryMatch && regionMatch && cityMatch;
+
+  console.log('[Processor]', matches ? '✅' : '❌', 'Geography result:', {
+    country: countryMatch ? '✓' : '✗',
+    region: regionMatch ? '✓' : '✗',
+    city: cityMatch ? '✓' : '✗',
+    final: matches
+  });
+
+  return matches;
+}
 
       default:
         console.log('[Processor] ✗ Unknown trigger type:', trigger.type);
@@ -1346,213 +1425,6 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
 // NODE PROCESSORS
 // ============================================================================
 
-// async function processSendNotification(
-//   state: JourneyState,
-//   node: JourneyNode,
-//   flowDefinition: FlowDefinition
-// ): Promise<void> {
-//   console.log('[Processor] Sending notification');
-
-//   await logExecution(
-//     state.journey_id,
-//     state.id,
-//     'notification_sending',
-//     `Sending notification: ${node.data.title}`,
-//     { title: node.data.title, body: node.data.body, url: node.data.url }
-//   );
-
-//   try {
-//     const { data: subscriber, error: subError } = await supabase
-//       .from('subscribers')
-//       .select('*')
-//       .eq('id', state.subscriber_id)
-//       .single();
-
-//     if (subError || !subscriber) {
-//       throw new Error('Subscriber not found');
-//     }
-
-//     // 🔥 FIX: Check if subscription is missing or expired
-//     if (!subscriber.endpoint || !subscriber.p256dh_key || !subscriber.auth_key) {
-//       console.log('[Processor] ⚠ No valid push subscription');
-
-//       await supabase.from('notification_logs').insert({
-//         website_id: subscriber.website_id,
-//         subscriber_id: subscriber.id,
-//         journey_id: state.journey_id,
-//         journey_step_id: node.id,
-//         user_journey_state_id: state.id,
-//         status: 'failed',
-//         platform: 'web',
-//         sent_at: new Date().toISOString(),
-//         error_message: 'No valid push subscription - user needs to re-subscribe',
-//       });
-
-//       await logJourneyEvent(
-//         state.journey_id,
-//         state.subscriber_id,
-//         state.id,
-//         'notification_skipped',
-//         { reason: 'No push subscription' },
-//         node.id
-//       );
-
-//       // 🔥 CRITICAL: Move to next node anyway (don't block journey)
-//       await moveToNextNode(state, flowDefinition, node.id);
-//       return;
-//     }
-
-//     const { data: website } = await supabase
-//       .from('websites')
-//       .select('*')
-//       .eq('id', subscriber.website_id)
-//       .single();
-
-//     if (!website) {
-//       throw new Error('Website not found');
-//     }
-
-//     const branding = website.notification_branding as any || {};
-
-//     const { data: notificationLog, error: logError } = await supabase
-//       .from('notification_logs')
-//       .insert({
-//         website_id: subscriber.website_id,
-//         subscriber_id: subscriber.id,
-//         journey_id: state.journey_id,
-//         journey_step_id: node.id,
-//         user_journey_state_id: state.id,
-//         status: 'sent',
-//         platform: 'web',
-//         sent_at: new Date().toISOString(),
-//       })
-//       .select()
-//       .single();
-
-//     if (logError || !notificationLog) {
-//       throw new Error('Failed to create notification log');
-//     }
-
-//     const notificationPayload = {
-//       title: node.data.title || 'Notification',
-//       body: node.data.body || '',
-//       icon: branding?.logo_url || node.data.icon_url || '/icon-192x192.png',
-//       badge: '/badge-96x96.png',
-//       image: node.data.image_url || undefined,
-//       url: node.data.url || node.data.click_url || '/',
-//       tag: notificationLog.id,
-//       requireInteraction: false,
-//       branding: {
-//         primary_color: branding?.primary_color || '#667eea',
-//         secondary_color: branding?.secondary_color || '#764ba2',
-//         logo_url: branding?.logo_url,
-//         font_family: branding?.font_family || 'Inter',
-//         button_style: branding?.button_style || 'rounded',
-//         notification_position: branding?.notification_position || 'top-right',
-//         animation_style: branding?.animation_style || 'slide',
-//         show_logo: branding?.show_logo ?? true,
-//         show_branding: branding?.show_branding ?? true,
-//       },
-//     };
-
-//     console.log('[Processor] Sending notification...');
-
-//     const result = await sendNotificationToSubscriber(subscriber, notificationPayload);
-
-//     if (result.success) {
-//       console.log('[Processor] ✓ Notification sent successfully!');
-
-//       await supabase
-//         .from('notification_logs')
-//         .update({
-//           status: 'delivered',
-//           delivered_at: new Date().toISOString(),
-//         })
-//         .eq('id', notificationLog.id);
-
-//       await logJourneyEvent(
-//         state.journey_id,
-//         state.subscriber_id,
-//         state.id,
-//         'notification_sent',
-//         {
-//           title: notificationPayload.title,
-//           notification_id: notificationLog.id,
-//         },
-//         node.id
-//       );
-//     } else {
-//       console.error('[Processor] ✗ Notification failed:', result.error);
-
-//       await supabase
-//         .from('notification_logs')
-//         .update({
-//           status: 'failed',
-//           error_message: result.error,
-//         })
-//         .eq('id', notificationLog.id);
-
-//       await logJourneyEvent(
-//         state.journey_id,
-//         state.subscriber_id,
-//         state.id,
-//         'notification_failed',
-//         { error: result.error },
-//         node.id
-//       );
-
-//       // 🔥 FIX: Handle expired subscriptions
-//       if (result.error?.includes('410') ||
-//           result.error?.includes('404') ||
-//           result.error?.includes('SUBSCRIPTION_EXPIRED') ||
-//           result.error?.includes('Invalid subscription keys')) {
-
-//         console.log('[Processor] ⚠ Push subscription expired - clearing invalid subscription');
-
-//         // Clear the expired subscription (but keep subscriber active)
-//         await supabase.from('subscribers')
-//           .update({
-//             endpoint: null,
-//             p256dh_key: null,
-//             auth_key: null,
-//             updated_at: new Date().toISOString(),
-//           })
-//           .eq('id', subscriber.id);
-
-//         await logJourneyEvent(
-//           state.journey_id,
-//           state.subscriber_id,
-//           state.id,
-//           'subscription_expired',
-//           { 
-//             error: result.error,
-//             note: 'User can re-subscribe to receive future notifications'
-//           },
-//           node.id
-//         );
-//       }
-//     }
-
-//     // 🔥 CRITICAL: ALWAYS move to next node (don't block journey on notification failure)
-//     await moveToNextNode(state, flowDefinition, node.id);
-
-//   } catch (error: any) {
-//     console.error('[Processor] ✗ Notification error:', error.message);
-
-//     await logJourneyEvent(
-//       state.journey_id,
-//       state.subscriber_id,
-//       state.id,
-//       'notification_error',
-//       { error: error.message },
-//       node.id
-//     );
-
-//     // Move to next step anyway
-//     await moveToNextNode(state, flowDefinition, node.id);
-//   }
-// }
-
 async function processSendNotification(
   state: JourneyState,
   node: JourneyNode,
@@ -1624,20 +1496,7 @@ async function processSendNotification(
     }
 
     const branding = website.notification_branding as any || {};
-    // const { data: notificationLog } = await supabase
-    //   .from('notification_logs')
-    //   .insert({
-    //           website_id: subscriber.website_id,
-    //             subscriber_id: subscriber.id,
-    //             journey_id: state.journey_id,
-    //             journey_step_id: node.id,
-    //             user_journey_state_id: state.id,
-    //             platform: 'web',
-    //             sent_at: new Date().toISOString(),
-
-    //   })
-    //   .select()
-    //   .single();
+  
 
     const { data: notificationLog } = await supabase
       .from('notification_logs')
@@ -1658,30 +1517,17 @@ async function processSendNotification(
     
     // 🔥 FIX 3: Prepare notification payload
     const notificationPayload = {
-      // title: node.data.title || 'Notification',
-      // body: node.data.body || '',
-      // icon: branding?.logo_url || node.data.icon_url || '/favicon.ico',
-      // badge: '/badge-96x96.png',
-      // image: node.data.image_url || undefined,
-      //  url: notificationUrl, // ✅ CRITICAL: Primary URL field
-      // click_url: notificationUrl, // ✅ CRITICAL: Backup URL field
-      // url: node.data.url || node.data.click_url || '/',
-      // tag: `notif-${state.id}-${Date.now()}`,
-      // requireInteraction: false,
-      // campaign_id: null,
-      // subscriber_id: subscriber.id,
-      // notification_id: notificationLog?.id || null,
-      // journey_id: state.journey_id,
+   
       title: node.data.title || 'Notification',
       body: node.data.body || '',
       icon: branding?.logo_url || node.data.icon_url || '/favicon.ico',
       badge: '/badge-96x96.png',
       image: node.data.image_url || undefined,
-      url: notificationUrl, // ✅ CRITICAL: Primary URL field
-      click_url: notificationUrl, // ✅ CRITICAL: Backup URL field
+      url: notificationUrl, // 
+      click_url: notificationUrl, 
       tag: notificationLog?.id || `notif-${state.id}-${Date.now()}`,
       requireInteraction: false,
-      // ✅ TOP-LEVEL fields for service worker
+      
       subscriber_id: subscriber.id,
       notification_id: notificationLog?.id ?? undefined,
       journey_id: state.journey_id,
@@ -1999,11 +1845,11 @@ async function processWaitNode(
     //   node.data.waiting_for_event;
 
 
-    console.log('[Processor] 🔍 DEBUG: Inspecting node.data for event name');
-    console.log('[Processor] 🔍 node.data.event_name:', node.data.event_name);
-    console.log('[Processor] 🔍 node.data.waiting_for_event:', node.data.waiting_for_event);
-    console.log('[Processor] 🔍 node.data.event:', JSON.stringify(node.data.event));
-    console.log('[Processor] 🔍 Full node.data keys:', Object.keys(node.data));
+    console.log('[Processor] DEBUG: Inspecting node.data for event name');
+    console.log('[Processor] node.data.event_name:', node.data.event_name);
+    console.log('[Processor] node.data.waiting_for_event:', node.data.waiting_for_event);
+    console.log('[Processor] node.data.event:', JSON.stringify(node.data.event));
+    console.log('[Processor] Full node.data keys:', Object.keys(node.data));
 
     const eventName =
       node.data.event_name ||                    // Direct property
