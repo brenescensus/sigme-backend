@@ -340,8 +340,19 @@ export const GET = withAuth(async (req, user) => {
 
     // Calculate subscription dates
     const now = new Date();
-    const nextBillingDate = new Date(now);
-    nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+    // const nextBillingDate = new Date(now);
+    // nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+const metadata = paymentData.metadata || paymentIntent.metadata || {};
+const billing_cycle = metadata.billing_cycle || 'monthly';
+const billing_duration = parseInt(metadata.billing_duration || '1', 10);
+
+const nextBillingDate = new Date(now);
+if (billing_cycle === 'yearly') {
+  nextBillingDate.setFullYear(nextBillingDate.getFullYear() + billing_duration);
+} else {
+  nextBillingDate.setMonth(nextBillingDate.getMonth() + billing_duration);
+}
+
 
     // Update payment intent
     await supabase
@@ -366,6 +377,7 @@ export const GET = withAuth(async (req, user) => {
       plan_tier: paymentIntent.plan_id,
       plan_name: plan.name,
       plan_price: plan.price,
+       notifications_used: 0,
       status: 'active',
       websites_limit: plan.websites_limit || 1,
       notifications_limit: plan.notifications_limit || 10000,

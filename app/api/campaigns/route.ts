@@ -194,7 +194,6 @@
 
 
 // app/api/campaigns/route.ts
-// FIXED: Added custom plan limit checking for notifications
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, getAuthenticatedClient, AuthUser } from '@/lib/auth-middleware';
@@ -397,6 +396,33 @@ export const POST = withAuth(
 
       console.log('[Campaigns POST] Campaign created successfully:', campaign.id);
 
+        if (is_recurring) {
+        console.log('[Campaigns POST] Incrementing recurring_used counter...');
+
+        // Fetch current value
+        const { data: currentSub } = await supabase
+          .from('user_subscriptions')
+          .select('recurring_used')
+          .eq('user_id', user.id)
+          .single();
+
+        const currentUsed = currentSub?.recurring_used || 0;
+
+        // Update with new value
+        const { error: updateError } = await supabase
+          .from('user_subscriptions')
+          .update({ 
+            recurring_used: currentUsed + 1 
+          })
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('[Campaigns POST] Failed to increment recurring_used:', updateError);
+          // Don't fail the campaign creation, just log the error
+        } else {
+          console.log('[Campaigns POST] Incremented recurring_used:', currentUsed, '→', currentUsed + 1);
+        }
+      }
       return NextResponse.json({
         success: true,
         campaign,

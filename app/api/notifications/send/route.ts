@@ -1,5 +1,4 @@
 // app/api/notifications/send/route.ts
-// FIXED: Added custom plan notification limit checking
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthUser, getAuthenticatedClient } from '@/lib/auth-middleware';
@@ -234,9 +233,26 @@ async function handler(req: NextRequest, user: AuthUser) {
       }
 
       // Also increment standard subscription counter
-      await supabase.rpc('increment_notification_usage', {
-        p_user_id: user.id
-      });
+      // await supabase.rpc('increment_notification_usage', {
+      //   p_user_id: user.id
+      // });
+
+      if (deliveredCount > 0) {
+  // Get current usage first
+  const { data: currentSub } = await supabase
+    .from('user_subscriptions')
+    .select('notifications_used')
+    .eq('user_id', user.id)
+    .single();
+
+  await supabase
+    .from('user_subscriptions')
+    .update({
+      notifications_used: (currentSub?.notifications_used || 0) + deliveredCount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', user.id);
+}
     }
 
     // Mark expired subscriptions as inactive
