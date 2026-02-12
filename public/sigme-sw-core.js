@@ -271,6 +271,8 @@ self.addEventListener('push', (event) => {
     body: 'You have a new message',
     icon: '/icon.png',
     badge: '/badge.png',
+    url: '/',          
+    click_url: '/',
     data: {}
   };
 
@@ -306,10 +308,16 @@ self.addEventListener('push', (event) => {
         hasTag: !!data.tag
       });
 
+       const targetUrl = 
+        data.url ||                    
+        data.click_url ||              
+        data.data?.url ||              
+        data.data?.click_url ||        
+        '/';
       // FIX: Build data object from ALL possible sources
       const notificationData = {
-        url: data.url || data.click_url || '/',
-        click_url: data.click_url || data.url || '/',
+        url:  targetUrl,
+        click_url:  targetUrl,
         subscriber_id: data.subscriber_id || data.data?.subscriber_id,
         campaign_id: data.campaign_id || data.data?.campaign_id,
         journey_id: data.journey_id || data.data?.journey_id,
@@ -330,10 +338,18 @@ self.addEventListener('push', (event) => {
         icon: data.icon || notification.icon,
         badge: data.badge || notification.badge,
         image: data.image,
+        url: targetUrl,              
+        click_url: targetUrl, 
         tag: data.tag || `notif-${Date.now()}`,
-        data: notificationData, //  Use properly built object
+        data: notificationData, 
       };
 
+      console.log('[Sigme SW Core]  Final notification object:', {
+        url: notification.url,
+        click_url: notification.click_url,
+        dataUrl: notification.data.url,
+        dataClickUrl: notification.data.click_url,
+      });
 
       // console.log('[Sigme SW Core] Notification data:', notification.data);
     } catch (e) {
@@ -352,6 +368,11 @@ self.addEventListener('push', (event) => {
     vibrate: [200, 100, 200]
   };
 
+   if (notification.url) {
+    options.data = options.data || {};
+    options.data.url = notification.url;
+    options.data.click_url = notification.url;
+  }
   // Just show the notification - delivery already tracked server-side
   const showNotificationPromise = self.registration.showNotification(notification.title, options)
     .then(() => {
