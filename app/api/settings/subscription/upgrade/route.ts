@@ -80,7 +80,7 @@ export const POST = withAuth(async (req, user) => {
       );
     }
 
-    console.log('✅ Plan found:', {
+    console.log('Plan found:', {
       plan_id: plan.plan_id,
       name: plan.name,
       price: plan.price,
@@ -105,6 +105,9 @@ export const POST = withAuth(async (req, user) => {
         plan_price: 0,
         websites_limit: plan.websites_limit,
         notifications_limit: plan.notifications_limit,
+        subscribers_limit: plan.subscribers_limit ?? null,    
+        custom_domains_limit: plan.custom_domains_limit ?? null, 
+        notifications_used: 0,
         recurring_limit: plan.recurring_limit ?? undefined,
         status: 'active' as const,
         subscription_starts_at: new Date().toISOString(),
@@ -239,7 +242,7 @@ export const POST = withAuth(async (req, user) => {
       finalPriceUSD = Math.max(0, totalPriceUSD - discountAmount);
       couponData = coupon;
 
-      console.log('✅ Coupon validated:', {
+      console.log('Coupon validated:', {
         code: coupon.code,
         total_price: totalPriceUSD,
         discount: discountAmount,
@@ -289,6 +292,7 @@ export const POST = withAuth(async (req, user) => {
       duration: durationLabel,
       test_mode: paystackConfig.isTestMode
     });
+    const callbackUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/dashboard/billing?payment=success&reference=${reference}`;
 
     // Initialize Paystack payment
     const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
@@ -302,7 +306,7 @@ export const POST = withAuth(async (req, user) => {
         amount: paystackAmount,
         currency: currency,
         reference: reference,
-        callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?payment=success&reference=${reference}`,
+        callback_url: callbackUrl,
         metadata: {
           user_id: user.id,
           plan_id: plan_id,
@@ -348,7 +352,7 @@ export const POST = withAuth(async (req, user) => {
 
     const paymentData = await paystackResponse.json();
 
-    console.log('✅ Paystack response received');
+    console.log('Paystack response received');
 
     // Create payment intent record
     const { data: paymentIntent, error: intentError } = await supabase
@@ -387,7 +391,7 @@ export const POST = withAuth(async (req, user) => {
       throw new Error('Failed to create payment record');
     }
 
-    console.log('✅ Payment initialized successfully:', {
+    console.log('Payment initialized successfully:', {
       user: user.email,
       plan: plan.name,
       duration: durationLabel,
@@ -398,6 +402,7 @@ export const POST = withAuth(async (req, user) => {
       currency: currency,
       exchange_rate: exchangeRate,
       reference: reference,
+      callback_url: callbackUrl, 
       test_mode: paystackConfig.isTestMode
     });
 

@@ -84,7 +84,7 @@ export async function sendWebPushNotification(
       //  Add timestamp for debugging
       timestamp: Date.now(),
 
-      // ✅ CRITICAL: Pass through ALL tracking data
+      // CRITICAL: Pass through ALL tracking data
   subscriber_id: (notification as any).subscriber_id,
   notification_id: (notification as any).notification_id,
   journey_id: (notification as any).journey_id,

@@ -17,7 +17,7 @@ async function handleGet(req: NextRequest, user: AuthUser) {
 
     const supabase = await getAuthenticatedClient(req);
 
-    // ✅ Verify website ownership
+    // Verify website ownership
     const { data: website, error: websiteError } = await supabase
       .from('websites')
       .select('id')

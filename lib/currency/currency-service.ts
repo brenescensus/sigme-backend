@@ -59,7 +59,7 @@ export async function getExchangeRates(): Promise<ExchangeRates> {
     };
     cacheTimestamp = now;
 
-    console.log('✅ Exchange rates updated:', {
+    console.log('Exchange rates updated:', {
       NGN: rates.NGN,
       KES: rates.KES,
       GHS: rates.GHS,

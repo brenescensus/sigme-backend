@@ -355,7 +355,7 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
     
     const supabase = await getAuthenticatedClient(req);
     
-    // ✅ FIXED: Use the database function for accurate limit checking
+    // FIXED: Use the database function for accurate limit checking
     console.log('[Websites POST] Checking website limit via RPC...');
     
     const { data: canAdd, error: rpcError } = await supabase.rpc('can_add_website', {
@@ -372,7 +372,7 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
     
     console.log('[Websites POST] can_add_website result:', canAdd);
     
-    // ✅ CRITICAL: Block if canAdd is false
+    // CRITICAL: Block if canAdd is false
     if (!canAdd) {
       console.warn('[Websites POST] ❌ Website limit reached for user:', user.id);
       
@@ -400,7 +400,7 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
       );
     }
     
-    console.log('[Websites POST] ✅ Limit check passed, creating website...');
+    console.log('[Websites POST] Limit check passed, creating website...');
     
     // Validate URL format
     let domain: string;
@@ -442,7 +442,7 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
     
     console.log('[Websites POST] Website created:', data.id);
     
-    // ✅ Increment usage counter
+    // Increment usage counter
     const { error: incrementError } = await supabase.rpc('increment_website_usage', {
       p_user_id: user.id
     });
@@ -452,7 +452,7 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
       // Don't fail the request - website was created successfully
     }
     
-    console.log('[Websites POST] ✅ Success:', data.id);
+    console.log('[Websites POST] Success:', data.id);
     
     return NextResponse.json({
       success: true,

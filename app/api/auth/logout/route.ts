@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log('✅ [Logout] User signed out successfully');
+    console.log('[Logout] User signed out successfully');
 
     return NextResponse.json({ 
       success: true,

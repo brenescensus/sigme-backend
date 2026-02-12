@@ -62,7 +62,7 @@ async function debugJourneyFlow(journeyName: string) {
   }
 
   // Validate flow
-  console.log('✅ VALIDATION:');
+  console.log('VALIDATION:');
   console.log('─────────────────────────────────────────');
   
   const issues: string[] = [];
@@ -91,7 +91,7 @@ async function debugJourneyFlow(journeyName: string) {
   });
 
   if (issues.length === 0) {
-    console.log('✅ Flow structure looks good!');
+    console.log('Flow structure looks good!');
   } else {
     console.log('❌ ISSUES FOUND:\n');
     issues.forEach(issue => console.log(issue));

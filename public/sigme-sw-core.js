@@ -306,7 +306,7 @@ self.addEventListener('push', (event) => {
         hasTag: !!data.tag
       });
 
-      // ✅ FIX: Build data object from ALL possible sources
+      // FIX: Build data object from ALL possible sources
       const notificationData = {
         url: data.url || data.click_url || '/',
         click_url: data.click_url || data.url || '/',

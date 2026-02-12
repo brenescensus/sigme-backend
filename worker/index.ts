@@ -540,7 +540,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //       throw new Error('Journey not found');
 //     }
 
-//     console.log(`[Worker] ✅ State found - Status: ${state.status}`);
+//     console.log(`[Worker] State found - Status: ${state.status}`);
 //     console.log(`   Journey ID: ${journey.id}`);
 //     console.log(`   Current step: ${state.current_step_id}`);
 //     console.log(`   Journey: ${journey.name} (${journey.status})`);
@@ -583,7 +583,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //             last_processed_at: new Date().toISOString(),
 //           }).eq('id', journeyStateId);
 
-//           console.log('[Worker] ✅ State updated to active');
+//           console.log('[Worker] State updated to active');
 
 //           await supabase.from('journey_events').insert({
 //             journey_id: state.journey_id,
@@ -594,7 +594,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //             metadata: { next_step_id: nextEdge.to }
 //           });
 
-//           console.log('[Worker] ✅ Wait completion logged');
+//           console.log('[Worker] Wait completion logged');
 
 //           await processNextStepInWorker(state.id, nextEdge.to, state.journey_id);
           
@@ -616,7 +616,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //       })
 //       .eq('id', scheduledStepId);
 
-//     console.log(`✅ [Worker] Job ${job.id} completed successfully\n`);
+//     console.log(`[Worker] Job ${job.id} completed successfully\n`);
 
 //   } catch (error: any) {
 //     console.error(`❌ [Worker] Job ${job.id} failed:`, error.message);
@@ -653,7 +653,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
           started_at: new Date().toISOString(),
         })
         .eq('id', scheduledStepId)
-         // ✅ FIXED: Added .select() to make it a Promise
+         // FIXED: Added .select() to make it a Promise
     ]);
 
     const { data: state, error: stateError } = stateResult;
@@ -675,7 +675,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
       throw new Error('Journey not found');
     }
 
-    console.log(`[Worker] ✅ State found - Status: ${state.status}`);
+    console.log(`[Worker] State found - Status: ${state.status}`);
     console.log(`   Journey ID: ${journey.id}`);
     console.log(`   Current step: ${state.current_step_id}`);
     console.log(`   Journey: ${journey.name} (${journey.status})`);

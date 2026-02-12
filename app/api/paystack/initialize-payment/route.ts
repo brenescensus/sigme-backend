@@ -186,7 +186,7 @@ export const POST = withAuth(async (req, user) => {
       throw new Error('Failed to create payment record');
     }
 
-    console.log('✅ Payment initialized:', {
+    console.log('Payment initialized:', {
       user: user.email,
       plan: plan.name,
       amount: finalAmount,

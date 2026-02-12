@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log('✅ [Refresh] Token refreshed successfully');
+    console.log('[Refresh] Token refreshed successfully');
 
     return NextResponse.json({
       success: true,

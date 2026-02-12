@@ -779,7 +779,7 @@ case 'geography_filter': {
   const allowedRegions = trigger.regions || [];
   const allowedCities = trigger.cities || [];
 
-  // ✅ Require at least one filter
+  // Require at least one filter
   if (allowedCountries.length === 0 && allowedRegions.length === 0 && allowedCities.length === 0) {
     console.log('[Processor] ✓ Geography filter: no restrictions');
     return true;
@@ -790,7 +790,7 @@ case 'geography_filter': {
     allowedCities,
   });
 
-  // ✅ Get subscriber's ACTUAL location from database
+  // Get subscriber's ACTUAL location from database
   const subscriberCountry = (subscriber.country || '').toLowerCase().trim();
   const subscriberCity = (subscriber.city || '').toLowerCase().trim();
   const subscriberRegion = ((subscriber as any).region || (subscriber as any).state || '').toLowerCase().trim();
@@ -800,18 +800,18 @@ case 'geography_filter': {
     city: subscriberCity || 'not set',
   });
 
-  // ✅ Handle missing location - REJECT if no data
+  // Handle missing location - REJECT if no data
   if (!subscriberCountry && !subscriberCity && !subscriberRegion) {
     console.log('[Processor] ⚠️ No location data - REJECTING');
     return false;
   }
 
-  // Normalize - ✅ FIXED: Explicit type annotations
+  // Normalize - FIXED: Explicit type annotations
   const normalizedCountries = allowedCountries.map((c: string) => c.toLowerCase().trim());
   const normalizedRegions = allowedRegions.map((r: string) => r.toLowerCase().trim());
   const normalizedCities = allowedCities.map((c: string) => c.toLowerCase().trim());
 
-  // Check country (if specified) - ✅ FIXED: Explicit type for 'allowed'
+  // Check country (if specified) - FIXED: Explicit type for 'allowed'
   let countryMatch = allowedCountries.length === 0;
   if (!countryMatch && subscriberCountry) {
     countryMatch = normalizedCountries.some((allowed: string) => 
@@ -821,7 +821,7 @@ case 'geography_filter': {
     );
   }
 
-  // Check region (if specified) - ✅ FIXED: Explicit type for 'allowed'
+  // Check region (if specified) - FIXED: Explicit type for 'allowed'
   let regionMatch = allowedRegions.length === 0;
   if (!regionMatch && subscriberRegion) {
     regionMatch = normalizedRegions.some((allowed: string) =>
@@ -829,7 +829,7 @@ case 'geography_filter': {
     );
   }
 
-  // Check city (if specified) - ✅ FIXED: Explicit type for 'allowed'
+  // Check city (if specified) - FIXED: Explicit type for 'allowed'
   let cityMatch = allowedCities.length === 0;
   if (!cityMatch && subscriberCity) {
     cityMatch = normalizedCities.some((allowed: string) =>
@@ -837,7 +837,7 @@ case 'geography_filter': {
     );
   }
 
-  // ✅ ALL filters must match (AND logic)
+  // ALL filters must match (AND logic)
   const matches = countryMatch && regionMatch && cityMatch;
 
   console.log('[Processor]', matches ? '✅' : '❌', 'Geography result:', {
@@ -1157,7 +1157,7 @@ export async function enrollSubscriber(
       throw stateError;
     }
 
-    console.log('[Processor] ✅ Journey state created:', journeyState.id);
+    console.log('[Processor] Journey state created:', journeyState.id);
 
     await logJourneyEvent(
       journeyId,
@@ -1532,7 +1532,7 @@ async function processSendNotification(
       notification_id: notificationLog?.id ?? undefined,
       journey_id: state.journey_id,
       campaign_id: null,
-      // ✅ CRITICAL: Include ALL tracking data
+      // CRITICAL: Include ALL tracking data
       data: {
         url: notificationUrl,
         click_url: notificationUrl,
@@ -1731,7 +1731,7 @@ async function processWaitNode(
 
     let durationSeconds = node.data.duration_seconds || node.data.duration || 86400;
 
-    // ✅ ADD DEBUG LOGGING
+    // ADD DEBUG LOGGING
     console.log('[Processor] 📊 Wait node data:', {
       duration: node.data.duration,
       duration_seconds: node.data.duration_seconds,
@@ -1916,7 +1916,7 @@ async function processWaitNode(
       throw updateError;
     }
 
-    console.log('[Processor] ✅ State updated to waiting for event');
+    console.log('[Processor] State updated to waiting for event');
 
     const { data: scheduledStep } = await supabase
       .from('scheduled_journey_steps')

@@ -574,7 +574,7 @@ function startTimeTracking() {
 
 
 // ==========================================
-  // ✅ NEW: NAVIGATION DETECTION
+  // NEW: NAVIGATION DETECTION
   // ==========================================
   
   function setupNavigationTracking() {
