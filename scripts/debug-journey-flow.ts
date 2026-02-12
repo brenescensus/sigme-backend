@@ -19,7 +19,7 @@ async function debugJourneyFlow(journeyName: string) {
     .single();
 
   if (!journey) {
-    console.error('❌ Journey not found!');
+    console.error(' Journey not found!');
     return;
   }
 
@@ -42,7 +42,7 @@ async function debugJourneyFlow(journeyName: string) {
   console.log('🔗 EDGES (Connections):');
   console.log('─────────────────────────────────────────');
   if (!flow.edges || flow.edges.length === 0) {
-    console.error('❌ NO EDGES FOUND! This is the problem!');
+    console.error(' NO EDGES FOUND! This is the problem!');
     console.log('\nYour nodes are not connected. You need to:');
     console.log('1. Open the journey in the builder');
     console.log('2. Connect each node to the next one');
@@ -73,7 +73,7 @@ async function debugJourneyFlow(journeyName: string) {
     
     const hasOutgoing = flow.edges.some((e: any) => e.from === node.id);
     if (!hasOutgoing) {
-      issues.push(`❌ Node "${node.id}" (${node.type}) has NO outgoing edge`);
+      issues.push(` Node "${node.id}" (${node.type}) has NO outgoing edge`);
     }
   });
 
@@ -83,17 +83,17 @@ async function debugJourneyFlow(journeyName: string) {
     const toExists = flow.nodes.some((n: any) => n.id === edge.to);
     
     if (!fromExists) {
-      issues.push(`❌ Edge references non-existent "from" node: ${edge.from}`);
+      issues.push(` Edge references non-existent "from" node: ${edge.from}`);
     }
     if (!toExists) {
-      issues.push(`❌ Edge references non-existent "to" node: ${edge.to}`);
+      issues.push(` Edge references non-existent "to" node: ${edge.to}`);
     }
   });
 
   if (issues.length === 0) {
     console.log('Flow structure looks good!');
   } else {
-    console.log('❌ ISSUES FOUND:\n');
+    console.log(' ISSUES FOUND:\n');
     issues.forEach(issue => console.log(issue));
   }
 

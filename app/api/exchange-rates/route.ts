@@ -14,7 +14,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error('❌ Error fetching exchange rates:', error);
+    console.error(' Error fetching exchange rates:', error);
     
     // Return fallback rates on error
     return NextResponse.json({

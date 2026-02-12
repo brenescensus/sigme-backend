@@ -476,7 +476,7 @@ self.addEventListener('notificationclick', (event) => {
           const clientUrlObj = new URL(client.url);
 
           if (clientUrlObj.origin === targetUrlObj.origin) {
-            console.log('[Sigme SW Core] ♻️ Found matching window, sending navigation message');
+            console.log('[Sigme SW Core]  Found matching window, sending navigation message');
             
             // Focus the window and send navigation message
             return client.focus().then(() => {

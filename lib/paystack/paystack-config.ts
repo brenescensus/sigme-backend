@@ -8,9 +8,9 @@ export const paystackConfig = {
 
 // Validate keys on startup
 if (!paystackConfig.publicKey) {
-  console.error('❌ NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY is not set');
+  console.error(' NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY is not set');
 }
 
 if (!paystackConfig.secretKey && typeof window === 'undefined') {
-  console.error('❌ PAYSTACK_SECRET_KEY is not set');
+  console.error(' PAYSTACK_SECRET_KEY is not set');
 }

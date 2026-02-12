@@ -66,7 +66,7 @@
 //       .single();
 
 //     if (intentError || !paymentIntent) {
-//       console.error('❌ Payment intent not found:', reference);
+//       console.error(' Payment intent not found:', reference);
 //       return NextResponse.json(
 //         { error: 'Payment record not found' },
 //         { status: 404 }
@@ -187,7 +187,7 @@
 //           });
 
 //         if (redemptionError) {
-//           console.error('❌ Error recording coupon redemption:', redemptionError);
+//           console.error(' Error recording coupon redemption:', redemptionError);
 //         } else {
 //           // Increment times_redeemed counter
 //           await supabase
@@ -248,7 +248,7 @@
 //       coupon_applied: !!paymentIntent.coupon_code,
 //     });
 //   } catch (error: any) {
-//     console.error('❌ Payment verification error:', error.response?.data || error.message);
+//     console.error(' Payment verification error:', error.response?.data || error.message);
 //     return NextResponse.json(
 //       {
 //         error: error.response?.data?.message || error.message || 'Payment verification failed',
@@ -355,7 +355,7 @@ export const GET = withAuth(async (req, user) => {
       .single();
 
     if (intentError || !paymentIntent) {
-      console.error('❌ Payment intent not found:', reference, intentError);
+      console.error(' Payment intent not found:', reference, intentError);
       return NextResponse.json(
         { error: 'Payment record not found' },
         { status: 404 }
@@ -382,7 +382,7 @@ export const GET = withAuth(async (req, user) => {
       .single();
 
     if (planError || !plan) {
-      console.error('❌ Plan not found:', paymentIntent.plan_id, planError);
+      console.error(' Plan not found:', paymentIntent.plan_id, planError);
       throw new Error(`Plan not found: ${paymentIntent.plan_id}`);
     }
 
@@ -425,7 +425,7 @@ export const GET = withAuth(async (req, user) => {
       .eq('id', paymentIntent.id);
 
     if (intentUpdateError) {
-      console.error('❌ Failed to update payment intent:', intentUpdateError);
+      console.error(' Failed to update payment intent:', intentUpdateError);
     }
 
     // Get existing subscription (service role — no RLS)
@@ -491,7 +491,7 @@ export const GET = withAuth(async (req, user) => {
     }
 
     if (subscriptionUpdateError) {
-      console.error('❌ SUBSCRIPTION UPDATE FAILED:', subscriptionUpdateError);
+      console.error(' SUBSCRIPTION UPDATE FAILED:', subscriptionUpdateError);
       // Don't throw — payment was real, log it and return partial success
       // so user can contact support with the reference
       return NextResponse.json({
@@ -542,7 +542,7 @@ export const GET = withAuth(async (req, user) => {
 
           console.log('Coupon redeemed:', coupon.code);
         } else {
-          console.error('❌ Coupon redemption error:', redemptionError);
+          console.error(' Coupon redemption error:', redemptionError);
         }
       }
     }
@@ -600,7 +600,7 @@ export const GET = withAuth(async (req, user) => {
     });
 
   } catch (error: any) {
-    console.error('❌ Payment verification error:', error.response?.data || error.message);
+    console.error(' Payment verification error:', error.response?.data || error.message);
     return NextResponse.json(
       {
         error: error.response?.data?.message || error.message || 'Payment verification failed',

@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
           userEmail = user.email || null;
           console.log('[Affiliate Apply] Authenticated user:', userId);
         } else {
-          console.log('[Affiliate Apply] ❌ Invalid token:', error?.message);
+          console.log('[Affiliate Apply]  Invalid token:', error?.message);
           // Token invalid, will fall through to new user creation
         }
       } catch (error) {

@@ -394,7 +394,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           return meetsTime;
         });
 
-        console.log('[Processor]', hasAbandoned ? '✅' : '❌', 'Page abandonment final result:', {
+        console.log('[Processor]', hasAbandoned ? '✅' : '', 'Page abandonment final result:', {
           minTime: validatedMinTime,
           pagePattern: pagePattern || 'any',
           hasAbandoned
@@ -840,7 +840,7 @@ case 'geography_filter': {
   // ALL filters must match (AND logic)
   const matches = countryMatch && regionMatch && cityMatch;
 
-  console.log('[Processor]', matches ? '✅' : '❌', 'Geography result:', {
+  console.log('[Processor]', matches ? '✅' : '', 'Geography result:', {
     country: countryMatch ? '✓' : '✗',
     region: regionMatch ? '✓' : '✗',
     city: cityMatch ? '✓' : '✗',
@@ -848,6 +848,79 @@ case 'geography_filter': {
   });
 
   return matches;
+}
+
+case 'date_range': {
+  const startDate = trigger.start_date ? new Date(trigger.start_date) : null;
+  const endDate = trigger.end_date ? new Date(trigger.end_date) : null;
+  const now = new Date();
+
+  if (!startDate || !endDate) {
+    console.log('[Processor] ✗ Date range: missing start or end date');
+    return false;
+  }
+
+  const isInRange = now >= startDate && now <= endDate;
+
+  console.log('[Processor]', isInRange ? '✓' : '✗', 'Date range check:', {
+    start: startDate.toISOString(),
+    end: endDate.toISOString(),
+    now: now.toISOString(),
+    isInRange
+  });
+
+  return isInRange;
+}
+
+case 'time_range': {
+  const startTime = trigger.start_time || '00:00';
+  const endTime = trigger.end_time || '23:59';
+  const activeDays = trigger.active_days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const timezone = trigger.timezone || 'UTC';
+
+  try {
+    // Get current time in specified timezone
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+
+    const parts = formatter.formatToParts(now);
+    const currentDay = parts.find(p => p.type === 'weekday')?.value || '';
+    const currentHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+    const currentMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
+    const currentTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+
+    // Check if current day is active
+    const isDayActive = activeDays.includes(currentDay);
+
+    // Check if current time is in range
+    const isTimeInRange = currentTime >= startTime && currentTime <= endTime;
+
+    const matches = isDayActive && isTimeInRange;
+
+    console.log('[Processor]', matches ? '✓' : '✗', 'Time range check:', {
+      timezone,
+      currentDay,
+      currentTime,
+      startTime,
+      endTime,
+      activeDays,
+      isDayActive,
+      isTimeInRange,
+      matches
+    });
+
+    return matches;
+
+  } catch (error: any) {
+    console.error('[Processor] ✗ Time range check failed:', error.message);
+    return false;
+  }
 }
 
       default:

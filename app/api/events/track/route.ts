@@ -25,7 +25,7 @@
 // //     'Access-Control-Allow-Origin': origin || '*',
 // //     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 // //     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
-// //     // ❌ NO credentials - this is a public endpoint
+// //     //  NO credentials - this is a public endpoint
 // //     'Access-Control-Max-Age': '86400',
 // //   };
 // // }

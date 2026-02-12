@@ -206,6 +206,10 @@ class JourneyEntryHandler {
       const targetEvent = trigger.event_name || trigger.event?.name;
       return event.event_name === targetEvent;
     }
+    if (trigger.type === 'date_range' || trigger.type === 'time_range') {
+    // Validation happens in processor, so accept the event here
+    return true;
+  }
 
     switch (trigger.type) {
       case 'time_on_page':

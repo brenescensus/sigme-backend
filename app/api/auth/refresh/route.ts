@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       session: data.session,
     });
   } catch (e: any) {
-    console.error('❌ [Refresh] Error:', e.message);
+    console.error(' [Refresh] Error:', e.message);
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }

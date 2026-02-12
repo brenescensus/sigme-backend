@@ -619,7 +619,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //     console.log(`[Worker] Job ${job.id} completed successfully\n`);
 
 //   } catch (error: any) {
-//     console.error(`❌ [Worker] Job ${job.id} failed:`, error.message);
+//     console.error(` [Worker] Job ${job.id} failed:`, error.message);
 
 //     await supabase
 //       .from('scheduled_journey_steps')

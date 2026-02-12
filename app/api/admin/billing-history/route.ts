@@ -36,7 +36,7 @@
 //       history: formattedHistory,
 //     });
 //   } catch (error: any) {
-//     console.error('❌ Error fetching billing history:', error);
+//     console.error(' Error fetching billing history:', error);
 //     return NextResponse.json(
 //       { error: error.message || 'Failed to fetch billing history' },
 //       { status: 500 }
@@ -100,7 +100,7 @@ export const GET = withSuperAdmin(async (req, user) => {
       history: formattedHistory,
     });
   } catch (error: any) {
-    console.error('❌ Error fetching billing history:', error);
+    console.error(' Error fetching billing history:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to fetch billing history' },
       { status: 500 }

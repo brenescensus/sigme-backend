@@ -35,7 +35,7 @@
 //       payments: formattedPayments,
 //     });
 //   } catch (error: any) {
-//     console.error('❌ Error fetching payments:', error);
+//     console.error(' Error fetching payments:', error);
 //     return NextResponse.json(
 //       { error: error.message || 'Failed to fetch payments' },
 //       { status: 500 }
@@ -106,7 +106,7 @@ export const GET = withSuperAdmin(async (req, user) => {
       payments: formattedPayments,
     });
   } catch (error: any) {
-    console.error('❌ Error fetching payments:', error);
+    console.error(' Error fetching payments:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to fetch payments' },
       { status: 500 }

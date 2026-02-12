@@ -73,7 +73,7 @@ export const POST = withAuth(async (req, user) => {
       .single();
 
     if (planError || !plan) {
-      console.error('❌ Plan lookup error:', planError);
+      console.error(' Plan lookup error:', planError);
       return NextResponse.json(
         { error: 'Invalid plan selected' },
         { status: 400 }
@@ -160,7 +160,7 @@ export const POST = withAuth(async (req, user) => {
         .single();
 
       if (couponError || !coupon) {
-        console.error('❌ Coupon not found:', normalizedCouponCode);
+        console.error(' Coupon not found:', normalizedCouponCode);
         return NextResponse.json(
           { error: 'Invalid coupon code' },
           { status: 400 }
@@ -346,7 +346,7 @@ export const POST = withAuth(async (req, user) => {
 
     if (!paystackResponse.ok) {
       const error = await paystackResponse.json();
-      console.error('❌ Paystack error:', error);
+      console.error(' Paystack error:', error);
       throw new Error(error.message || 'Failed to initialize payment');
     }
 
@@ -387,7 +387,7 @@ export const POST = withAuth(async (req, user) => {
       .single();
 
     if (intentError) {
-      console.error('❌ Failed to create payment intent:', intentError);
+      console.error(' Failed to create payment intent:', intentError);
       throw new Error('Failed to create payment record');
     }
 
@@ -436,7 +436,7 @@ export const POST = withAuth(async (req, user) => {
     });
 
   } catch (error: any) {
-    console.error('❌ Error upgrading plan:', error);
+    console.error(' Error upgrading plan:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to upgrade plan' },
       { status: 500 }

@@ -374,7 +374,7 @@ export const POST = withAuth(async (req: NextRequest, user: AuthUser) => {
     
     // CRITICAL: Block if canAdd is false
     if (!canAdd) {
-      console.warn('[Websites POST] ❌ Website limit reached for user:', user.id);
+      console.warn('[Websites POST]  Website limit reached for user:', user.id);
       
       // Get subscription details for error message
       const { data: subscription } = await supabase
