@@ -291,6 +291,7 @@ export const POST = withAuth(
         target_browsers,
         target_devices,
         target_countries,
+        advanced_targeting,
         status,
         scheduled_at,
         is_recurring,
@@ -326,7 +327,7 @@ export const POST = withAuth(
       //  CHECK NOTIFICATION LIMIT FOR RECURRING CAMPAIGNS
       if (is_recurring) {
         console.log('[Campaigns POST] Checking recurring campaign limit...');
-        
+
         // Check if user can create recurring campaigns
         const { data: subscription } = await supabase
           .from('user_subscriptions')
@@ -341,7 +342,7 @@ export const POST = withAuth(
           if (limit > 0 && used >= limit) {
             console.warn('[Campaigns POST] Recurring campaign limit reached');
             return NextResponse.json(
-              { 
+              {
                 error: `Recurring campaign limit reached. You have ${used} of ${limit} recurring campaigns.`,
                 limit,
                 used,
@@ -376,6 +377,7 @@ export const POST = withAuth(
           target_browsers: target_browsers || null,
           target_devices: target_devices || null,
           target_countries: target_countries || null,
+          advanced_targeting: advanced_targeting || null,
           status: status || 'draft',
           scheduled_at: scheduled_at || null,
           is_recurring: is_recurring || false,
@@ -396,7 +398,7 @@ export const POST = withAuth(
 
       console.log('[Campaigns POST] Campaign created successfully:', campaign.id);
 
-        if (is_recurring) {
+      if (is_recurring) {
         console.log('[Campaigns POST] Incrementing recurring_used counter...');
 
         // Fetch current value
@@ -411,8 +413,8 @@ export const POST = withAuth(
         // Update with new value
         const { error: updateError } = await supabase
           .from('user_subscriptions')
-          .update({ 
-            recurring_used: currentUsed + 1 
+          .update({
+            recurring_used: currentUsed + 1
           })
           .eq('user_id', user.id);
 
