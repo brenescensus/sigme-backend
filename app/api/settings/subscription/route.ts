@@ -1,5 +1,5 @@
 // app/api/settings/subscription/route.ts
-// FIXED: Returns custom plan details when user has a custom plan
+// Returns custom plan details when user has a custom plan
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
