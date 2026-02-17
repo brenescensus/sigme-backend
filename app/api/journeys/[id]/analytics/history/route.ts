@@ -83,7 +83,7 @@
 //     }
 
 //     // Otherwise, generate history from user_journey_states
-//     console.log('[Journey Analytics] 📊 Generating history from journey states...');
+//     console.log('[Journey Analytics]  Generating history from journey states...');
 
 //     const { data: states, error: statesError } = await supabase
 //       .from('user_journey_states')
@@ -249,7 +249,7 @@ export async function GET(
     }
 
     // Otherwise, generate history from user_journey_states
-    console.log('[Journey Analytics] 📊 Generating history from journey states...');
+    console.log('[Journey Analytics]  Generating history from journey states...');
 
     const { data: states, error: statesError } = await supabase
       .from('user_journey_states')

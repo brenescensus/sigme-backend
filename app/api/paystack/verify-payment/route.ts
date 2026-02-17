@@ -435,7 +435,7 @@ export const GET = withAuth(async (req, user) => {
       .eq('user_id', user.id)
       .single();
 
-    console.log('📋 Existing subscription:', existingSubscription);
+    console.log(' Existing subscription:', existingSubscription);
 
     // FIX 5: Reset notifications_used + correct billing date
     const subscriptionData = {

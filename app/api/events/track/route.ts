@@ -230,7 +230,7 @@
 // //       );
 // //     }
 
-// //     // 🔥 FIX: Quick validation - don't fetch subscriber
+// //     //  FIX: Quick validation - don't fetch subscriber
 // //     // Trust the SDK to send correct subscriber_id
 // //     const finalWebsiteId = website_id;
 
@@ -247,7 +247,7 @@
 // //       current_url: current_url || properties.current_url || event_data?.current_url,
 // //     };
 
-// //     // 🔥 FIX: Insert event IMMEDIATELY (no waiting)
+// //     //  FIX: Insert event IMMEDIATELY (no waiting)
 // //     const insertPromise = supabase
 // //       .from('subscriber_events')
 // //       .insert({
@@ -259,7 +259,7 @@
 // //       .select()
 // //       .single();
 
-// //     // 🔥 FIX: Fire everything in parallel, don't wait
+// //     //  FIX: Fire everything in parallel, don't wait
 // //     Promise.all([
 // //       insertPromise,
       
@@ -282,7 +282,7 @@
 // //       }),
 // //     ]).catch(err => console.error('[Event Track] Background error:', err));
 
-// //     // 🔥 CRITICAL: Return immediately
+// //     //  CRITICAL: Return immediately
 // //     return NextResponse.json(
 // //       {
 // //         success: true,
@@ -421,7 +421,7 @@
 //       );
 //     }
 
-//     // 🔥 FIX: Fetch subscriber to get website_id (SDK doesn't always send it)
+//     //  FIX: Fetch subscriber to get website_id (SDK doesn't always send it)
 //     const { data: subscriber, error: subError } = await supabase
 //       .from('subscribers')
 //       .select('website_id, id')
@@ -429,14 +429,14 @@
 //       .single();
 
 //     if (subError || !subscriber) {
-//       console.error('[Event Track] ✗ Subscriber not found:', subscriber_id);
+//       console.error('[Event Track]  Subscriber not found:', subscriber_id);
 //       return NextResponse.json(
 //         { success: false, error: 'Subscriber not found' },
 //         { status: 404, headers: getCorsHeaders(request) }
 //       );
 //     }
 
-//     // 🔥 CRITICAL: Use subscriber's website_id if not provided
+//     //  CRITICAL: Use subscriber's website_id if not provided
 //     const finalWebsiteId = website_id || subscriber.website_id;
 
 //     if (!finalWebsiteId) {
@@ -452,7 +452,7 @@
 //       current_url: current_url || properties.current_url || event_data?.current_url,
 //     };
 
-//     // 🔥 OPTIMIZATION: Parallel database operations
+//     //  OPTIMIZATION: Parallel database operations
 
 
 //     const [eventResult] = await Promise.all([
@@ -477,7 +477,7 @@
 //     })
 //     .eq('id', subscriber_id)
 //     .catch((err: any) => {
-//       console.error('[Event Track] ✗ Update subscriber failed:', err);
+//       console.error('[Event Track]  Update subscriber failed:', err);
 //     }),
 // ]);
 //   //  const [eventResult] = await Promise.all([
@@ -502,27 +502,27 @@
 //   //       })
 //   //       .eq('id', subscriber_id)
 //   //       .then(() => {})
-//   //       .catch(err => console.error('[Event Track] ✗ Update subscriber failed:', err)),
+//   //       .catch(err => console.error('[Event Track]  Update subscriber failed:', err)),
 //   //   ]);
 
 //     const { data: event, error: insertError } = eventResult;
 
 //     if (insertError) {
-//       console.error('[Event Track] ✗ Insert error:', insertError);
+//       console.error('[Event Track]  Insert error:', insertError);
 //       return NextResponse.json(
 //         { success: false, error: 'Failed to track event' },
 //         { status: 500, headers: getCorsHeaders(request) }
 //       );
 //     }
 
-//     // 🔥 CRITICAL: Trigger journeys IMMEDIATELY (don't wait)
+//     //  CRITICAL: Trigger journeys IMMEDIATELY (don't wait)
 //     trackEventWithJourneys({
 //       subscriber_id,
 //       website_id: finalWebsiteId,
 //       event_name,
 //       event_data: mergedProperties,
 //       timestamp: new Date().toISOString(),
-//     }).catch(err => console.error('[Event Track] ✗ Journey error:', err));
+//     }).catch(err => console.error('[Event Track]  Journey error:', err));
 
 //     // Handle notification clicks (fire-and-forget)
 //     if (event_name === 'notification_clicked') {
@@ -570,7 +570,7 @@
 //               }
 //             }
 //           } catch (err) {
-//             console.error('[Event Track] ✗ Click tracking failed:', err);
+//             console.error('[Event Track]  Click tracking failed:', err);
 //           }
 //         })();
 //       }
@@ -586,7 +586,7 @@
 //     );
 
 //   } catch (error: any) {
-//     console.error('[Event Track] ✗ Fatal error:', error.message);
+//     console.error('[Event Track]  Fatal error:', error.message);
 //     return NextResponse.json(
 //       { success: false, error: 'Internal server error' },
 //       { status: 500, headers: getCorsHeaders(request) }
@@ -730,7 +730,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 🔥 FIX: Fetch subscriber to get website_id (SDK doesn't always send it)
+    //  FIX: Fetch subscriber to get website_id (SDK doesn't always send it)
     const { data: subscriber, error: subError } = await supabase
       .from('subscribers')
       .select('website_id, id')
@@ -738,14 +738,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (subError || !subscriber) {
-      console.error('[Event Track] ✗ Subscriber not found:', subscriber_id);
+      console.error('[Event Track]  Subscriber not found:', subscriber_id);
       return NextResponse.json(
         { success: false, error: 'Subscriber not found' },
         { status: 404, headers: getCorsHeaders(request) }
       );
     }
 
-    // 🔥 CRITICAL: Use subscriber's website_id if not provided
+    //  CRITICAL: Use subscriber's website_id if not provided
     const finalWebsiteId = website_id || subscriber.website_id;
 
     if (!finalWebsiteId) {
@@ -761,7 +761,7 @@ export async function POST(request: NextRequest) {
       current_url: current_url || properties.current_url || event_data?.current_url,
     };
 
-    // 🔥 OPTIMIZATION: Parallel database operations
+    //  OPTIMIZATION: Parallel database operations
     // const [eventResult] = await Promise.all([
     //   // Insert event
     //   supabase
@@ -784,7 +784,7 @@ export async function POST(request: NextRequest) {
     //     })
     //     .eq('id', subscriber_id)
     //     .catch((err: any) => {
-    //       console.error('[Event Track] ✗ Update subscriber failed:', err);
+    //       console.error('[Event Track]  Update subscriber failed:', err);
     //     }),
     // ]);
 
@@ -812,7 +812,7 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', subscriber_id);
     } catch (err: any) {
-      console.error('[Event Track] ✗ Update subscriber failed:', err);
+      console.error('[Event Track]  Update subscriber failed:', err);
     }
   })(),
 ]);
@@ -820,14 +820,14 @@ export async function POST(request: NextRequest) {
     const { data: event, error: insertError } = eventResult;
 
     if (insertError) {
-      console.error('[Event Track] ✗ Insert error:', insertError);
+      console.error('[Event Track]  Insert error:', insertError);
       return NextResponse.json(
         { success: false, error: 'Failed to track event' },
         { status: 500, headers: getCorsHeaders(request) }
       );
     }
 
-    // 🔥 CRITICAL: Trigger journeys IMMEDIATELY (don't wait)
+    //  CRITICAL: Trigger journeys IMMEDIATELY (don't wait)
     (async () => {
       try {
         await trackEventWithJourneys({
@@ -838,7 +838,7 @@ export async function POST(request: NextRequest) {
           timestamp: new Date().toISOString(),
         });
       } catch (err: any) {
-        console.error('[Event Track] ✗ Journey error:', err);
+        console.error('[Event Track]  Journey error:', err);
       }
     })();
 
@@ -888,7 +888,7 @@ export async function POST(request: NextRequest) {
               }
             }
           } catch (err: any) {
-            console.error('[Event Track] ✗ Click tracking failed:', err);
+            console.error('[Event Track]  Click tracking failed:', err);
           }
         })();
       }
@@ -904,7 +904,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error: any) {
-    console.error('[Event Track] ✗ Fatal error:', error.message);
+    console.error('[Event Track]  Fatal error:', error.message);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500, headers: getCorsHeaders(request) }

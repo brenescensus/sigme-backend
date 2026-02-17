@@ -32,7 +32,7 @@ async function handleGet(req: NextRequest, user: AuthUser) {
       );
     }
 
-    // 🔥 Fetch all active subscribers with location data
+    //  Fetch all active subscribers with location data
     const { data: subscribers, error } = await supabase
       .from('subscribers')
       .select('country, city')
@@ -60,7 +60,7 @@ async function handleGet(req: NextRequest, user: AuthUser) {
       });
     }
 
-    // 🔥 Aggregate countries and cities
+    //  Aggregate countries and cities
     const countryMap = new Map<string, number>();
     const cityMap = new Map<string, number>();
 
@@ -78,7 +78,7 @@ async function handleGet(req: NextRequest, user: AuthUser) {
       }
     });
 
-    // 🔥 Convert to sorted arrays (most popular first)
+    //  Convert to sorted arrays (most popular first)
     const countries = Array.from(countryMap.entries())
       .map(([country, count]) => ({ country, city: '', count }))
       .sort((a, b) => b.count - a.count);

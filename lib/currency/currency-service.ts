@@ -72,7 +72,7 @@ export async function getExchangeRates(): Promise<ExchangeRates> {
     console.error(' Failed to fetch exchange rates:', error);
     
     // Fallback to approximate rates if API fails
-    console.log('⚠️ Using fallback exchange rates');
+    console.log(' Using fallback exchange rates');
     return getFallbackRates();
   }
 }

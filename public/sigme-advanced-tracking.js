@@ -37,7 +37,7 @@
   //   const currentUrl = window.location.href;
   //   const currentPath = window.location.pathname;
     
-  //   console.log('[Sigme] ✓ Tracking page landing:', currentPath);
+  //   console.log('[Sigme]  Tracking page landing:', currentPath);
     
   //   //  FIX: Changed from 'page_landing' to 'page_landed' to match backend
   //   window.Sigme.track('page_landed', {
@@ -525,12 +525,12 @@ function startTimeTracking() {
     deviceType = 'mobile';
     platform = 'ios';
   } 
-  // 🔥 ENHANCED: Detect iPad (tricky - can report as desktop)
+  //  ENHANCED: Detect iPad (tricky - can report as desktop)
   else if (/iPad/.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform))) {
     deviceType = 'tablet';
     platform = 'ios';
   }
-  // 🔥 ENHANCED: Detect Android devices
+  //  ENHANCED: Detect Android devices
   else if (/Android/.test(ua)) {
     if (/Mobile/.test(ua)) {
       deviceType = 'mobile';
@@ -564,7 +564,7 @@ function startTimeTracking() {
 
   return { 
     deviceType,
-    platform,  // 🔥 NEW: 'ios', 'android', or 'unknown'
+    platform,  //  NEW: 'ios', 'android', or 'unknown'
     browser, 
     os 
   };

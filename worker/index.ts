@@ -96,7 +96,7 @@ async function sendWebPushNotification(
 
     return { success: true };
   } catch (error: any) {
-    console.error('[Web Push] ✗ Send error:', error.message);
+    console.error('[Web Push]  Send error:', error.message);
 
     if (error.statusCode === 410 || error.statusCode === 404) {
       return { success: false, error: 'SUBSCRIPTION_EXPIRED' };
@@ -155,7 +155,7 @@ async function processNextStepInWorker(
       .single();
 
     if (!journey) {
-      console.error('[Worker] ✗ Journey not found');
+      console.error('[Worker]  Journey not found');
       return;
     }
 
@@ -203,7 +203,7 @@ async function processNextStepInWorker(
         }
     }
   } catch (error: any) {
-    console.error('[Worker] ✗ Error processing next step:', error.message);
+    console.error('[Worker]  Error processing next step:', error.message);
   }
 }
 
@@ -223,7 +223,7 @@ async function sendNotificationFromWorker(
       .single();
 
     if (!state) {
-      console.error('[Worker] ✗ State not found');
+      console.error('[Worker]  State not found');
       return;
     }
 
@@ -298,7 +298,7 @@ async function sendNotificationFromWorker(
         error_message: result.error || 'Unknown error'
       }).eq('id', notificationLog?.id);
       
-      console.log('[Worker] ✗ Notification failed:', result.error);
+      console.log('[Worker]  Notification failed:', result.error);
     }
 
     await supabase.from('journey_events').insert({
@@ -314,7 +314,7 @@ async function sendNotificationFromWorker(
     return;
 
   } catch (error: any) {
-    console.error('[Worker] ✗ Notification error:', error.message);
+    console.error('[Worker]  Notification error:', error.message);
     await moveToNextNodeInWorker(stateId, node.id, flowDefinition, journeyId);
     return;
   }
@@ -345,7 +345,7 @@ async function scheduleWaitFromWorker(
       .single();
 
     if (!state) {
-      console.error('[Worker] ✗ State not found');
+      console.error('[Worker]  State not found');
       return;
     }
 
@@ -382,11 +382,11 @@ async function scheduleWaitFromWorker(
       jobId: `wait-${scheduledStep!.id}`,
     });
 
-    console.log(`[Worker] ✓ Wait scheduled: wait-${scheduledStep!.id}`);
+    console.log(`[Worker]  Wait scheduled: wait-${scheduledStep!.id}`);
     return;
     
   } catch (error: any) {
-    console.error('[Worker] ✗ Failed to schedule wait:', error.message);
+    console.error('[Worker]  Failed to schedule wait:', error.message);
   }
 }
 
@@ -458,7 +458,7 @@ async function completeJourney(stateId: string, journeyId: string): Promise<void
       event_type: 'journey_completed',
     });
 
-    // 🔥 FIX: Removed conversion_rate (doesn't exist in database)
+    //  FIX: Removed conversion_rate (doesn't exist in database)
     const { data: allStates } = await supabase
       .from('user_journey_states')
       .select('status')
@@ -479,10 +479,10 @@ async function completeJourney(stateId: string, journeyId: string): Promise<void
       }).eq('id', journeyId);
     }
 
-    console.log('[Worker] ✓ Journey completed successfully');
+    console.log('[Worker]  Journey completed successfully');
 
   } catch (error: any) {
-    console.error('[Worker] ✗ Error completing journey:', error.message);
+    console.error('[Worker]  Error completing journey:', error.message);
   }
 }
 
@@ -525,7 +525,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //       .single();
 
 //     if (stateError || !state) {
-//       console.error(`[Worker] ✗ Journey state not found:`, stateError?.message || 'No data');
+//       console.error(`[Worker]  Journey state not found:`, stateError?.message || 'No data');
 //       throw new Error('Journey state not found');
 //     }
 
@@ -536,7 +536,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //       .single();
 
 //     if (journeyError || !journey) {
-//       console.error(`[Worker] ✗ Journey not found:`, journeyError?.message || 'No data');
+//       console.error(`[Worker]  Journey not found:`, journeyError?.message || 'No data');
 //       throw new Error('Journey not found');
 //     }
 
@@ -559,7 +559,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //     }
 
 //     if (stepType.includes('wait')) {
-//       console.log('[Worker] ⏰ Wait period completed');
+//       console.log('[Worker]  Wait period completed');
       
 //       const flowDefinition = journey.flow_definition as any;
 //       const currentNode = flowDefinition.nodes.find(
@@ -574,7 +574,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //         );
         
 //         if (nextEdge) {
-//           console.log(`[Worker] ➡️  Moving to next step: ${nextEdge.to}`);
+//           console.log(`[Worker]   Moving to next step: ${nextEdge.to}`);
           
 //           await supabase.from('user_journey_states').update({
 //             current_step_id: nextEdge.to,
@@ -603,7 +603,7 @@ async function triggerProcessorForState(stateId: string): Promise<void> {
 //           await completeJourney(state.id, state.journey_id);
 //         }
 //       } else {
-//         console.log('[Worker] ✗ Current node not found in flow');
+//         console.log('[Worker]  Current node not found in flow');
 //         await completeJourney(state.id, state.journey_id);
 //       }
 //     }
@@ -644,7 +644,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
   const { scheduledStepId, journeyStateId, stepType } = job.data;
 
   try {
-    // 🔥 FIX 1: PARALLEL fetch state and update schedule (saves 800ms)
+    //  FIX 1: PARALLEL fetch state and update schedule (saves 800ms)
     const [stateResult, scheduleUpdateResult] = await Promise.all([
       supabase.from('user_journey_states').select('*').eq('id', journeyStateId).single(),
       supabase.from('scheduled_journey_steps')
@@ -659,11 +659,11 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
     const { data: state, error: stateError } = stateResult;
 
     if (stateError || !state) {
-      console.error(`[Worker] ✗ Journey state not found:`, stateError?.message || 'No data');
+      console.error(`[Worker]  Journey state not found:`, stateError?.message || 'No data');
       throw new Error('Journey state not found');
     }
 
-    // 🔥 FIX 2: Fetch journey 
+    //  FIX 2: Fetch journey 
     const { data: journey, error: journeyError } = await supabase
       .from('journeys')
       .select('*')
@@ -671,7 +671,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
       .single();
 
     if (journeyError || !journey) {
-      console.error(`[Worker] ✗ Journey not found:`, journeyError?.message || 'No data');
+      console.error(`[Worker]  Journey not found:`, journeyError?.message || 'No data');
       throw new Error('Journey not found');
     }
 
@@ -711,7 +711,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
         if (nextEdge) {
           console.log(`[Worker]   Moving to next step: ${nextEdge.to}`);
           
-          // 🔥 FIX 3: Update state and log event IN PARALLEL (saves 500ms)
+          //  FIX 3: Update state and log event IN PARALLEL (saves 500ms)
           await Promise.all([
             supabase.from('user_journey_states').update({
               current_step_id: nextEdge.to,
@@ -733,7 +733,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
           console.log('[Worker] State updated to active');
           console.log('[Worker] Wait completion logged');
 
-          // 🔥 FIX 4: Process next step and update schedule in parallel
+          //  FIX 4: Process next step and update schedule in parallel
           await Promise.all([
             processNextStepInWorker(state.id, nextEdge.to, state.journey_id),
             supabase
@@ -753,7 +753,7 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
           await completeJourney(state.id, state.journey_id);
         }
       } else {
-        console.log('[Worker] ✗ Current node not found in flow');
+        console.log('[Worker]  Current node not found in flow');
         await completeJourney(state.id, state.journey_id);
       }
     }
@@ -796,7 +796,7 @@ const worker = new Worker<NotificationJobData>(
     concurrency: 20,
     drainDelay: 50,
     lockDuration: 15000,
-    maxStalledCount: 2,     // 🔥 NEW: Fail faster on stalled jobs
+    maxStalledCount: 2,     //  NEW: Fail faster on stalled jobs
     stalledInterval: 5000,
   }
 );

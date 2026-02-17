@@ -426,8 +426,8 @@ self.addEventListener('notificationclick', (event) => {
       title: event.notification.title,
     };
     // console.log('[Sigme SW Core]  Tracking click:', {
-    //   notification_id: payload.notification_id ? '✓' : '✗',
-    //   subscriber_id: payload.subscriber_id ? '✓' : '✗',
+    //   notification_id: payload.notification_id ? '' : '',
+    //   subscriber_id: payload.subscriber_id ? '' : '',
     //   journey_id: payload.journey_id || 'none',
     // });
 
@@ -529,7 +529,7 @@ self.addEventListener('notificationclick', (event) => {
 //                 client.navigate(urlToOpen)
 //               }
 //               else {
-//                 console.warn('[Sigme SW Core] ⚠️ Navigate not available, opening new window');
+//                 console.warn('[Sigme SW Core]  Navigate not available, opening new window');
 //                 return self.clients.openWindow(urlToOpen);
 //               }
 //           });

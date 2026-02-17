@@ -397,14 +397,14 @@
 // //       .single();
 
 // //     if (campaignError || !campaign) {
-// //       console.error('[Campaign Send] ✗ Campaign not found');
+// //       console.error('[Campaign Send]  Campaign not found');
 // //       return NextResponse.json(
 // //         { success: false, error: 'Campaign not found' },
 // //         { status: 404 }
 // //       );
 // //     }
 
-// //     console.log('[Campaign Send] ✓ Campaign loaded:', campaign.name);
+// //     console.log('[Campaign Send]  Campaign loaded:', campaign.name);
 
 // //     // 2. Get website with branding
 // //     const { data: website, error: websiteError } = await supabase
@@ -414,14 +414,14 @@
 // //       .single();
 
 // //     if (websiteError || !website) {
-// //       console.error('[Campaign Send] ✗ Website not found');
+// //       console.error('[Campaign Send]  Website not found');
 // //       return NextResponse.json(
 // //         { success: false, error: 'Website not found' },
 // //         { status: 404 }
 // //       );
 // //     }
 
-// //     console.log('[Campaign Send] ✓ Website loaded:', website.name);
+// //     console.log('[Campaign Send]  Website loaded:', website.name);
 
 // //     const branding = parseBranding(website.notification_branding);
 
@@ -448,7 +448,7 @@
 // //     const { data: subscribers, error: subscribersError } = await query;
 
 // //     if (subscribersError) {
-// //       console.error('[Campaign Send] ✗ Error fetching subscribers:', subscribersError);
+// //       console.error('[Campaign Send]  Error fetching subscribers:', subscribersError);
 // //       return NextResponse.json(
 // //         { success: false, error: 'Failed to fetch subscribers' },
 // //         { status: 500 }
@@ -490,7 +490,7 @@
 // //       try {
 // //         // Double-check subscription validity
 // //         if (!subscriber.endpoint || !subscriber.p256dh_key || !subscriber.auth_key) {
-// //           console.error(`[Campaign Send] ✗ Invalid subscription keys for ${subscriber.id}`);
+// //           console.error(`[Campaign Send]  Invalid subscription keys for ${subscriber.id}`);
 // //           failedCount++;
 
 // //           await supabase.from('notification_logs').insert({
@@ -532,7 +532,7 @@
 // //           .single();
 
 // //         if (logError || !notificationLog) {
-// //           console.error(`[Campaign Send] ✗ Failed to create log for ${subscriber.id}`);
+// //           console.error(`[Campaign Send]  Failed to create log for ${subscriber.id}`);
 // //           failedCount++;
 // //           continue;
 // //         }
@@ -602,12 +602,12 @@
 // //           })
 // //           .eq('id', notificationLog.id);
 
-// //         console.log(`[Campaign Send] ✓ Delivered to ${subscriber.id.substring(0, 8)}...`);
+// //         console.log(`[Campaign Send]  Delivered to ${subscriber.id.substring(0, 8)}...`);
 
 // //       } catch (error: any) {
 // //         const errorInfo = classifyPushError(error);
 
-// //         console.error(`[Campaign Send] ✗ Failed to send to ${subscriber.id.substring(0, 8)}...`);
+// //         console.error(`[Campaign Send]  Failed to send to ${subscriber.id.substring(0, 8)}...`);
 // //         console.error(`[Campaign Send]   Status: ${errorInfo.statusCode}`);
 // //         console.error(`[Campaign Send]   Error: ${errorInfo.errorMessage}`);
 
@@ -634,8 +634,8 @@
 // //             .from('subscribers')
 // //             .update({
 // //               status: 'inactive',
-// //               endpoint: null,        // 🔥 ADD THIS!
-// //               p256dh_key: null,      // 🔥 ADD THIS!
+// //               endpoint: null,        //  ADD THIS!
+// //               p256dh_key: null,      //  ADD THIS!
 // //               auth_key: null,
 // //               updated_at: new Date().toISOString()
 // //             })
@@ -661,7 +661,7 @@
 // //       })
 // //       .eq('id', campaignId);
 
-// //     console.log(`\n[Campaign Send] ✓ Campaign complete:`);
+// //     console.log(`\n[Campaign Send]  Campaign complete:`);
 // //     console.log(`   Sent: ${sentCount}`);
 // //     console.log(`   Delivered: ${deliveredCount}`);
 // //     console.log(`   Failed: ${failedCount}`);
@@ -677,7 +677,7 @@
 // //     });
 
 // //   } catch (error: any) {
-// //     console.error('[Campaign Send] ✗ Fatal error:', error);
+// //     console.error('[Campaign Send]  Fatal error:', error);
 
 // //     return NextResponse.json(
 // //       {
@@ -807,14 +807,14 @@
 //       .single();
 
 //     if (campaignError || !campaign) {
-//       console.error('[Campaign Send] ✗ Campaign not found');
+//       console.error('[Campaign Send]  Campaign not found');
 //       return NextResponse.json(
 //         { success: false, error: 'Campaign not found' },
 //         { status: 404 }
 //       );
 //     }
 
-//     console.log('[Campaign Send] ✓ Campaign loaded:', campaign.name);
+//     console.log('[Campaign Send]  Campaign loaded:', campaign.name);
 
 //     const { data: website, error: websiteError } = await supabase
 //       .from('websites')
@@ -823,14 +823,14 @@
 //       .single();
 
 //     if (websiteError || !website) {
-//       console.error('[Campaign Send] ✗ Website not found');
+//       console.error('[Campaign Send]  Website not found');
 //       return NextResponse.json(
 //         { success: false, error: 'Website not found' },
 //         { status: 404 }
 //       );
 //     }
 
-//     console.log('[Campaign Send] ✓ Website loaded:', website.name);
+//     console.log('[Campaign Send]  Website loaded:', website.name);
 
 //     const branding = parseBranding(website.notification_branding);
 
@@ -852,13 +852,13 @@
 //       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 //       query = query.lt('last_seen_at', thirtyDaysAgo.toISOString());
 //     }
-//     // 🔥 NEW: Apply device filter
+//     //  NEW: Apply device filter
 //     if (campaign.target_devices && campaign.target_devices.length > 0) {
 //       // Device filter is applied in-memory after fetch (see below)
 //       console.log('[Campaign Send] Will filter by devices:', campaign.target_devices);
 //     }
 
-//     // 🔥 NEW: Apply country filter
+//     //  NEW: Apply country filter
 //     if (campaign.target_countries && campaign.target_countries.length > 0) {
 //       console.log('[Campaign Send] Filtering by countries:', campaign.target_countries);
 //       // Use overlap operator for array containment
@@ -867,14 +867,14 @@
 //     const { data: subscribers, error: subscribersError } = await query;
 
 //     if (subscribersError) {
-//       console.error('[Campaign Send] ✗ Error fetching subscribers:', subscribersError);
+//       console.error('[Campaign Send]  Error fetching subscribers:', subscribersError);
 //       return NextResponse.json(
 //         { success: false, error: 'Failed to fetch subscribers' },
 //         { status: 500 }
 //       );
 //     }
 
-// // 🔥 NEW: Apply advanced targeting filters in-memory
+// //  NEW: Apply advanced targeting filters in-memory
 // let subscribers = allSubscribers || [];
 
 // // Filter by devices
@@ -1011,7 +1011,7 @@
 //     for (const subscriber of subscribers) {
 //       try {
 //         if (!subscriber.endpoint || !subscriber.p256dh_key || !subscriber.auth_key) {
-//           console.error(`[Campaign Send] ✗ Invalid subscription keys for ${subscriber.id}`);
+//           console.error(`[Campaign Send]  Invalid subscription keys for ${subscriber.id}`);
 //           failedCount++;
 
 //           await supabase.from('notification_logs').insert({
@@ -1052,7 +1052,7 @@
 //           .single();
 
 //         if (logError || !notificationLog) {
-//           console.error(`[Campaign Send] ✗ Failed to create log for ${subscriber.id}`);
+//           console.error(`[Campaign Send]  Failed to create log for ${subscriber.id}`);
 //           failedCount++;
 //           continue;
 //         }
@@ -1128,12 +1128,12 @@
 //           })
 //           .eq('id', notificationLog.id);
 
-//         console.log(`[Campaign Send] ✓ Delivered to ${subscriber.id.substring(0, 8)}...`);
+//         console.log(`[Campaign Send]  Delivered to ${subscriber.id.substring(0, 8)}...`);
 
 //       } catch (error: any) {
 //         const errorInfo = classifyPushError(error);
 
-//         console.error(`[Campaign Send] ✗ Failed to send to ${subscriber.id.substring(0, 8)}...`);
+//         console.error(`[Campaign Send]  Failed to send to ${subscriber.id.substring(0, 8)}...`);
 //         console.error(`[Campaign Send]   Status: ${errorInfo.statusCode}`);
 //         console.error(`[Campaign Send]   Error: ${errorInfo.errorMessage}`);
 
@@ -1183,7 +1183,7 @@
 //       })
 //       .eq('id', campaignId);
 
-//     console.log(`\n[Campaign Send] ✓ Campaign complete:`);
+//     console.log(`\n[Campaign Send]  Campaign complete:`);
 //     console.log(`   Sent: ${sentCount}`);
 //     console.log(`   Delivered: ${deliveredCount}`);
 //     console.log(`   Failed: ${failedCount}`);
@@ -1199,7 +1199,7 @@
 //     });
 
 //   } catch (error: any) {
-//     console.error('[Campaign Send] ✗ Fatal error:', error);
+//     console.error('[Campaign Send]  Fatal error:', error);
 
 //     return NextResponse.json(
 //       {
@@ -1338,14 +1338,14 @@ export async function POST(
       .single();
 
     if (campaignError || !campaign) {
-      console.error('[Campaign Send] ✗ Campaign not found');
+      console.error('[Campaign Send]  Campaign not found');
       return NextResponse.json(
         { success: false, error: 'Campaign not found' },
         { status: 404 }
       );
     }
 
-    console.log('[Campaign Send] ✓ Campaign loaded:', campaign.name);
+    console.log('[Campaign Send]  Campaign loaded:', campaign.name);
 
     const { data: website, error: websiteError } = await supabase
       .from('websites')
@@ -1354,18 +1354,18 @@ export async function POST(
       .single();
 
     if (websiteError || !website) {
-      console.error('[Campaign Send] ✗ Website not found');
+      console.error('[Campaign Send]  Website not found');
       return NextResponse.json(
         { success: false, error: 'Website not found' },
         { status: 404 }
       );
     }
 
-    console.log('[Campaign Send] ✓ Website loaded:', website.name);
+    console.log('[Campaign Send]  Website loaded:', website.name);
 
     const branding = parseBranding(website.notification_branding);
 
-    // 🔥 BUILD BASE QUERY
+    //  BUILD BASE QUERY
     let query = supabase
       .from('subscribers')
       .select('*')
@@ -1403,7 +1403,7 @@ export async function POST(
     const { data: allSubscribers, error: subscribersError } = await query;
 
     if (subscribersError) {
-      console.error('[Campaign Send] ✗ Error fetching subscribers:', subscribersError);
+      console.error('[Campaign Send]  Error fetching subscribers:', subscribersError);
       return NextResponse.json(
         { success: false, error: 'Failed to fetch subscribers' },
         { status: 500 }
@@ -1412,7 +1412,7 @@ export async function POST(
 
     console.log(`[Campaign Send] ℹ Base query matched ${allSubscribers?.length || 0} subscribers`);
 
-    // 🔥 APPLY ADVANCED TARGETING FILTERS IN-MEMORY
+    //  APPLY ADVANCED TARGETING FILTERS IN-MEMORY
     let subscribers = allSubscribers || [];
     const advancedTargeting = campaign.advanced_targeting as any;
 
@@ -1482,7 +1482,7 @@ export async function POST(
       const isTimeInRange = currentTime >= start_time && currentTime <= end_time;
       
       if (!isDayActive || !isTimeInRange) {
-        console.log('[Campaign Send] ⏰ Current time outside allowed range:', {
+        console.log('[Campaign Send]  Current time outside allowed range:', {
           currentDay,
           currentTime,
           allowed: `${start_time}-${end_time} on ${active_days.join(', ')}`
@@ -1496,7 +1496,7 @@ export async function POST(
         }, { status: 400 });
       }
       
-      console.log('[Campaign Send] ⏰ Time range check passed:', { currentDay, currentTime });
+      console.log('[Campaign Send]  Time range check passed:', { currentDay, currentTime });
     }
 
     // Log final targeting summary
@@ -1548,7 +1548,7 @@ export async function POST(
     for (const subscriber of subscribers) {
       try {
         if (!subscriber.endpoint || !subscriber.p256dh_key || !subscriber.auth_key) {
-          console.error(`[Campaign Send] ✗ Invalid subscription keys for ${subscriber.id}`);
+          console.error(`[Campaign Send]  Invalid subscription keys for ${subscriber.id}`);
           failedCount++;
           
           await supabase.from('notification_logs').insert({
@@ -1589,7 +1589,7 @@ export async function POST(
           .single();
 
         if (logError || !notificationLog) {
-          console.error(`[Campaign Send] ✗ Failed to create log for ${subscriber.id}`);
+          console.error(`[Campaign Send]  Failed to create log for ${subscriber.id}`);
           failedCount++;
           continue;
         }
@@ -1705,7 +1705,7 @@ export async function POST(
       })
       .eq('id', campaignId);
 
-    console.log(`\n[Campaign Send] ✓ Campaign complete:`);
+    console.log(`\n[Campaign Send]  Campaign complete:`);
     console.log(`   Sent: ${sentCount}`);
     console.log(`   Delivered: ${deliveredCount}`);
     console.log(`   Failed: ${failedCount}`);
@@ -1721,7 +1721,7 @@ export async function POST(
     });
 
   } catch (error: any) {
-    console.error('[Campaign Send] ✗ Fatal error:', error);
+    console.error('[Campaign Send]  Fatal error:', error);
     
     return NextResponse.json(
       {

@@ -76,7 +76,7 @@
 //     const uniqueEvents = [...new Set(events?.map(e => e.event_name) || [])];
 
 //     console.log('[Events]  Found', events?.length, 'events');
-//     console.log('[Events] 📊 Unique event types:', uniqueEvents.length);
+//     console.log('[Events]  Unique event types:', uniqueEvents.length);
 
 //     return NextResponse.json({
 //       success: true,
@@ -177,7 +177,7 @@ export async function GET(
     const uniqueEvents = [...new Set(events?.map(e => e.event_name) || [])];
 
     console.log('[Events]  Found', events?.length, 'events');
-    console.log('[Events] 📊 Unique event types:', uniqueEvents.length);
+    console.log('[Events]  Unique event types:', uniqueEvents.length);
 
     return NextResponse.json({
       success: true,

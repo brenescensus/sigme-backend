@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
             : 0;
 
         console.log('[Journey Reach]  Estimated reach:', estimatedReach);
-        console.log('[Journey Reach] 📊 Percentage:', percentage + '%');
+        console.log('[Journey Reach]  Percentage:', percentage + '%');
 
         return NextResponse.json({
             success: true,

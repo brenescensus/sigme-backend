@@ -25,7 +25,7 @@ async function debugJourneyFlow(journeyName: string) {
 
   const flow = journey.flow_definition as any;
   
-  console.log('📋 NODES:');
+  console.log(' NODES:');
   console.log('─────────────────────────────────────────');
   flow.nodes.forEach((node: any, idx: number) => {
     console.log(`${idx + 1}. ${node.id}`);

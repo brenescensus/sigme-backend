@@ -18,7 +18,7 @@ const supabase = createClient<Database>(
       autoRefreshToken: false,
       persistSession: false,
     },
-    // 🔥 ADD THIS:
+    //  ADD THIS:
     global: {
       fetch: (...args) => fetch(...args).then(res => {
         if (!res.ok && res.status >= 500) {
@@ -200,7 +200,7 @@ function getEventProperties(properties: any): EventProperties {
 // ============================================================================
 
 async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise<boolean> {
-  console.log('[Processor] ✓ Checking advanced trigger:', trigger.type);
+  console.log('[Processor]  Checking advanced trigger:', trigger.type);
 
   try {
     const { data: subscriber } = await supabase
@@ -210,7 +210,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       .single();
 
     if (!subscriber) {
-      console.log('[Processor] ✗ Subscriber not found');
+      console.log('[Processor]  Subscriber not found');
       return false;
     }
 
@@ -221,7 +221,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           trigger.url_pattern ||
           trigger.url;
         if (!urlPattern) {
-          console.log('[Processor] ✗ Page landing: no URL pattern specified');
+          console.log('[Processor]  Page landing: no URL pattern specified');
           return false;
         }
 
@@ -234,7 +234,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           .limit(3);
 
         if (!events || events.length === 0) {
-          console.log('[Processor] ✗ No page_landed events found');
+          console.log('[Processor]  No page_landed events found');
           return false;
         }
 
@@ -253,7 +253,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           return eventUrl.toLowerCase().includes(urlPattern.toLowerCase());
         });
 
-        console.log('[Processor]', hasLanded ? '✓' : '✗', 'Page landing check:', { urlPattern, hasLanded });
+        console.log('[Processor]', hasLanded ? '' : '', 'Page landing check:', { urlPattern, hasLanded });
         return hasLanded;
       }
 
@@ -263,7 +263,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           0;
 
         if (requiredPercentage <= 0 || requiredPercentage > 100) {
-          console.log('[Processor] ✗ Invalid scroll depth percentage:', requiredPercentage);
+          console.log('[Processor]  Invalid scroll depth percentage:', requiredPercentage);
           return false;
         }
 
@@ -278,7 +278,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           .limit(10);
 
         if (!events || events.length === 0) {
-          console.log('[Processor] ✗ No scroll_depth events found');
+          console.log('[Processor]  No scroll_depth events found');
           return false;
         }
 
@@ -308,7 +308,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           return percentage >= requiredPercentage;
         });
 
-        console.log('[Processor]', hasReached ? '✓' : '✗', 'Scroll depth check:', { requiredPercentage, pagePattern, hasReached });
+        console.log('[Processor]', hasReached ? '' : '', 'Scroll depth check:', { requiredPercentage, pagePattern, hasReached });
         return hasReached;
       }
 
@@ -323,7 +323,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
 
         console.log('[Processor] Page abandonment check - min time:', minTime, 'seconds');
 
-        // 🔥 FIX: Validate range but don't reject completely
+        //  FIX: Validate range but don't reject completely
         const validatedMinTime = Math.max(1, Math.min(minTime, 3600)); // Clamp between 1s and 1hr
 
 
@@ -332,7 +332,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           console.log(`[Processor] Adjusted min time from ${minTime}s to ${validatedMinTime}s`);
         }
         // if (minTime <= 0 || minTime > 3600) {
-        //   console.log('[Processor] ✗ Page abandonment: invalid time value:', minTime);
+        //   console.log('[Processor]  Page abandonment: invalid time value:', minTime);
         //   return false;
         // }
         const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
@@ -381,15 +381,15 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
             }
 
             if (!pathMatches) {
-              console.log(`[Processor]   ✗ Path mismatch (pattern: "${pagePattern}")`);
+              console.log(`[Processor]    Path mismatch (pattern: "${pagePattern}")`);
 
               return false;
             }
-            console.log(`[Processor]   ✓ Path matches pattern`);
+            console.log(`[Processor]    Path matches pattern`);
           }
 
           const meetsTime = timeOnPage >= validatedMinTime;
-          console.log(`[Processor]   ${meetsTime ? '✓' : '✗'} Time check: ${timeOnPage}s >= ${validatedMinTime}s`);
+          console.log(`[Processor]   ${meetsTime ? '' : ''} Time check: ${timeOnPage}s >= ${validatedMinTime}s`);
 
           return meetsTime;
         });
@@ -413,7 +413,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       //       return timeOnPage >= minTime;
       //   });
 
-      //     console.log('[Processor]', hasAbandoned ? '✓' : '✗', 'Page abandonment check:', { minTime, hasAbandoned });
+      //     console.log('[Processor]', hasAbandoned ? '' : '', 'Page abandonment check:', { minTime, hasAbandoned });
       //     return hasAbandoned;
       // }
 
@@ -429,7 +429,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           0;
 
         if (threshold <= 0 || threshold > 3600) {
-          console.log('[Processor] ✗ Time on page: invalid threshold:', threshold);
+          console.log('[Processor]  Time on page: invalid threshold:', threshold);
           return false;
         }
         const pagePattern = trigger.event_config?.page_pattern || trigger.page_pattern;
@@ -443,7 +443,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           .limit(3);
 
         if (!events || events.length === 0) {
-          console.log('[Processor] ✗ No time_on_page events found');
+          console.log('[Processor]  No time_on_page events found');
           return false;
         }
 
@@ -473,7 +473,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           return seconds >= threshold;
         });
 
-        console.log('[Processor]', hasReached ? '✓' : '✗', 'Time on page check:', { threshold, pagePattern, hasReached });
+        console.log('[Processor]', hasReached ? '' : '', 'Time on page check:', { threshold, pagePattern, hasReached });
         return hasReached;
       }
 
@@ -489,7 +489,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           .limit(10);
 
         if (!events || events.length === 0) {
-          console.log('[Processor] ✗ No link_clicked events found');
+          console.log('[Processor]  No link_clicked events found');
           return false;
         }
 
@@ -500,11 +500,11 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
             return clickedUrl.includes(targetUrl.toLowerCase());
           });
 
-          console.log('[Processor]', matches ? '✓' : '✗', 'Link interaction check:', { targetUrl, matches });
+          console.log('[Processor]', matches ? '' : '', 'Link interaction check:', { targetUrl, matches });
           return matches;
         }
 
-        console.log('[Processor] ✓ Link interaction check: any link clicked');
+        console.log('[Processor]  Link interaction check: any link clicked');
         return true;
       }
 
@@ -513,7 +513,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         const delayUnit = trigger.delay_unit || 'minutes';
 
         if (delayValue <= 0) {
-          console.log('[Processor] ✗ Cart abandoned: invalid delay value');
+          console.log('[Processor]  Cart abandoned: invalid delay value');
           return false;
         }
 
@@ -533,7 +533,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         }
 
         if (delayMs > 30 * 24 * 60 * 60 * 1000) {
-          console.log('[Processor] ✗ Cart abandoned: delay too long (max 30 days)');
+          console.log('[Processor]  Cart abandoned: delay too long (max 30 days)');
           return false;
         }
 
@@ -549,7 +549,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
           .limit(1);
 
         if (!events || events.length === 0) {
-          console.log('[Processor] ✗ No cart_abandoned events found before cutoff');
+          console.log('[Processor]  No cart_abandoned events found before cutoff');
           return false;
         }
 
@@ -563,7 +563,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
 
         const hasAbandonedCart = !purchases || purchases.length === 0;
 
-        console.log('[Processor]', hasAbandonedCart ? '✓' : '✗', 'Cart abandoned check:', { delayValue, delayUnit, hasAbandonedCart });
+        console.log('[Processor]', hasAbandonedCart ? '' : '', 'Cart abandoned check:', { delayValue, delayUnit, hasAbandonedCart });
         return hasAbandonedCart;
       }
 
@@ -583,7 +583,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       //     .limit(10);
 
       //   if (!events || events.length === 0) {
-      //     console.log('[Processor] ✗ No product_purchased events found');
+      //     console.log('[Processor]  No product_purchased events found');
       //     return false;
       //   }
 
@@ -598,7 +598,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       //       );
       //     });
 
-      //     console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by ID):', { productIds, hasPurchased });
+      //     console.log('[Processor]', hasPurchased ? '' : '', 'Product purchased check (by ID):', { productIds, hasPurchased });
       //     return hasPurchased;
       //   }
 
@@ -609,7 +609,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       //       return items.some((item: any) => item.sku === sku);
       //     });
 
-      //     console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by SKU):', { sku, hasPurchased });
+      //     console.log('[Processor]', hasPurchased ? '' : '', 'Product purchased check (by SKU):', { sku, hasPurchased });
       //     return hasPurchased;
       //   }
 
@@ -623,11 +623,11 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       //       );
       //     });
 
-      //     console.log('[Processor]', hasPurchased ? '✓' : '✗', 'Product purchased check (by category):', { categories, hasPurchased });
+      //     console.log('[Processor]', hasPurchased ? '' : '', 'Product purchased check (by category):', { categories, hasPurchased });
       //     return hasPurchased;
       //   }
 
-      //   console.log('[Processor] ✓ Product purchased check: any product');
+      //   console.log('[Processor]  Product purchased check: any product');
       //   return true;
       // }
 
@@ -656,7 +656,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
 
             if (eventDevice && ['mobile', 'tablet', 'desktop'].includes(eventDevice)) {
               device = eventDevice;
-              // console.log('[Processor] ✓ Device from recent event:', device);
+              // console.log('[Processor]  Device from recent event:', device);
               // break;
               platform = eventPlatform;
               console.log('[Processor]  Device from event:', device, '| Platform:', platform);
@@ -680,7 +680,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         //   const customAttrs = subscriber.custom_attributes as any;
         //   if (customAttrs?.device) {
         //     device = customAttrs.device.toLowerCase();
-        //     console.log('[Processor] ✓ Device from custom attributes:', device);
+        //     console.log('[Processor]  Device from custom attributes:', device);
         //   }
         // }
 
@@ -691,7 +691,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
         //   } else if (ua.includes('tablet') || ua.includes('ipad')) {
         //     device = 'tablet';
         //   }
-        //   console.log('[Processor] ✓ Device from user agent:', device);
+        //   console.log('[Processor]  Device from user agent:', device);
         // }
 
 
@@ -737,7 +737,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       //   const allowedCities = trigger.cities || [];
 
       //   if (allowedCountries.length === 0 && allowedRegions.length === 0 && allowedCities.length === 0) {
-      //     console.log('[Processor] ✓ Geography filter: no restrictions');
+      //     console.log('[Processor]  Geography filter: no restrictions');
       //     return true;
       //   }
 
@@ -767,7 +767,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
       //   }
 
       //   const matches = countryMatch && regionMatch && cityMatch;
-      //   console.log('[Processor]', matches ? '✓' : '✗', 'Geography filter check:', { countryMatch, regionMatch, cityMatch, finalMatch: matches });
+      //   console.log('[Processor]', matches ? '' : '', 'Geography filter check:', { countryMatch, regionMatch, cityMatch, finalMatch: matches });
       //   return matches;
       // }
 
@@ -781,7 +781,7 @@ case 'geography_filter': {
 
   // Require at least one filter
   if (allowedCountries.length === 0 && allowedRegions.length === 0 && allowedCities.length === 0) {
-    console.log('[Processor] ✓ Geography filter: no restrictions');
+    console.log('[Processor]  Geography filter: no restrictions');
     return true;
   }
 
@@ -802,7 +802,7 @@ case 'geography_filter': {
 
   // Handle missing location - REJECT if no data
   if (!subscriberCountry && !subscriberCity && !subscriberRegion) {
-    console.log('[Processor] ⚠️ No location data - REJECTING');
+    console.log('[Processor]  No location data - REJECTING');
     return false;
   }
 
@@ -841,9 +841,9 @@ case 'geography_filter': {
   const matches = countryMatch && regionMatch && cityMatch;
 
   console.log('[Processor]', matches ? '✅' : '', 'Geography result:', {
-    country: countryMatch ? '✓' : '✗',
-    region: regionMatch ? '✓' : '✗',
-    city: cityMatch ? '✓' : '✗',
+    country: countryMatch ? '' : '',
+    region: regionMatch ? '' : '',
+    city: cityMatch ? '' : '',
     final: matches
   });
 
@@ -856,13 +856,13 @@ case 'date_range': {
   const now = new Date();
 
   if (!startDate || !endDate) {
-    console.log('[Processor] ✗ Date range: missing start or end date');
+    console.log('[Processor]  Date range: missing start or end date');
     return false;
   }
 
   const isInRange = now >= startDate && now <= endDate;
 
-  console.log('[Processor]', isInRange ? '✓' : '✗', 'Date range check:', {
+  console.log('[Processor]', isInRange ? '' : '', 'Date range check:', {
     start: startDate.toISOString(),
     end: endDate.toISOString(),
     now: now.toISOString(),
@@ -903,7 +903,7 @@ case 'time_range': {
 
     const matches = isDayActive && isTimeInRange;
 
-    console.log('[Processor]', matches ? '✓' : '✗', 'Time range check:', {
+    console.log('[Processor]', matches ? '' : '', 'Time range check:', {
       timezone,
       currentDay,
       currentTime,
@@ -918,17 +918,17 @@ case 'time_range': {
     return matches;
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Time range check failed:', error.message);
+    console.error('[Processor]  Time range check failed:', error.message);
     return false;
   }
 }
 
       default:
-        console.log('[Processor] ✗ Unknown trigger type:', trigger.type);
+        console.log('[Processor]  Unknown trigger type:', trigger.type);
         return false;
     }
   } catch (error: any) {
-    console.error('[Processor] ✗ Advanced trigger check failed:', error.message);
+    console.error('[Processor]  Advanced trigger check failed:', error.message);
     return false;
   }
 }
@@ -953,12 +953,12 @@ export async function processDueSteps(): Promise<ProcessingResult> {
       .limit(100);
 
     if (error) {
-      console.error('[Processor] ✗ Error fetching due steps:', error);
+      console.error('[Processor]  Error fetching due steps:', error);
       throw error;
     }
 
     if (!dueSteps || dueSteps.length === 0) {
-      console.log('[Processor] ✓ No due steps found');
+      console.log('[Processor]  No due steps found');
       return { processed: 0, failed: 0, skipped: 0, total: 0 };
     }
 
@@ -1011,7 +1011,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
         const state = toJourneyState(stateData);
 
         if (stepPayload?.step_type?.includes('wait')) {
-          console.log('[Processor] ✓ Wait step completed, advancing journey...');
+          console.log('[Processor]  Wait step completed, advancing journey...');
 
           const { data: journey } = await supabase
             .from('journeys')
@@ -1063,7 +1063,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
                 await processJourneyStep(state.id);
 
                 processed++;
-                console.log(`[Processor] ✓ Wait step ${step.id} completed successfully`);
+                console.log(`[Processor]  Wait step ${step.id} completed successfully`);
                 continue;
               } else {
                 console.log('[Processor] No next node after wait, completing journey');
@@ -1095,10 +1095,10 @@ export async function processDueSteps(): Promise<ProcessingResult> {
           .eq('id', step.id);
 
         processed++;
-        console.log(`[Processor] ✓ Step ${step.id} completed successfully`);
+        console.log(`[Processor]  Step ${step.id} completed successfully`);
 
       } catch (stepError: any) {
-        console.error(`[Processor] ✗ Step ${step.id} failed:`, stepError.message);
+        console.error(`[Processor]  Step ${step.id} failed:`, stepError.message);
 
         await supabase
           .from('scheduled_journey_steps')
@@ -1117,7 +1117,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     const duration = Date.now() - startTime;
     const total = processed + failed + skipped;
 
-    console.log(`\n[Processor] ✓ Completed in ${duration}ms`);
+    console.log(`\n[Processor]  Completed in ${duration}ms`);
     console.log(`    Processed: ${processed}`);
     console.log(`    Failed: ${failed}`);
     console.log(`    Skipped: ${skipped}`);
@@ -1126,7 +1126,7 @@ export async function processDueSteps(): Promise<ProcessingResult> {
     return { processed, failed, skipped, total, errors: errors.length > 0 ? errors : undefined };
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Fatal error in processDueSteps:', error.message);
+    console.error('[Processor]  Fatal error in processDueSteps:', error.message);
     throw error;
   }
 }
@@ -1153,7 +1153,7 @@ export async function enrollSubscriber(
       throw new Error(`Journey is not active (status: ${journey.status})`);
     }
 
-    // 🔥 NEW: Log current active journeys for debugging
+    //  NEW: Log current active journeys for debugging
     const { data: activeJourneys } = await supabase
       .from('user_journey_states')
       .select('journey_id, status')
@@ -1173,11 +1173,11 @@ export async function enrollSubscriber(
       const triggerMet = await checkAdvancedTrigger(subscriberId, entryTrigger);
 
       if (!triggerMet) {
-        console.log('[Processor] ✗ Advanced trigger criteria not met');
+        console.log('[Processor]  Advanced trigger criteria not met');
         throw new Error('Subscriber does not meet entry trigger criteria');
       }
 
-      console.log('[Processor] ✓ Advanced trigger criteria met');
+      console.log('[Processor]  Advanced trigger criteria met');
     }
 
     const flowDefinition = parseFlowDefinition(journey.flow_definition);
@@ -1193,7 +1193,7 @@ export async function enrollSubscriber(
 
     const canEnter = await checkReEntryRules(subscriberId, journey);
     if (!canEnter) {
-      console.log('[Processor] ✗ Re-entry rules prevent enrollment');
+      console.log('[Processor]  Re-entry rules prevent enrollment');
       throw new Error('Subscriber cannot re-enter this journey at this time');
     }
 
@@ -1222,11 +1222,11 @@ export async function enrollSubscriber(
       }
 
       if (stateError.code === '23514') {
-        console.error('[Processor] ✗ Invalid status value');
+        console.error('[Processor]  Invalid status value');
         throw new Error('Invalid journey state status');
       }
 
-      console.error('[Processor] ✗ Failed to create journey state:', stateError);
+      console.error('[Processor]  Failed to create journey state:', stateError);
       throw stateError;
     }
 
@@ -1254,11 +1254,11 @@ export async function enrollSubscriber(
 
     await processJourneyStep(journeyState.id);
 
-    console.log('[Processor] ✓ Subscriber enrolled successfully');
+    console.log('[Processor]  Subscriber enrolled successfully');
     return journeyState;
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Enrollment error:', error.message);
+    console.error('[Processor]  Enrollment error:', error.message);
     throw error;
   }
 }
@@ -1275,7 +1275,7 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
     .order('entered_at', { ascending: false });
 
   if (error) {
-    console.error('[Processor] ✗ Error checking re-entry rules:', error);
+    console.error('[Processor]  Error checking re-entry rules:', error);
     throw error;
   }
 
@@ -1283,13 +1283,13 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
     return true;
   }
 
-  // 🔥 CRITICAL FIX: Check for ACTIVE or WAITING states
+  //  CRITICAL FIX: Check for ACTIVE or WAITING states
   const activeOrWaitingState = states.find(
     s => s.status === 'active' || s.status === 'waiting'
   );
 
   if (activeOrWaitingState) {
-    console.log(`[Processor] ⚠️  Already in journey ${journey.name} (status: ${activeOrWaitingState.status})`);
+    console.log(`[Processor]   Already in journey ${journey.name} (status: ${activeOrWaitingState.status})`);
 
     console.log('[Processor]  Already in journey (status:', activeOrWaitingState.status + ')');
     return false;
@@ -1304,13 +1304,13 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
   }
 
   if (!allowReEntry) {
-    console.log('[Processor] ✗ Re-entry not allowed');
+    console.log('[Processor]  Re-entry not allowed');
     return false;
   }
 
   const maxEntries = reEntrySettings.max_entries || 0;
   if (maxEntries > 0 && states.length >= maxEntries) {
-    console.log(`[Processor] ✗ Max entries (${maxEntries}) reached`);
+    console.log(`[Processor]  Max entries (${maxEntries}) reached`);
     return false;
   }
 
@@ -1321,13 +1321,13 @@ async function checkReEntryRules(subscriberId: string, journey: any): Promise<bo
 
     if (daysSince < cooldownDays) {
       console.log(
-        `[Processor] ✗ Cooldown period (${cooldownDays} days) not met. ${daysSince.toFixed(1)} days since last entry`
+        `[Processor]  Cooldown period (${cooldownDays} days) not met. ${daysSince.toFixed(1)} days since last entry`
       );
       return false;
     }
   }
 
-  console.log('[Processor] ✓ Re-entry allowed');
+  console.log('[Processor]  Re-entry allowed');
   return true;
 }
 
@@ -1358,10 +1358,10 @@ async function processExitNode(
         };
 
         await sendNotificationToSubscriber(subscriber, notificationPayload);
-        console.log('[Processor] ✓ Exit notification sent');
+        console.log('[Processor]  Exit notification sent');
       }
     } catch (error: any) {
-      console.error('[Processor] ✗ Failed to send exit notification:', error);
+      console.error('[Processor]  Failed to send exit notification:', error);
     }
   }
 
@@ -1470,7 +1470,7 @@ export async function processJourneyStep(journeyStateId: string): Promise<void> 
     }
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Step processing error:', error.message);
+    console.error('[Processor]  Step processing error:', error.message);
 
     const { data: stateData } = await supabase
       .from('user_journey_states')
@@ -1514,7 +1514,7 @@ async function processSendNotification(
   );
 
   try {
-    // 🔥 FIX 1: PARALLEL database queries (saves 1-2s)
+    //  FIX 1: PARALLEL database queries (saves 1-2s)
     const [subscriberResult, websiteResult] = await Promise.all([
       supabase.from('subscribers').select('*').eq('id', state.subscriber_id).single(),
       supabase.from('subscribers')
@@ -1537,7 +1537,7 @@ async function processSendNotification(
     if (!subscriber.endpoint || !subscriber.p256dh_key || !subscriber.auth_key) {
       console.log('[Processor] ⚠ No valid push subscription');
 
-      // 🔥 FIX 2: Fire-and-forget log insertion (proper async handling)
+      //  FIX 2: Fire-and-forget log insertion (proper async handling)
       Promise.all([
         supabase.from('notification_logs').insert({
           website_id: subscriber.website_id,
@@ -1558,7 +1558,7 @@ async function processSendNotification(
           { reason: 'No push subscription' },
           node.id
         ),
-      ]).catch((err) => console.error('[Processor] ✗ Background logging failed:', err));
+      ]).catch((err) => console.error('[Processor]  Background logging failed:', err));
 
       await moveToNextNode(state, flowDefinition, node.id);
       return;
@@ -1588,7 +1588,7 @@ async function processSendNotification(
 
       const notificationUrl = node.data.url || node.data.click_url || '/';
     
-    // 🔥 FIX 3: Prepare notification payload
+    //  FIX 3: Prepare notification payload
     const notificationPayload = {
    
       title: node.data.title || 'Notification',
@@ -1635,7 +1635,7 @@ async function processSendNotification(
     });
     console.log('[Processor] Sending notification...');
 
-    // 🔥 FIX 4: Send notification FIRST, then log (saves 700ms)
+    //  FIX 4: Send notification FIRST, then log (saves 700ms)
     const result = await sendNotificationToSubscriber(subscriber, notificationPayload);
 
     // Fire-and-forget logging (don't block on database writes)
@@ -1699,7 +1699,7 @@ async function processSendNotification(
         //   ]);
         // }
 
-        // 🔥 CRITICAL FIX: ONLY clear on CONFIRMED expiration (410/404)
+        //  CRITICAL FIX: ONLY clear on CONFIRMED expiration (410/404)
         if (!result.success) {
           const errorStr = String(result.error || '').toLowerCase();
           const statusCode = result.error?.match(/\b(410|404)\b/)?.[0];
@@ -1720,7 +1720,7 @@ async function processSendNotification(
                 endpoint: null,
                 p256dh_key: null,
                 auth_key: null,
-                status: 'inactive',  // 🔥 CRITICAL: Set status too!
+                status: 'inactive',  //  CRITICAL: Set status too!
                 updated_at: new Date().toISOString(),
               }).eq('id', subscriber.id),
 
@@ -1738,7 +1738,7 @@ async function processSendNotification(
               ),
             ]);
           } else {
-            // 🔥 NEW: Log but DON'T clear subscription
+            //  NEW: Log but DON'T clear subscription
             console.log('[Processor] ℹ️ Notification failed but subscription may still be valid');
             console.log('[Processor] → Error:', result.error);
             console.log('[Processor] → NOT clearing subscription (might be VAPID/rate limit/network issue)');
@@ -1746,21 +1746,21 @@ async function processSendNotification(
         }
 
       } catch (logError) {
-        console.error('[Processor] ✗ Background logging failed:', logError);
+        console.error('[Processor]  Background logging failed:', logError);
       }
     })(); // Self-executing async function (fire-and-forget)
 
     if (result.success) {
-      console.log('[Processor] ✓ Notification sent successfully!');
+      console.log('[Processor]  Notification sent successfully!');
     } else {
-      console.error('[Processor] ✗ Notification failed:', result.error);
+      console.error('[Processor]  Notification failed:', result.error);
     }
 
-    // 🔥 CRITICAL: Move to next node IMMEDIATELY (don't wait for logging)
+    //  CRITICAL: Move to next node IMMEDIATELY (don't wait for logging)
     await moveToNextNode(state, flowDefinition, node.id);
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Notification error:', error.message);
+    console.error('[Processor]  Notification error:', error.message);
 
     // Fire-and-forget event logging
     logJourneyEvent(
@@ -1770,7 +1770,7 @@ async function processSendNotification(
       'notification_error',
       { error: error.message },
       node.id
-    ).then(() => { }).catch((err) => console.error('[Processor] ✗ Event logging failed:', err));
+    ).then(() => { }).catch((err) => console.error('[Processor]  Event logging failed:', err));
 
     await moveToNextNode(state, flowDefinition, node.id);
   }
@@ -1805,7 +1805,7 @@ async function processWaitNode(
     let durationSeconds = node.data.duration_seconds || node.data.duration || 86400;
 
     // ADD DEBUG LOGGING
-    console.log('[Processor] 📊 Wait node data:', {
+    console.log('[Processor]  Wait node data:', {
       duration: node.data.duration,
       duration_seconds: node.data.duration_seconds,
       unit: node.data.unit,
@@ -1829,7 +1829,7 @@ async function processWaitNode(
       .eq('id', state.id);
 
     if (updateError) {
-      console.error('[Processor] ✗ Failed to update state:', updateError);
+      console.error('[Processor]  Failed to update state:', updateError);
       throw updateError;
     }
 
@@ -1854,7 +1854,7 @@ async function processWaitNode(
       .single();
 
     if (scheduleError) {
-      console.error('[Processor] ✗ Failed to create scheduled step:', scheduleError);
+      console.error('[Processor]  Failed to create scheduled step:', scheduleError);
       throw scheduleError;
     }
 
@@ -1880,7 +1880,7 @@ async function processWaitNode(
 
       console.log(`[Processor]  Job queued: wait-${scheduledStep.id}`);
     } catch (queueError: any) {
-      console.error('[Processor] ✗ Queue error:', queueError.message);
+      console.error('[Processor]  Queue error:', queueError.message);
       await supabase
         .from('scheduled_journey_steps')
         .update({
@@ -1933,15 +1933,15 @@ async function processWaitNode(
       node.data.config?.event_name ||            // Generic config
       (typeof node.data.event === 'string' ? node.data.event : null);  // String directly
 
-    // 🔥 CRITICAL: Log the full node data if event name is missing
+    //  CRITICAL: Log the full node data if event name is missing
     if (!eventName) {
-      console.error('[Processor] ✗ Event name missing!');
-      console.error('[Processor] 📋 Full node.data:', JSON.stringify(node.data, null, 2));
-      console.error('[Processor] 📋 Available keys:', Object.keys(node.data));
+      console.error('[Processor]  Event name missing!');
+      console.error('[Processor]  Full node.data:', JSON.stringify(node.data, null, 2));
+      console.error('[Processor]  Available keys:', Object.keys(node.data));
       throw new Error('Event name is required for wait-until-event mode');
     }
 
-    console.log(`[Processor] ⏰ Waiting for event: "${eventName}"`);
+    console.log(`[Processor]  Waiting for event: "${eventName}"`);
 
     const timeoutSeconds =
       node.data.timeout_seconds ||
@@ -1957,16 +1957,16 @@ async function processWaitNode(
       {};
 
     if (!eventName) {
-      console.error('[Processor] ✗ Event name missing!');
-      console.error('[Processor] 📋 Node data:', JSON.stringify(node.data, null, 2));
+      console.error('[Processor]  Event name missing!');
+      console.error('[Processor]  Node data:', JSON.stringify(node.data, null, 2));
       throw new Error('Event name is required for wait-until-event mode');
     }
 
-    console.log(`[Processor] ⏰ Waiting for event: "${eventName}"`);
-    console.log(`[Processor] 📋 Event config:`, JSON.stringify(eventConfig, null, 2));
-    console.log(`[Processor] ⏱️  Timeout: ${timeoutSeconds}s`);
+    console.log(`[Processor]  Waiting for event: "${eventName}"`);
+    console.log(`[Processor]  Event config:`, JSON.stringify(eventConfig, null, 2));
+    console.log(`[Processor]   Timeout: ${timeoutSeconds}s`);
 
-    // 🔥 CRITICAL: Update state with proper event name
+    //  CRITICAL: Update state with proper event name
     const { error: updateError } = await supabase
       .from('user_journey_states')
       .update({
@@ -1974,7 +1974,7 @@ async function processWaitNode(
         next_execution_at: timeoutAt.toISOString(),
         context: {
           ...state.context,
-          waiting_for_event: eventName,  // 🔥 Must be set correctly!
+          waiting_for_event: eventName,  //  Must be set correctly!
           event_config: eventConfig,
           wait_mode: 'until_event',
           wait_started_at: new Date().toISOString(),
@@ -1985,7 +1985,7 @@ async function processWaitNode(
       .eq('id', state.id);
 
     if (updateError) {
-      console.error('[Processor] ✗ Failed to update state:', updateError);
+      console.error('[Processor]  Failed to update state:', updateError);
       throw updateError;
     }
 
@@ -2025,9 +2025,9 @@ async function processWaitNode(
           jobId: `timeout-${scheduledStep!.id}`,
         }
       );
-      console.log(`[Processor] ✓ Timeout job queued: timeout-${scheduledStep!.id}`);
+      console.log(`[Processor]  Timeout job queued: timeout-${scheduledStep!.id}`);
     } catch (queueError: any) {
-      console.error('[Processor] ✗ Queue error:', queueError.message);
+      console.error('[Processor]  Queue error:', queueError.message);
     }
 
     await logJourneyEvent(
@@ -2044,7 +2044,7 @@ async function processWaitNode(
       node.id
     );
 
-    // 🔥 CRITICAL: STOP HERE
+    //  CRITICAL: STOP HERE
     console.log('[Processor] Journey paused - waiting for event or timeout');
     return;
   }
@@ -2172,7 +2172,7 @@ async function processConditionNode(
     }
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Condition error:', error.message);
+    console.error('[Processor]  Condition error:', error.message);
 
     const noEdge = flowDefinition.edges.find(e => e.from === node.id && (e.type === 'no' || e.condition === 'no'));
     if (noEdge) {
@@ -2259,7 +2259,7 @@ async function processUpdateContactNode(
   const attributeValue = node.data.attribute_value;
 
   if (!attributeKey) {
-    console.error('[Processor] ✗ No attribute key specified');
+    console.error('[Processor]  No attribute key specified');
     await moveToNextNode(state, flowDefinition, node.id);
     return;
   }
@@ -2317,10 +2317,10 @@ async function processUpdateContactNode(
       node.id
     );
 
-    console.log('[Processor] ✓ Contact updated successfully');
+    console.log('[Processor]  Contact updated successfully');
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Failed to update contact:', error.message);
+    console.error('[Processor]  Failed to update contact:', error.message);
   }
 
   await moveToNextNode(state, flowDefinition, node.id);
@@ -2350,13 +2350,13 @@ async function moveToNextNode(
     const nextNode = flowDefinition.nodes.find(n => n.id === nextNodeId);
 
     if (!nextNode) {
-      console.error(`[Processor] ✗ Next node ${nextNodeId} not found in flow definition!`);
+      console.error(`[Processor]  Next node ${nextNodeId} not found in flow definition!`);
       console.error(`[Processor] Available nodes:`, flowDefinition.nodes.map(n => n.id));
       await completeJourney(state.id);
       return;
     }
 
-    console.log(`[Processor] ➡️ Moving to next node: ${nextNodeId} (type: ${nextNode.type})`);
+    console.log(`[Processor]  Moving to next node: ${nextNodeId} (type: ${nextNode.type})`);
 
     await supabase
       .from('user_journey_states')
@@ -2415,14 +2415,14 @@ export async function recalculateJourneyMetrics(journeyId: string): Promise<void
       })
       .eq('id', journeyId);
 
-    console.log('[Processor] ✓ Metrics updated:', {
+    console.log('[Processor]  Metrics updated:', {
       total_entered,
       total_active,
       total_completed,
       total_exited,
     });
   } catch (error: any) {
-    console.error('[Processor] ✗ Failed to recalculate metrics:', error);
+    console.error('[Processor]  Failed to recalculate metrics:', error);
   }
 }
 
@@ -2458,10 +2458,10 @@ async function completeJourney(journeyStateId: string): Promise<void> {
 
     await recalculateJourneyMetrics(state.journey_id);
 
-    console.log('[Processor] ✓ Journey completed successfully');
+    console.log('[Processor]  Journey completed successfully');
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Error completing journey:', error.message);
+    console.error('[Processor]  Error completing journey:', error.message);
   }
 }
 
@@ -2502,10 +2502,10 @@ async function exitJourney(journeyStateId: string, reason: string): Promise<void
 
     await recalculateJourneyMetrics(state.journey_id);
 
-    console.log('[Processor] ✓ Journey exited successfully');
+    console.log('[Processor]  Journey exited successfully');
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Error exiting journey:', error.message);
+    console.error('[Processor]  Error exiting journey:', error.message);
   }
 }
 
@@ -2551,7 +2551,7 @@ export async function handleSubscriberEvent(
           const actualPercentage = eventData.percentage || 0;
 
           if (actualPercentage < requiredPercentage) {
-            console.log(`[Processor] ✗ Scroll depth ${actualPercentage}% < required ${requiredPercentage}%`);
+            console.log(`[Processor]  Scroll depth ${actualPercentage}% < required ${requiredPercentage}%`);
             configMatches = false;
           }
         }
@@ -2571,7 +2571,7 @@ export async function handleSubscriberEvent(
           }
 
           if (!configMatches) {
-            console.log(`[Processor] ✗ URL "${actualUrl}" doesn't match pattern "${urlPattern}"`);
+            console.log(`[Processor]  URL "${actualUrl}" doesn't match pattern "${urlPattern}"`);
           }
         }
 
@@ -2580,7 +2580,7 @@ export async function handleSubscriberEvent(
           const actualTime = eventData.time_on_page_seconds || eventData.seconds || 0;
 
           if (actualTime < requiredTime) {
-            console.log(`[Processor] ✗ Time on page ${actualTime}s < required ${requiredTime}s`);
+            console.log(`[Processor]  Time on page ${actualTime}s < required ${requiredTime}s`);
             configMatches = false;
           }
         }
@@ -2590,7 +2590,7 @@ export async function handleSubscriberEvent(
           const actualTime = eventData.seconds || eventData.duration || 0;
 
           if (actualTime < threshold) {
-            console.log(`[Processor] ✗ Time ${actualTime}s < threshold ${threshold}s`);
+            console.log(`[Processor]  Time ${actualTime}s < threshold ${threshold}s`);
             configMatches = false;
           }
         }
@@ -2602,7 +2602,7 @@ export async function handleSubscriberEvent(
           configMatches = clickedUrl.includes(targetUrl);
 
           if (!configMatches) {
-            console.log(`[Processor] ✗ Clicked URL "${clickedUrl}" doesn't match "${targetUrl}"`);
+            console.log(`[Processor]  Clicked URL "${clickedUrl}" doesn't match "${targetUrl}"`);
           }
         }
 
@@ -2611,7 +2611,7 @@ export async function handleSubscriberEvent(
           const cartValue = eventData.total_value || eventData.value || 0;
 
           if (cartValue < minValue) {
-            console.log(`[Processor] ✗ Cart value ${cartValue} < minimum ${minValue}`);
+            console.log(`[Processor]  Cart value ${cartValue} < minimum ${minValue}`);
             configMatches = false;
           }
         }
@@ -2624,7 +2624,7 @@ export async function handleSubscriberEvent(
         //     );
 
         //     if (!configMatches) {
-        //       console.log(`[Processor] ✗ Product ID "${eventConfig.product_id}" not in purchase`);
+        //       console.log(`[Processor]  Product ID "${eventConfig.product_id}" not in purchase`);
         //     }
         //   }
 
@@ -2635,7 +2635,7 @@ export async function handleSubscriberEvent(
         //     );
 
         //     if (!configMatches) {
-        //       console.log(`[Processor] ✗ Category "${eventConfig.category}" not in purchase`);
+        //       console.log(`[Processor]  Category "${eventConfig.category}" not in purchase`);
         //     }
         //   }
         // }
@@ -2645,7 +2645,7 @@ export async function handleSubscriberEvent(
           configMatches = actualFormId === eventConfig.form_id;
 
           if (!configMatches) {
-            console.log(`[Processor] ✗ Form ID "${actualFormId}" doesn't match "${eventConfig.form_id}"`);
+            console.log(`[Processor]  Form ID "${actualFormId}" doesn't match "${eventConfig.form_id}"`);
           }
         }
 
@@ -2655,7 +2655,7 @@ export async function handleSubscriberEvent(
         }
       }
 
-      console.log(`[Processor] ✓ Event "${eventName}" received for waiting journey ${state.journey_id}`);
+      console.log(`[Processor]  Event "${eventName}" received for waiting journey ${state.journey_id}`);
 
       await supabase
         .from('scheduled_journey_steps')
@@ -2711,7 +2711,7 @@ export async function handleSubscriberEvent(
     }
 
   } catch (error: any) {
-    console.error('[Processor] ✗ Error handling event:', error.message);
+    console.error('[Processor]  Error handling event:', error.message);
   }
 }
 

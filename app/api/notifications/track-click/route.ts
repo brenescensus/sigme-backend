@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       if (log) {
         actualCampaignId = log.campaign_id || actualCampaignId;
         actualJourneyId = log.journey_id || actualJourneyId;
-        console.log('[Track Click] ✓ Notification log updated');
+        console.log('[Track Click]  Notification log updated');
       } else if (logError) {
         console.warn('[Track Click] Could not update log:', logError.message);
       }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       if (log) {
         logId = log.id;
         actualJourneyId = log.journey_id || actualJourneyId;
-        console.log('[Track Click] ✓ Found and updated log:', logId);
+        console.log('[Track Click]  Found and updated log:', logId);
       } else if (findError) {
         console.warn('[Track Click] No log found or already clicked');
       }
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       if (campaignError) {
         console.error('[Track Click] Failed to increment campaign:', campaignError);
       } else {
-        console.log('[Track Click] ✓ Campaign clicked_count incremented');
+        console.log('[Track Click]  Campaign clicked_count incremented');
       }
     }
 
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
           },
         });
         
-        console.log('[Track Click] ✓ Journey click event logged');
+        console.log('[Track Click]  Journey click event logged');
       }
     }
 
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log('[Track Click] ✓ Click tracked successfully');
+    console.log('[Track Click]  Click tracked successfully');
 
     return NextResponse.json({
       success: true,
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('[Track Click] ✗ Error:', error);
+    console.error('[Track Click]  Error:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

@@ -21,7 +21,7 @@ class JourneyEntryHandler {
   private enrollmentCache = new Map<string, number>();
   private readonly ENROLLMENT_COOLDOWN_MS = 5000; // 5 seconds per journey
   
-  // 🔥 Track page sessions per journey
+  //  Track page sessions per journey
   private pageSessionCache = new Map<string, string>();
 
   async handleEvent(event: TrackedEvent): Promise<void> {
@@ -43,11 +43,11 @@ class JourneyEntryHandler {
         journeyProcessor.processDueSteps().catch(console.error);
       }, 100);
     } catch (error) {
-      console.error('[JourneyEntry] ✗ Error:', error);
+      console.error('[JourneyEntry]  Error:', error);
     }
   }
 
-  // 🔥 Per-journey cooldown
+  //  Per-journey cooldown
   private canEnroll(subscriberId: string, journeyId: string): boolean {
     const cacheKey = `${subscriberId}:${journeyId}`;
     const lastEnrollment = this.enrollmentCache.get(cacheKey);
@@ -87,7 +87,7 @@ class JourneyEntryHandler {
 
     console.log(`[JourneyEntry] Found ${journeys.length} active journey(s)`);
 
-    // 🔥 CRITICAL: Process ALL journeys (don't stop on first match)
+    //  CRITICAL: Process ALL journeys (don't stop on first match)
     for (const journey of journeys) {
       try {
         const entryTrigger = journey.entry_trigger as any;
@@ -95,10 +95,8 @@ class JourneyEntryHandler {
         if (!this.doesEventMatchTrigger(entryTrigger, event)) {
           continue; // Skip THIS journey, check OTHERS
         }
-console.log(`[JourneyEntry] ✓ Event matches trigger for: ${journey.name}`);
-console.log(`[JourneyEntry] Trigger config:`, JSON.stringify(entryTrigger, null, 2));
-console.log(`[JourneyEntry] Event data:`, JSON.stringify(event.event_data, null, 2));
-        // 🔥 FIX: Pre-validate scroll depth
+
+        //  FIX: Pre-validate scroll depth
         if (entryTrigger.type === 'scroll_depth') {
           const requiredPercentage = entryTrigger.event_config?.percentage || 
                                       entryTrigger.percentage || 0;
@@ -110,7 +108,7 @@ console.log(`[JourneyEntry] Event data:`, JSON.stringify(event.event_data, null,
           }
         }
 
-        // 🔥 FIX: Pre-validate time threshold
+        //  FIX: Pre-validate time threshold
         if (entryTrigger.type === 'time_on_page') {
           const threshold = entryTrigger.event_config?.threshold_seconds ||
                            entryTrigger.threshold_seconds ||
@@ -145,7 +143,7 @@ console.log(`[JourneyEntry] Event data:`, JSON.stringify(event.event_data, null,
             .from('user_journey_states')
             .select('status, entered_at, completed_at')
             .eq('subscriber_id', event.subscriber_id)
-            .eq('journey_id', journey.id) // 🔥 Check THIS journey only
+            .eq('journey_id', journey.id) //  Check THIS journey only
             .order('entered_at', { ascending: false })
             .limit(1);
 
@@ -153,7 +151,7 @@ console.log(`[JourneyEntry] Event data:`, JSON.stringify(event.event_data, null,
             const state = states[0];
             
             if (state.status === 'active' || state.status === 'waiting') {
-              console.log(`[JourneyEntry] ⚠️  Already in journey: ${journey.name} (${state.status})`);
+              console.log(`[JourneyEntry]   Already in journey: ${journey.name} (${state.status})`);
               continue; // Skip THIS journey, check OTHERS
             }
 
@@ -171,21 +169,13 @@ console.log(`[JourneyEntry] Event data:`, JSON.stringify(event.event_data, null,
 
           this.pageSessionCache.set(sessionKey, currentSessionId);
         }
-if (entryTrigger.type === 'page_abandonment') {
-  
-  const minTime = entryTrigger.min_time_value || 
-                  entryTrigger.min_time_seconds || 
-                  entryTrigger.event_config?.min_time_seconds || 0;
-  const actualTime = event.event_data?.time_on_page_seconds || 
-                     event.event_data?.seconds || 
-                     event.event_data?.time_on_page || 0;
-  
-  if (actualTime < minTime) {
-    console.log(`[JourneyEntry]   Abandonment time ${actualTime}s < required ${minTime}s for ${journey.name}`);
-    continue;
-  }
-}
-console.log(`[JourneyEntry] Attempting enrollment in: ${journey.name}`);
+
+        const delayUnitMap: Record<string, number> = { minutes: 60000, hours: 3600000, days: 86400000 };
+const delayMs = entryTrigger.type === 'page_abandonment'
+  ? (entryTrigger.delay_value || 0) * (delayUnitMap[entryTrigger.delay_unit as string || 'minutes'] || 60000)
+  : 0;
+
+
         // Try to enroll in THIS journey
         await journeyProcessor.enrollSubscriber(
           journey.id,
@@ -194,35 +184,12 @@ console.log(`[JourneyEntry] Attempting enrollment in: ${journey.name}`);
             event: event.event_name,
             event_data: event.event_data,
             timestamp: event.timestamp,
+            abandonment_delay_ms: delayMs,
           }
         );
 
         console.log(`[JourneyEntry]  Enrolled in journey: ${journey.name}`);
-if (entryTrigger.type === 'page_abandonment') {
-  const delayValue = entryTrigger.delay_value || 0;
-  const delayUnit = entryTrigger.delay_unit || 'minutes';
 
-  const unitToMs: Record<string, number> = {
-    minutes: 60 * 1000,
-    hours: 60 * 60 * 1000,
-    days: 24 * 60 * 60 * 1000,
-  };
-
-  const delayMs = delayValue * (unitToMs[delayUnit] || 60000);
-
-  if (delayMs > 0) {
-    console.log(`[JourneyEntry] Delaying abandonment journey by ${delayValue} ${delayUnit}`);
-    await supabase
-      .from('user_journey_states')
-      .update({
-        status: 'waiting',
-        next_execution_at: new Date(Date.now() + delayMs).toISOString(),
-      })
-      .eq('subscriber_id', event.subscriber_id)
-      .eq('journey_id', journey.id)
-      .in('status', ['active']);
-  }
-}
       } catch (error: any) {
         // Don't stop processing other journeys
         if (error.message.includes('cannot re-enter') || 
@@ -230,9 +197,9 @@ if (entryTrigger.type === 'page_abandonment') {
             error.message.includes('Already in journey')) {
           console.log(`[JourneyEntry] ℹ️  Skipped ${journey.name}: ${error.message}`);
         } else {
-          console.error(`[JourneyEntry] ✗ Error enrolling in ${journey.name}:`, error.message);
+          console.error(`[JourneyEntry]  Error enrolling in ${journey.name}:`, error.message);
         }
-        continue; // 🔥 CRITICAL: Continue to next journey
+        continue; //  CRITICAL: Continue to next journey
       }
     }
   }

@@ -345,7 +345,7 @@
       
 //       const logsClicked = logs?.filter(l => l.clicked_at != null).length || 0;
 
-//       console.log('[Delivery Status] 📋 Log Counts (Debug Only):');
+//       console.log('[Delivery Status]  Log Counts (Debug Only):');
 //       console.log('  - Total logs:', totalLogs);
 //       console.log('  - Delivered logs:', logsDelivered);
 //       console.log('  - Failed logs:', logsFailed);
