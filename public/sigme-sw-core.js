@@ -300,13 +300,13 @@ self.addEventListener('push', (event) => {
       //   data: data.data || {},
       // };
 
-
-      console.log('[Sigme SW Core] Push data received:', {
-        hasTitle: !!data.title,
-        hasBody: !!data.body,
-        hasUrl: !!(data.url || data.click_url),
-        hasTag: !!data.tag
-      });
+console.log("Notification received");
+      // console.log('[Sigme SW Core] Push data received:', {
+      //   hasTitle: !!data.title,
+      //   hasBody: !!data.body,
+      //   hasUrl: !!(data.url || data.click_url),
+      //   hasTag: !!data.tag
+      // });
 
        const targetUrl = 
         data.url ||                    
@@ -344,12 +344,12 @@ self.addEventListener('push', (event) => {
         data: notificationData, 
       };
 
-      console.log('[Sigme SW Core]  Final notification object:', {
-        url: notification.url,
-        click_url: notification.click_url,
-        dataUrl: notification.data.url,
-        dataClickUrl: notification.data.click_url,
-      });
+      // console.log('[Sigme SW Core]  Final notification object:', {
+      //   url: notification.url,
+      //   click_url: notification.click_url,
+      //   dataUrl: notification.data.url,
+      //   dataClickUrl: notification.data.click_url,
+      // });
 
       // console.log('[Sigme SW Core] Notification data:', notification.data);
     } catch (e) {

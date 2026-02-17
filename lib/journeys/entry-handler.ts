@@ -95,7 +95,9 @@ class JourneyEntryHandler {
         if (!this.doesEventMatchTrigger(entryTrigger, event)) {
           continue; // Skip THIS journey, check OTHERS
         }
-
+console.log(`[JourneyEntry] ✓ Event matches trigger for: ${journey.name}`);
+console.log(`[JourneyEntry] Trigger config:`, JSON.stringify(entryTrigger, null, 2));
+console.log(`[JourneyEntry] Event data:`, JSON.stringify(event.event_data, null, 2));
         // 🔥 FIX: Pre-validate scroll depth
         if (entryTrigger.type === 'scroll_depth') {
           const requiredPercentage = entryTrigger.event_config?.percentage || 
@@ -169,7 +171,21 @@ class JourneyEntryHandler {
 
           this.pageSessionCache.set(sessionKey, currentSessionId);
         }
-
+if (entryTrigger.type === 'page_abandonment') {
+  
+  const minTime = entryTrigger.min_time_value || 
+                  entryTrigger.min_time_seconds || 
+                  entryTrigger.event_config?.min_time_seconds || 0;
+  const actualTime = event.event_data?.time_on_page_seconds || 
+                     event.event_data?.seconds || 
+                     event.event_data?.time_on_page || 0;
+  
+  if (actualTime < minTime) {
+    console.log(`[JourneyEntry]   Abandonment time ${actualTime}s < required ${minTime}s for ${journey.name}`);
+    continue;
+  }
+}
+console.log(`[JourneyEntry] Attempting enrollment in: ${journey.name}`);
         // Try to enroll in THIS journey
         await journeyProcessor.enrollSubscriber(
           journey.id,
@@ -181,8 +197,32 @@ class JourneyEntryHandler {
           }
         );
 
-        console.log(`[JourneyEntry] ✓ Enrolled in journey: ${journey.name}`);
+        console.log(`[JourneyEntry]  Enrolled in journey: ${journey.name}`);
+if (entryTrigger.type === 'page_abandonment') {
+  const delayValue = entryTrigger.delay_value || 0;
+  const delayUnit = entryTrigger.delay_unit || 'minutes';
 
+  const unitToMs: Record<string, number> = {
+    minutes: 60 * 1000,
+    hours: 60 * 60 * 1000,
+    days: 24 * 60 * 60 * 1000,
+  };
+
+  const delayMs = delayValue * (unitToMs[delayUnit] || 60000);
+
+  if (delayMs > 0) {
+    console.log(`[JourneyEntry] Delaying abandonment journey by ${delayValue} ${delayUnit}`);
+    await supabase
+      .from('user_journey_states')
+      .update({
+        status: 'waiting',
+        next_execution_at: new Date(Date.now() + delayMs).toISOString(),
+      })
+      .eq('subscriber_id', event.subscriber_id)
+      .eq('journey_id', journey.id)
+      .in('status', ['active']);
+  }
+}
       } catch (error: any) {
         // Don't stop processing other journeys
         if (error.message.includes('cannot re-enter') || 

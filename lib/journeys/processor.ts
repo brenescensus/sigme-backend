@@ -347,7 +347,7 @@ async function checkAdvancedTrigger(subscriberId: string, trigger: any): Promise
 
         if (!events || events.length === 0) {
           console.log('[Processor]  No page_abandoned events found');
-          return false;
+          return true;
         }
 
         const hasAbandoned = events.some((e, index) => {
