@@ -41,6 +41,10 @@ interface NotificationJobData {
   journeyStateId: string;
   stepType: string;
   executeAt: string;
+  // For delayed-enrollment jobs:
+  journeyId?: string;
+  subscriberId?: string;
+  context?: any;
 }
 
 interface NotificationPayload {
@@ -641,6 +645,40 @@ async function processNotificationJob(job: Job<NotificationJobData>) {
   console.log(`   Scheduled for: ${job.data.executeAt}`);
   console.log(`   Journey State ID: ${job.data.journeyStateId}`);
 
+
+  // Handle delayed enrollment for page abandonment journeys
+  if (job.data.stepType === 'delayed-enrollment') {
+    const { journeyId, subscriberId, context } = job.data;
+    
+    if (!journeyId || !subscriberId) {
+      console.error('[Worker] Missing journeyId or subscriberId for delayed-enrollment');
+      return;
+    }
+
+    console.log(`[Worker] Processing delayed enrollment: journey=${journeyId}, subscriber=${subscriberId}`);
+
+    try {
+      // Import processor dynamically to avoid circular deps, or use supabase directly
+      // to call the API endpoint
+      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/journeys/enroll`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.WORKER_SECRET}` 
+        },
+        body: JSON.stringify({ journeyId, subscriberId, context }),
+      });
+
+      if (response.ok) {
+        console.log('[Worker]  Delayed enrollment completed');
+      } else {
+        console.error('[Worker]  Delayed enrollment failed:', await response.text());
+      }
+    } catch (error: any) {
+      console.error('[Worker]  Delayed enrollment error:', error.message);
+    }
+    return;
+  }
   const { scheduledStepId, journeyStateId, stepType } = job.data;
 
   try {

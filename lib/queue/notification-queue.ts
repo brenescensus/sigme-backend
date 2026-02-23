@@ -3,10 +3,20 @@ import { Queue } from 'bullmq';
 import { redisConnection } from './config';
 
 export interface NotificationJobData {
-  scheduledStepId: string;
-  journeyStateId: string;
-  stepType: string;
-  executeAt: string;
+  // scheduledStepId: string;
+  // journeyStateId: string;
+ 
+  // executeAt: string;
+  // Standard wait/schedule jobs
+  scheduledStepId?: string;
+  journeyStateId?: string;
+   stepType: string;
+  executeAt?: string;
+  // Delayed enrollment jobs (page abandonment)
+  journeyId?: string;
+  subscriberId?: string;
+  context?: any;
+  
 }
 
 let notificationQueue: Queue<NotificationJobData> | null = null;

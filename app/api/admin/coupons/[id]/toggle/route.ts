@@ -11,7 +11,7 @@ export const PATCH = withAdmin(
     context: { params: Promise<{ couponId: string }> }
   ) => {
     // Await params (Next.js 14+ requirement)
-    const { couponId } = await context.params;
+    const { id: couponId } = await context.params;
     const supabase = getAdminClient();
 
     // Get current status
