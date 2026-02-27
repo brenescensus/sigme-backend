@@ -1,3 +1,349 @@
+// // lib/admin-middleware.ts - Token-based Super Admin Authentication
+
+// import { NextRequest, NextResponse } from 'next/server';
+// import { createServerClient } from '@supabase/ssr';
+// import type { Database } from '@/types/database';
+
+// export interface AdminAuthUser {
+//   id: string;
+//   email: string;
+//   role: string;
+//   fullName?: string;
+// }
+
+// /**
+//  * Create a Supabase client with JWT token (no cookies)
+//  */
+// function createClientFromToken(token: string) {
+//   return createServerClient<Database>(
+//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+//     {
+//       cookies: {
+//         getAll() {
+//           return [];
+//         },
+//         setAll() {},
+//       },
+//       global: {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       },
+//     }
+//   );
+// }
+
+// /**
+//  *  FIX: Create admin client with service role key
+//  */
+// function createAdminClient() {
+//   return createServerClient<Database>(
+//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//     process.env.SUPABASE_SERVICE_ROLE_KEY!,
+//     {
+//       cookies: {
+//         getAll() {
+//           return [];
+//         },
+//         setAll() {},
+//       },
+//     }
+//   );
+// }
+
+// /**
+//  * Verify JWT token and check role
+//  */
+// async function verifyAdminToken(req: NextRequest): Promise<AdminAuthUser | null> {
+//   try {
+//     const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
+    
+//     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+//       console.error('[Admin Auth]  No authorization header');
+//       return null;
+//     }
+
+//     const token = authHeader.substring(7).trim();
+//     if (!token) {
+//       console.error('[Admin Auth]  Empty token');
+//       return null;
+//     }
+
+//     // Use token-based client
+//     const supabase = createClientFromToken(token);
+//     const { data: { user }, error } = await supabase.auth.getUser();
+    
+//     if (error || !user) {
+//       console.error('[Admin Auth]  Token verification failed:', error?.message);
+//       return null;
+//     }
+
+//     // Get role from user metadata
+//     const role = user.user_metadata?.role || 'user';
+    
+//     console.log('[Admin Auth]  User verified:', {
+//       email: user.email,
+//       role,
+//       userId: user.id,
+//     });
+
+//     return {
+//       id: user.id,
+//       email: user.email!,
+//       role,
+//       fullName: user.user_metadata?.full_name,
+//     };
+//   } catch (error: any) {
+//     console.error('[Admin Auth]  Verification error:', error.message);
+//     return null;
+//   }
+// }
+
+// /**
+//  * Require Super Admin role
+//  */
+// export async function requireSuperAdmin(req: NextRequest) {
+//   const user = await verifyAdminToken(req);
+
+//   if (!user) {
+//     return {
+//       error: NextResponse.json(
+//         { error: 'Unauthorized - Invalid or missing token' },
+//         { status: 401 }
+//       ),
+//       user: null,
+//     };
+//   }
+
+//   if (user.role !== 'super_admin') {
+//     console.error('[Admin Auth]  Super admin required, got:', user.role);
+//     return {
+//       error: NextResponse.json(
+//         { error: 'Super admin access required' },
+//         { status: 403 }
+//       ),
+//       user: null,
+//     };
+//   }
+
+//   console.log('[Admin Auth]  Super admin access granted:', user.email);
+  
+//   return {
+//     user,
+//     error: null,
+//   };
+// }
+
+// /**
+//  * Require Admin role (admin OR super_admin)
+//  */
+// export async function requireAdmin(req: NextRequest) {
+//   const user = await verifyAdminToken(req);
+
+//   if (!user) {
+//     return {
+//       error: NextResponse.json(
+//         { error: 'Unauthorized - Invalid or missing token' },
+//         { status: 401 }
+//       ),
+//       user: null,
+//     };
+//   }
+
+//   if (user.role !== 'admin' && user.role !== 'super_admin') {
+//     console.error('[Admin Auth]  Admin required, got:', user.role);
+//     return {
+//       error: NextResponse.json(
+//         { error: 'Admin access required' },
+//         { status: 403 }
+//       ),
+//       user: null,
+//     };
+//   }
+
+//   console.log('[Admin Auth]  Admin access granted:', user.email);
+  
+//   return {
+//     user,
+//     error: null,
+//   };
+// }
+
+// /**
+//  * Add CORS headers for admin endpoints
+//  */
+// function addAdminCorsHeaders(response: NextResponse, origin?: string | null): NextResponse {
+//   const DASHBOARD_ORIGINS = [
+//     'http://localhost:5173',
+//     'http://localhost:3000',
+//     'http://localhost:8080',
+//     'https://notifications-app-seven.vercel.app',
+//     process.env.NEXT_PUBLIC_FRONTEND_URL,
+//   ].filter(Boolean) as string[];
+
+//   const isAllowed = origin && DASHBOARD_ORIGINS.includes(origin);
+  
+//   if (isAllowed) {
+//     response.headers.set('Access-Control-Allow-Origin', origin);
+//   } else if (DASHBOARD_ORIGINS.length > 0) {
+//     response.headers.set('Access-Control-Allow-Origin', DASHBOARD_ORIGINS[0]);
+//   }
+  
+//   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+//   response.headers.set(
+//     'Access-Control-Allow-Headers',
+//     'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+//   );
+//   response.headers.set('Access-Control-Max-Age', '86400');
+//   response.headers.set('Access-Control-Allow-Credentials', 'true');
+
+//   return response;
+// }
+
+// /**
+//  * Wrapper for super admin endpoints
+//  */
+// export function withSuperAdmin(
+//   handler: (req: NextRequest, user: AdminAuthUser, ...args: any[]) => Promise<NextResponse>
+// ) {
+//   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
+//     const origin = req.headers.get('origin');
+    
+//     console.log(`\n${'='.repeat(80)}`);
+//     console.log(`[Super Admin]  ${req.method} ${req.url}`);
+//     console.log(`[Super Admin] Origin: ${origin}`);
+//     console.log('='.repeat(80));
+    
+//     // Handle OPTIONS preflight
+//     if (req.method === 'OPTIONS') {
+//       console.log('[Super Admin]  OPTIONS preflight');
+//       const response = new NextResponse(null, { status: 204 });
+//       return addAdminCorsHeaders(response, origin);
+//     }
+    
+//     // Verify super admin
+//     const auth = await requireSuperAdmin(req);
+//     if (auth.error) {
+//       console.log('[Super Admin]  Auth failed\n');
+//       return addAdminCorsHeaders(auth.error, origin);
+//     }
+    
+//     console.log('[Super Admin]  Auth successful, executing handler...');
+    
+//     try {
+//       const response = await handler(req, auth.user!, ...args);
+//       console.log('[Super Admin]  Handler completed successfully\n');
+//       return addAdminCorsHeaders(response, origin);
+//     } catch (error: any) {
+//       console.error('[Super Admin]  Handler error:', error);
+//       console.error('='.repeat(80) + '\n');
+//       const errorResponse = NextResponse.json(
+//         { error: error.message || 'Internal server error' },
+//         { status: 500 }
+//       );
+//       return addAdminCorsHeaders(errorResponse, origin);
+//     }
+//   };
+// }
+
+// /**
+//  * Wrapper for admin endpoints (admin OR super_admin)
+//  */
+// export function withAdmin(
+//   handler: (req: NextRequest, user: AdminAuthUser, ...args: any[]) => Promise<NextResponse>
+// ) {
+//   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
+//     const origin = req.headers.get('origin');
+    
+//     console.log(`\n${'='.repeat(80)}`);
+//     console.log(`[Admin]  ${req.method} ${req.url}`);
+//     console.log(`[Admin] Origin: ${origin}`);
+//     console.log('='.repeat(80));
+    
+//     // Handle OPTIONS preflight
+//     if (req.method === 'OPTIONS') {
+//       console.log('[Admin]  OPTIONS preflight');
+//       const response = new NextResponse(null, { status: 204 });
+//       return addAdminCorsHeaders(response, origin);
+//     }
+    
+//     // Verify admin
+//     const auth = await requireAdmin(req);
+//     if (auth.error) {
+//       console.log('[Admin]  Auth failed\n');
+//       return addAdminCorsHeaders(auth.error, origin);
+//     }
+    
+//     console.log('[Admin]  Auth successful, executing handler...');
+    
+//     try {
+//       const response = await handler(req, auth.user!, ...args);
+//       console.log('[Admin]  Handler completed successfully\n');
+//       return addAdminCorsHeaders(response, origin);
+//     } catch (error: any) {
+//       console.error('[Admin]  Handler error:', error);
+//       console.error('='.repeat(80) + '\n');
+//       const errorResponse = NextResponse.json(
+//         { error: error.message || 'Internal server error' },
+//         { status: 500 }
+//       );
+//       return addAdminCorsHeaders(errorResponse, origin);
+//     }
+//   };
+// }
+
+// /**
+//  * Log admin activity to database
+//  */
+// export async function logAdminActivity(
+//   adminId: string,
+//   action: string,
+//   targetType: string,
+//   targetId?: string,
+//   details?: any,
+//   ipAddress?: string
+// ) {
+//   try {
+//     const supabase = createAdminClient();
+    
+//     await supabase.from('admin_activity_log').insert({
+//       admin_id: adminId,
+//       action,
+//       target_type: targetType,
+//       target_id: targetId,
+//       details: details ? JSON.stringify(details) : null,
+//       ip_address: ipAddress,
+//     });
+    
+//     console.log('[Activity Log] ', {
+//       admin: adminId,
+//       action,
+//       target: targetType,
+//     });
+//   } catch (error: any) {
+//     console.error('[Activity Log]  Failed to log:', error.message);
+//   }
+// }
+
+// /**
+//  *  FIX: Get admin client (synchronous, not async)
+//  */
+// export function getAdminClient() {
+//   return createAdminClient();
+// }
+
+// /**
+//  * Get user client with token
+//  */
+// export function getUserClient(token: string) {
+//   return createClientFromToken(token);
+// }
+
+
+
+
+
 // lib/admin-middleware.ts - Token-based Super Admin Authentication
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -20,22 +366,18 @@ function createClientFromToken(token: string) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return [];
-        },
+        getAll() { return []; },
         setAll() {},
       },
       global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       },
     }
   );
 }
 
 /**
- *  FIX: Create admin client with service role key
+ * Create admin client with service role key
  */
 function createAdminClient() {
   return createServerClient<Database>(
@@ -43,9 +385,7 @@ function createAdminClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       cookies: {
-        getAll() {
-          return [];
-        },
+        getAll() { return []; },
         setAll() {},
       },
     }
@@ -53,49 +393,58 @@ function createAdminClient() {
 }
 
 /**
- * Verify JWT token and check role
+ * Verify JWT token and check role.
+ *
+ * SECURITY FIX: Role is now read from app_metadata (server-controlled),
+ * NOT user_metadata (user-controlled). A user cannot promote themselves
+ * to super_admin by calling supabase.auth.updateUser() from the client.
+ *
+ * app_metadata is only writable via the service role key (your backend).
+ * user_metadata is writable by the user themselves — never trust it for roles.
  */
 async function verifyAdminToken(req: NextRequest): Promise<AdminAuthUser | null> {
   try {
     const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('[Admin Auth]  No authorization header');
+      console.error('[Admin Auth] ✗ No authorization header');
       return null;
     }
 
     const token = authHeader.substring(7).trim();
     if (!token) {
-      console.error('[Admin Auth]  Empty token');
+      console.error('[Admin Auth] ✗ Empty token');
       return null;
     }
 
-    // Use token-based client
     const supabase = createClientFromToken(token);
     const { data: { user }, error } = await supabase.auth.getUser();
-    
+
     if (error || !user) {
-      console.error('[Admin Auth]  Token verification failed:', error?.message);
+      console.error('[Admin Auth] ✗ Token verification failed:', error?.message);
       return null;
     }
 
-    // Get role from user metadata
-    const role = user.user_metadata?.role || 'user';
-    
-    console.log('[Admin Auth]  User verified:', {
+    // ✅ FIXED: Read role from app_metadata (server-only, tamper-proof)
+    // ❌ OLD:  user.user_metadata?.role  ← user can write this from client
+    // ✅ NEW:  user.app_metadata?.role   ← only your backend can write this
+    const role = user.app_metadata?.role || 'user';
+
+    console.log('[Admin Auth] ✓ User verified:', {
       email: user.email,
       role,
       userId: user.id,
+      roleSource: 'app_metadata', // confirms we're reading the secure field
     });
 
     return {
       id: user.id,
       email: user.email!,
       role,
-      fullName: user.user_metadata?.full_name,
+      fullName: user.user_metadata?.full_name, // fine to read display name from user_metadata
     };
   } catch (error: any) {
-    console.error('[Admin Auth]  Verification error:', error.message);
+    console.error('[Admin Auth] ✗ Verification error:', error.message);
     return null;
   }
 }
@@ -117,7 +466,7 @@ export async function requireSuperAdmin(req: NextRequest) {
   }
 
   if (user.role !== 'super_admin') {
-    console.error('[Admin Auth]  Super admin required, got:', user.role);
+    console.error('[Admin Auth] ✗ Super admin required, got:', user.role);
     return {
       error: NextResponse.json(
         { error: 'Super admin access required' },
@@ -127,12 +476,9 @@ export async function requireSuperAdmin(req: NextRequest) {
     };
   }
 
-  console.log('[Admin Auth]  Super admin access granted:', user.email);
-  
-  return {
-    user,
-    error: null,
-  };
+  console.log('[Admin Auth] ✓ Super admin access granted:', user.email);
+
+  return { user, error: null };
 }
 
 /**
@@ -152,7 +498,7 @@ export async function requireAdmin(req: NextRequest) {
   }
 
   if (user.role !== 'admin' && user.role !== 'super_admin') {
-    console.error('[Admin Auth]  Admin required, got:', user.role);
+    console.error('[Admin Auth] ✗ Admin required, got:', user.role);
     return {
       error: NextResponse.json(
         { error: 'Admin access required' },
@@ -162,12 +508,9 @@ export async function requireAdmin(req: NextRequest) {
     };
   }
 
-  console.log('[Admin Auth]  Admin access granted:', user.email);
-  
-  return {
-    user,
-    error: null,
-  };
+  console.log('[Admin Auth] ✓ Admin access granted:', user.email);
+
+  return { user, error: null };
 }
 
 /**
@@ -183,13 +526,13 @@ function addAdminCorsHeaders(response: NextResponse, origin?: string | null): Ne
   ].filter(Boolean) as string[];
 
   const isAllowed = origin && DASHBOARD_ORIGINS.includes(origin);
-  
+
   if (isAllowed) {
     response.headers.set('Access-Control-Allow-Origin', origin);
   } else if (DASHBOARD_ORIGINS.length > 0) {
     response.headers.set('Access-Control-Allow-Origin', DASHBOARD_ORIGINS[0]);
   }
-  
+
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   response.headers.set(
     'Access-Control-Allow-Headers',
@@ -209,35 +552,28 @@ export function withSuperAdmin(
 ) {
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     const origin = req.headers.get('origin');
-    
+
     console.log(`\n${'='.repeat(80)}`);
-    console.log(`[Super Admin]  ${req.method} ${req.url}`);
+    console.log(`[Super Admin] → ${req.method} ${req.url}`);
     console.log(`[Super Admin] Origin: ${origin}`);
     console.log('='.repeat(80));
-    
-    // Handle OPTIONS preflight
+
     if (req.method === 'OPTIONS') {
-      console.log('[Super Admin]  OPTIONS preflight');
       const response = new NextResponse(null, { status: 204 });
       return addAdminCorsHeaders(response, origin);
     }
-    
-    // Verify super admin
+
     const auth = await requireSuperAdmin(req);
     if (auth.error) {
-      console.log('[Super Admin]  Auth failed\n');
       return addAdminCorsHeaders(auth.error, origin);
     }
-    
-    console.log('[Super Admin]  Auth successful, executing handler...');
-    
+
     try {
       const response = await handler(req, auth.user!, ...args);
-      console.log('[Super Admin]  Handler completed successfully\n');
+      console.log('[Super Admin] ✓ Handler completed\n');
       return addAdminCorsHeaders(response, origin);
     } catch (error: any) {
-      console.error('[Super Admin]  Handler error:', error);
-      console.error('='.repeat(80) + '\n');
+      console.error('[Super Admin] ✗ Handler error:', error);
       const errorResponse = NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }
@@ -255,35 +591,28 @@ export function withAdmin(
 ) {
   return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     const origin = req.headers.get('origin');
-    
+
     console.log(`\n${'='.repeat(80)}`);
-    console.log(`[Admin]  ${req.method} ${req.url}`);
+    console.log(`[Admin] → ${req.method} ${req.url}`);
     console.log(`[Admin] Origin: ${origin}`);
     console.log('='.repeat(80));
-    
-    // Handle OPTIONS preflight
+
     if (req.method === 'OPTIONS') {
-      console.log('[Admin]  OPTIONS preflight');
       const response = new NextResponse(null, { status: 204 });
       return addAdminCorsHeaders(response, origin);
     }
-    
-    // Verify admin
+
     const auth = await requireAdmin(req);
     if (auth.error) {
-      console.log('[Admin]  Auth failed\n');
       return addAdminCorsHeaders(auth.error, origin);
     }
-    
-    console.log('[Admin]  Auth successful, executing handler...');
-    
+
     try {
       const response = await handler(req, auth.user!, ...args);
-      console.log('[Admin]  Handler completed successfully\n');
+      console.log('[Admin] ✓ Handler completed\n');
       return addAdminCorsHeaders(response, origin);
     } catch (error: any) {
-      console.error('[Admin]  Handler error:', error);
-      console.error('='.repeat(80) + '\n');
+      console.error('[Admin] ✗ Handler error:', error);
       const errorResponse = NextResponse.json(
         { error: error.message || 'Internal server error' },
         { status: 500 }
@@ -306,7 +635,7 @@ export async function logAdminActivity(
 ) {
   try {
     const supabase = createAdminClient();
-    
+
     await supabase.from('admin_activity_log').insert({
       admin_id: adminId,
       action,
@@ -315,19 +644,15 @@ export async function logAdminActivity(
       details: details ? JSON.stringify(details) : null,
       ip_address: ipAddress,
     });
-    
-    console.log('[Activity Log] ', {
-      admin: adminId,
-      action,
-      target: targetType,
-    });
+
+    console.log('[Activity Log] ✓', { admin: adminId, action, target: targetType });
   } catch (error: any) {
-    console.error('[Activity Log]  Failed to log:', error.message);
+    console.error('[Activity Log] ✗ Failed to log:', error.message);
   }
 }
 
 /**
- *  FIX: Get admin client (synchronous, not async)
+ * Get admin client (service role — bypasses RLS)
  */
 export function getAdminClient() {
   return createAdminClient();
