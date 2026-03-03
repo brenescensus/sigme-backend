@@ -430,7 +430,7 @@ async function verifyAdminToken(req: NextRequest): Promise<AdminAuthUser | null>
     // ✅ NEW:  user.app_metadata?.role   ← only your backend can write this
     const role = user.app_metadata?.role || 'user';
 
-    console.log('[Admin Auth] ✓ User verified:', {
+    console.log('[Admin Auth] User verified:', {
       email: user.email,
       role,
       userId: user.id,
@@ -476,7 +476,7 @@ export async function requireSuperAdmin(req: NextRequest) {
     };
   }
 
-  console.log('[Admin Auth] ✓ Super admin access granted:', user.email);
+  console.log('[Admin Auth] Super admin access granted:', user.email);
 
   return { user, error: null };
 }
@@ -508,7 +508,7 @@ export async function requireAdmin(req: NextRequest) {
     };
   }
 
-  console.log('[Admin Auth] ✓ Admin access granted:', user.email);
+  console.log('[Admin Auth] Admin access granted:', user.email);
 
   return { user, error: null };
 }
@@ -570,7 +570,7 @@ export function withSuperAdmin(
 
     try {
       const response = await handler(req, auth.user!, ...args);
-      console.log('[Super Admin] ✓ Handler completed\n');
+      console.log('[Super Admin] Handler completed\n');
       return addAdminCorsHeaders(response, origin);
     } catch (error: any) {
       console.error('[Super Admin] ✗ Handler error:', error);
@@ -609,7 +609,7 @@ export function withAdmin(
 
     try {
       const response = await handler(req, auth.user!, ...args);
-      console.log('[Admin] ✓ Handler completed\n');
+      console.log('[Admin] Handler completed\n');
       return addAdminCorsHeaders(response, origin);
     } catch (error: any) {
       console.error('[Admin] ✗ Handler error:', error);
