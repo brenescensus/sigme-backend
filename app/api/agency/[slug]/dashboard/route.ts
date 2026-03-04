@@ -17,7 +17,7 @@ async function resolveAgency(slug: string, userId: string) {
   return data;
 }
 
-export const GET_dashboard = withAuth(async (request: NextRequest, user, { params }: any) => {
+export const GET = withAuth(async (request: NextRequest, user, { params }: any) => {
   const { slug } = await params;
   const supabase = getAdminClient();
 
